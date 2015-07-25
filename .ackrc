@@ -1,0 +1,4 @@
+--ignore-directory=is:dist/
+--ignore-directory=is:static/tmp
+--ignore-directory=is:yesod-devel/
+
