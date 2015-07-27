@@ -3,8 +3,6 @@ packages:
 - '.'
 extra-deps:
 - ReadArgs-1.2.2
-- aeson-0.8.1.1
-- authenticate-1.3.2.11
 - basic-prelude-0.5.0
 - bytestring-builder-0.10.6.0.0
 - classy-prelude-0.12.1.1
@@ -18,11 +16,9 @@ extra-deps:
 - nonce-1.0.2
 - persistent-2.2
 - persistent-template-2.1.3.4
-- shakespeare-2.0.5
 - wai-app-static-3.0.1.1
 - wai-extra-3.0.9
 - wai-logger-2.2.4.1
-- yaml-0.8.12
 - yesod-1.4.1.5
 - yesod-auth-1.4.6
 - yesod-core-1.4.12
