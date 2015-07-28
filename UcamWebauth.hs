@@ -33,10 +33,15 @@ warpit :: IO ()
 warpit = run 3000 app
 
 app :: Application
-app _req sendResponse = sendResponse $ responseLBS
+app req sendResponse = case pathInfo req of
+    ["foo", "bar"] -> sendResponse $ responseLBS
         status200
         [("Content-Type", "text/plain")]
-        "Hello Warp!"
+        "You requested /foo/bar"
+    _ -> sendResponse $ responseLBS
+        status200
+        [("Content-Type", "text/plain")]
+        "You requested something else"
 
 newtype Base64BS = B64 { unB64 :: ByteString }
     deriving (Show, Read, Eq, Ord, Semigroup, Monoid, IsString)
