@@ -16,6 +16,7 @@ module UcamWebauth (
 import Import.NoFoundation hiding (take)
 import Network.HTTP.Types
 import Network.Wai
+import qualified Network.Wai as W
 import Network.Wai.Parse
 import Data.Time.RFC3339
 import Data.Time.LocalTime
@@ -39,6 +40,18 @@ app req sendResponse = case pathInfo req of
         status200
         [("Content-Type", "text/plain")]
         (fromByteString "You requested /foo/bar")
+    ["foo", "rawquery"] -> sendResponse $ responseBuilder
+        status200
+        [("Content-Type", "text/plain")]
+        (fromByteString . rawQueryString $ req)
+    ["foo", "query"] -> sendResponse $ responseBuilder
+        status200
+        [("Content-Type", "text/plain")]
+        (fromString . show . W.queryString $ req)
+    ["foo", "requestHeaders"] -> sendResponse $ responseBuilder
+        status200
+        [("Content-Type", "text/plain")]
+        (fromString . show . W.requestHeaders $ req)
     _ -> sendResponse $ responseBuilder
         status200
         [("Content-Type", "text/plain")]
