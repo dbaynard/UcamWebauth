@@ -82,6 +82,7 @@ library
                  , vector
                  , time
                  , timerep
+                 , blaze-builder
 
 executable         Ucam-Webauth
     if flag(library-only)

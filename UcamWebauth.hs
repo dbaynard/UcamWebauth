@@ -26,6 +26,7 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.ByteString.Char8 as B (map)
 import Data.Char (isAlphaNum)
+import Blaze.ByteString.Builder
 
 import Network.Wai.Handler.Warp
 
@@ -34,14 +35,14 @@ warpit = run 3000 app
 
 app :: Application
 app req sendResponse = case pathInfo req of
-    ["foo", "bar"] -> sendResponse $ responseLBS
+    ["foo", "bar"] -> sendResponse $ responseBuilder
         status200
         [("Content-Type", "text/plain")]
-        "You requested /foo/bar"
-    _ -> sendResponse $ responseLBS
+        (fromByteString "You requested /foo/bar")
+    _ -> sendResponse $ responseBuilder
         status200
         [("Content-Type", "text/plain")]
-        "You requested something else"
+        (fromByteString "You requested something else")
 
 newtype Base64BS = B64 { unB64 :: ByteString }
     deriving (Show, Read, Eq, Ord, Semigroup, Monoid, IsString)
