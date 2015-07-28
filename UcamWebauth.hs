@@ -42,10 +42,10 @@ import Network.Wai.Handler.Warp
 type LBS = LB.ByteString
 
 warpit :: IO ()
-warpit = run 3000 app
+warpit = run 3000 . app =<< getCurrentTime
 
-app :: Application
-app req sendResponse = case pathInfo req of
+app :: UTCTime -> Application
+app time req sendResponse = case pathInfo req of
     ["foo", "bar"] -> sendResponse $ responseBuilder
         status200
         [("Content-Type", "text/plain")]
@@ -62,6 +62,10 @@ app req sendResponse = case pathInfo req of
         status200
         [("Content-Type", "text/plain")]
         (fromString . show . W.requestHeaders $ req)
+    ["foo", "authenticate"] -> sendResponse $ responseBuilder
+        seeOther303
+        [("Content-Type", "text/plain"), ucamWebauthQuery ravenAuth . ucamWebauthHello $ time]
+        mempty
     _ -> sendResponse $ responseBuilder
         status200
         [("Content-Type", "text/plain")]
@@ -75,7 +79,7 @@ ucamWebauthHello time = AuthRequest {
                   requestVer = WLS3
                 , requestUrl = "http://localhost:3000/foo/query"
                 , requestDesc = Just "This is a sample"
-                , requestAauth = Just [Pwd]
+                , requestAauth = Nothing
                 , requestIact = Nothing
                 , requestMsg = Just "This is a private resource, or something."
                 , requestParams = Just "Haha, some data!" :: Maybe Text
@@ -186,14 +190,14 @@ data AuthType = Pwd -- ^ pwd: Username and password
     deriving (Show, Read, Eq, Ord, Enum, Bounded)
 
 responseCodes :: IntMap Status
-responseCodes = I.fromList . fmap (statusCode &&& id) $ [ok200, gone410, noauth510, protoerr520, paramerr530, nointeract540, unauthagent560, declined570]
+responseCodes = I.fromList . fmap (statusCode &&& id) $ [ok200, gone410, noAuth510, protoErr520, paramErr530, noInteract540, unAuthAgent560, declined570]
 
-noauth510, protoerr520, paramerr530, nointeract540, unauthagent560, declined570 :: Status
-noauth510 = mkStatus 510 "No mutually acceptable authentication types"
-protoerr520 = mkStatus 520 "Unsupported protocol version (Only for version 1)"
-paramerr530 = mkStatus 530 "General request parameter error"
-nointeract540 = mkStatus 540 "Interaction would be required but has been blocked"
-unauthagent560 = mkStatus 560 "Application agent is not authorised"
+noAuth510, protoErr520, paramErr530, noInteract540, unAuthAgent560, declined570 :: Status
+noAuth510 = mkStatus 510 "No mutually acceptable authentication types"
+protoErr520 = mkStatus 520 "Unsupported protocol version (Only for version 1)"
+paramErr530 = mkStatus 530 "General request parameter error"
+noInteract540 = mkStatus 540 "Interaction would be required but has been blocked"
+unAuthAgent560 = mkStatus 560 "Application agent is not authorised"
 declined570 = mkStatus 570 "Authentication declined"
 
 parseResponseCode :: Text -> Maybe Status
@@ -243,4 +247,4 @@ ucamTimeParser = do
         return . UcamTime . mconcat $ [year, "-", month, "-", day, "T", hour, ":", minute, ":", sec, "Z"]
 
 ravenAuth :: Z.Builder
-ravenAuth = "https://raven.cam.ac.uk/authenticate.html"
+ravenAuth = "https://raven.cam.ac.uk/auth/authenticate.html"
