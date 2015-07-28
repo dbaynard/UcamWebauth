@@ -59,6 +59,26 @@ app req sendResponse = case pathInfo req of
         [("Content-Type", "text/plain")]
         (fromByteString "You requested something else")
 
+{-|
+  Produce the request to the authentication server as a response
+-}
+ucamWebAuthHello :: UTCTime -> AuthRequest a
+ucamWebAuthHello time = AuthRequest {
+                  requestVer = WLS3
+                , requestUrl = "http://localhost/woohoo"
+                , requestDesc = Just "This is a sample"
+                , requestAauth = Just [Pwd]
+                , requestIact = Nothing
+                , requestMsg = Just "This is a private resource, or something."
+                , requestParams = Nothing
+                , requestDate = pure time
+                , requestFail = Just "Failure to launch"
+                }
+
+{-|
+  Parse the response to the authentication server as a request
+-}
+
 newtype Base64BS = B64 { unB64 :: ByteString }
     deriving (Show, Read, Eq, Ord, Semigroup, Monoid, IsString)
 
