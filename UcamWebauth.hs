@@ -8,6 +8,7 @@ https://raven.cam.ac.uk/project/waa2wls-protocol.txt
 -}
 
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE RankNTypes #-}
 
 module UcamWebauth (
     module UcamWebauth
@@ -25,13 +26,20 @@ import Data.Time (UTCTime, DiffTime)
 import Data.Attoparsec.Text
 import Data.Text (Text)
 import qualified Data.Text as T
+import qualified Data.Text.Encoding as T
 import qualified Data.ByteString.Char8 as B (map)
 import Data.Char (isAlphaNum)
-import Blaze.ByteString.Builder
+import Blaze.ByteString.Builder hiding (Builder)
+import qualified Blaze.ByteString.Builder as Z
 import Data.IntMap.Strict (IntMap)
 import qualified Data.IntMap.Strict as I
+import Data.Aeson (ToJSON, FromJSON)
+import qualified Data.Aeson as A
+import qualified Data.ByteString.Lazy as LB (ByteString)
 
 import Network.Wai.Handler.Warp
+
+type LBS = LB.ByteString
 
 warpit :: IO ()
 warpit = run 3000 app
@@ -62,22 +70,46 @@ app req sendResponse = case pathInfo req of
 {-|
   Produce the request to the authentication server as a response
 -}
-ucamWebAuthHello :: UTCTime -> AuthRequest a
-ucamWebAuthHello time = AuthRequest {
+ucamWebauthHello :: UTCTime -> AuthRequest
+ucamWebauthHello time = AuthRequest {
                   requestVer = WLS3
-                , requestUrl = "http://localhost/woohoo"
+                , requestUrl = "http://localhost:3000/foo/query"
                 , requestDesc = Just "This is a sample"
                 , requestAauth = Just [Pwd]
                 , requestIact = Nothing
                 , requestMsg = Just "This is a private resource, or something."
-                , requestParams = Nothing
+                , requestParams = Just "Haha, some data!" :: Maybe Text
                 , requestDate = pure time
                 , requestFail = Just "Failure to launch"
                 }
 
+ucamWebauthQuery :: Z.Builder -> AuthRequest -> Header
+ucamWebauthQuery url AuthRequest{..} = (hLocation, toByteString $ url <> theQuery)
+    where
+        theQuery :: Z.Builder
+        theQuery = renderQueryBuilder True $ textQs <> dataQs
+        textQs :: Query
+        textQs = toQuery [
+                   ("ver" :: Text, pure . textWLSVersion $ requestVer)
+                 , ("url", pure requestUrl)
+                 , ("desc", decodeASCII <$> requestDesc)
+                 , ("aauth", fromString . show <$> requestAauth)
+                 , ("iact", boolToYN <$> requestIact)
+                 , ("msg", requestMsg)
+                 , ("date", unUcamTime . ucamTime <$> requestDate)
+                 , ("fail", requestFail)
+                 ]
+        dataQs :: Query
+        dataQs = toQuery [
+                   ("params", A.encode <$> requestParams) :: (ByteString, Maybe LBS)
+                 ]
+
 {-|
   Parse the response to the authentication server as a request
 -}
+
+newtype ASCII = ASCII { unASCII :: ByteString }
+    deriving (Show, Read, Eq, Ord, Semigroup, Monoid, IsString)
 
 newtype Base64BS = B64 { unB64 :: ByteString }
     deriving (Show, Read, Eq, Ord, Semigroup, Monoid, IsString)
@@ -85,10 +117,10 @@ newtype Base64BS = B64 { unB64 :: ByteString }
 newtype UcamBase64BS = UcamB64 { unUcamB64 :: ByteString }
     deriving (Show, Read, Eq, Ord, Semigroup, Monoid, IsString)
 
-data AuthRequest a = AuthRequest {
+data AuthRequest = forall a . ToJSON a => AuthRequest {
                   requestVer :: WLSVersion -- ^ The version of WLS. 1, 2 or 3.
                 , requestUrl :: Text -- ^ Full http(s) url of resource request for display
-                , requestDesc :: Maybe ByteString -- ^ ASCII description
+                , requestDesc :: Maybe ASCII -- ^ ASCII description
                 , requestAauth :: Maybe [AuthType] -- ^ Comma delimited sequence of text tokens representing satisfactory authentication methods
                 , requestIact :: Maybe Bool -- ^ A token (Yes/No). Yes requires re-authentication. No required no re-authentication.
                 , requestMsg :: Maybe Text -- ^ Why is authentication being requested?
@@ -96,7 +128,6 @@ data AuthRequest a = AuthRequest {
                 , requestDate :: Maybe UTCTime -- ^ RFC 3339 representation of application’s time
                 , requestFail :: Maybe Text -- ^ Error token
                 }
-    deriving (Show, Eq, Ord)
 
 data AuthResponse a = AuthResponse {
                   responseVer :: WLSVersion -- ^ The version of WLS. 1, 2 or 3, <= the request
@@ -119,10 +150,16 @@ data AuthResponse a = AuthResponse {
 data WLSVersion = WLS1 | WLS2 | WLS3
     deriving (Read, Eq, Ord, Enum, Bounded)
 
+displayWLSVersion :: IsString a => WLSVersion -> a
+displayWLSVersion WLS1 = "1"
+displayWLSVersion WLS2 = "2"
+displayWLSVersion WLS3 = "3"
+
+textWLSVersion :: WLSVersion -> Text
+textWLSVersion = displayWLSVersion
+
 instance Show WLSVersion where
-    show WLS1 = "1"
-    show WLS2 = "2"
-    show WLS3 = "3"
+    show = displayWLSVersion
 
 parseWLSVersion :: Text -> Maybe WLSVersion
 parseWLSVersion = maybeResult . parse wlsVersionParser
@@ -133,6 +170,17 @@ wlsVersionParser = choice [
                           , "2" *> pure WLS2
                           , "1" *> pure WLS1
                           ]
+
+boolToYN :: IsString a => Bool -> a
+boolToYN True = "Yes"
+boolToYN _ = "No"
+
+trueOrFalse :: Text -> Maybe Bool
+trueOrFalse = maybeResult . parse ynToBool
+    where
+        ynToBool :: Parser Bool
+        ynToBool = ("Y" <|> "y") *> "es" *> pure True
+             <|> ("N" <|> "n") *> "o" *> pure False
 
 data AuthType = Pwd -- ^ pwd: Username and password
     deriving (Show, Read, Eq, Ord, Enum, Bounded)
@@ -175,6 +223,9 @@ convertUcamB64 = B64 . B.map camFilter . unUcamB64
 encodeB64 :: Text -> Base64BS
 encodeB64 = B64 . B.encode . encodeUtf8
 
+decodeASCII :: ASCII -> Text
+decodeASCII = T.decodeASCII . unASCII
+
 ucamTime :: UTCTime -> UcamTime
 ucamTime = UcamTime . T.filter isAlphaNum . formatTimeRFC3339 . utcToZonedTime utc
 
@@ -191,5 +242,5 @@ ucamTimeParser = do
         sec <- take 2 <* "Z"
         return . UcamTime . mconcat $ [year, "-", month, "-", day, "T", hour, ":", minute, ":", sec, "Z"]
 
-ravenAuth :: Text
+ravenAuth :: Z.Builder
 ravenAuth = "https://raven.cam.ac.uk/authenticate.html"
