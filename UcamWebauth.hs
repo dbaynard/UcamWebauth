@@ -27,6 +27,17 @@ import qualified Data.Text as T
 import qualified Data.ByteString.Char8 as B (map)
 import Data.Char (isAlphaNum)
 
+import Network.Wai.Handler.Warp
+
+warpit :: IO ()
+warpit = run 3000 app
+
+app :: Application
+app _req sendResponse = sendResponse $ responseLBS
+        status200
+        [("Content-Type", "text/plain")]
+        "Hello Warp!"
+
 newtype Base64BS = B64 { unB64 :: ByteString }
     deriving (Show, Read, Eq, Ord, Semigroup, Monoid, IsString)
 
