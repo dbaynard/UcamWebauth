@@ -12,6 +12,7 @@ extra-deps:
 - classy-prelude-yesod-0.12.0.1
 - fast-logger-2.3.1
 - hjsmin-0.1.4.8
+- html-conduit-1.2.0
 - language-javascript-0.5.13.4
 - monad-logger-0.3.13.2
 - mutable-containers-0.3.0
@@ -29,3 +30,4 @@ extra-deps:
 - yesod-newsfeed-1.4.0.1
 - yesod-persistent-1.4.0.3
 - yesod-static-1.4.0.4
+- yesod-test-1.4.3.1
