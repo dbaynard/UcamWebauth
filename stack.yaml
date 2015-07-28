@@ -1,4 +1,6 @@
 flags: {}
+extra-dep: true
+resolver: ghc-7.10
 packages:
 - '.'
 extra-deps:
@@ -26,4 +28,3 @@ extra-deps:
 - yesod-newsfeed-1.4.0.1
 - yesod-persistent-1.4.0.3
 - yesod-static-1.4.0.4
-resolver: ghc-7.10
