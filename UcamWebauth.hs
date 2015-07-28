@@ -28,6 +28,8 @@ import qualified Data.Text as T
 import qualified Data.ByteString.Char8 as B (map)
 import Data.Char (isAlphaNum)
 import Blaze.ByteString.Builder
+import Data.IntMap.Strict (IntMap)
+import qualified Data.IntMap.Strict as I
 
 import Network.Wai.Handler.Warp
 
@@ -78,7 +80,7 @@ data AuthRequest a = AuthRequest {
 
 data AuthResponse a = AuthResponse {
                   responseVer :: WLSVersion -- ^ The version of WLS. 1, 2 or 3, <= the request
-                , responseStatus :: ResponseCode -- ^ 3 digit status code (200 is success)
+                , responseStatus :: Status -- ^ 3 digit status code (200 is success)
                 , responseMsg :: Maybe Text -- ^ The status, for users
                 , responseIssue :: UTCTime -- ^ RFC 3339 representation of response’s time
                 , responseId :: Text -- ^ Not unguessable identifier, id + issue are unique
@@ -115,46 +117,19 @@ wlsVersionParser = choice [
 data AuthType = Pwd -- ^ pwd: Username and password
     deriving (Show, Read, Eq, Ord, Enum, Bounded)
 
-data ResponseCode = AuthSuccess -- ^ 200 Authentication successful
-                  | AuthCancel -- ^ 410 Cancelled by user
-                  | AuthNoMutualAuth -- ^ 510 No mutually acceptable authentication types
-                  | AuthUnsupportedProtocol -- ^ 520 Unsupported protocol version (Only for version 1)
-                  | AuthParamError -- ^ 530 General request parameter error
-                  | AuthNoInteraction -- ^ 540 Interaction would be required but has been blocked
-                  | AuthUnauthorized -- ^ 560 Application agent is not authorised
-                  | AuthDeclined -- ^ 570 Authentication declined
-                  | AuthUnrecognised -- ^ Unrecognised response code
-    deriving (Read, Eq, Ord, Enum, Bounded)
+responseCodes :: IntMap Status
+responseCodes = I.fromList . fmap (statusCode &&& id) $ [ok200, gone410, noauth510, protoerr520, paramerr530, nointeract540, unauthagent560, declined570]
 
-instance Show ResponseCode where
-    show AuthSuccess = "200"
-    show AuthCancel = "410"
-    show AuthNoMutualAuth = "510"
-    show AuthUnsupportedProtocol = "520"
-    show AuthParamError = "530"
-    show AuthNoInteraction = "540"
-    show AuthUnauthorized = "560"
-    show AuthDeclined = "570"
-    show AuthUnrecognised = "Unrecognised"
+noauth510, protoerr520, paramerr530, nointeract540, unauthagent560, declined570 :: Status
+noauth510 = mkStatus 510 "No mutually acceptable authentication types"
+protoerr520 = mkStatus 520 "Unsupported protocol version (Only for version 1)"
+paramerr530 = mkStatus 530 "General request parameter error"
+nointeract540 = mkStatus 540 "Interaction would be required but has been blocked"
+unauthagent560 = mkStatus 560 "Application agent is not authorised"
+declined570 = mkStatus 570 "Authentication declined"
 
-instance IsString ResponseCode where
-    fromString = fromMaybe AuthUnrecognised . parseResponseCode . T.pack
-
-parseResponseCode :: Text -> Maybe ResponseCode
-parseResponseCode = maybeResult . parse responseCodeParser
-
-responseCodeParser :: Parser ResponseCode
-responseCodeParser = choice [
-                              "200" *> pure AuthSuccess
-                            , "410" *> pure AuthCancel
-                            , "510" *> pure AuthNoMutualAuth
-                            , "520" *> pure AuthUnsupportedProtocol
-                            , "530" *> pure AuthParamError
-                            , "540" *> pure AuthNoInteraction
-                            , "560" *> pure AuthUnauthorized
-                            , "570" *> pure AuthDeclined
-                            , many1 digit *> pure AuthUnrecognised 
-                            ]
+parseResponseCode :: Text -> Maybe Status
+parseResponseCode = flip lookup responseCodes <=< maybeResult . parse decimal
 
 newtype UcamTime = UcamTime { unUcamTime :: Text }
     deriving (Show, Read, Eq, Ord, Semigroup, Monoid, IsString)
