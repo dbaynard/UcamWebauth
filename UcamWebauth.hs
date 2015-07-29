@@ -16,32 +16,28 @@ module UcamWebauth (
 
 import Import.NoFoundation hiding (take)
 import Control.Applicative (empty)
-import Network.HTTP.Types
+import Network.HTTP.Types ()
 import Network.Wai
 import qualified Network.Wai as W
-import Network.Wai.Parse
 import Data.Time.RFC3339
 import Data.Time.LocalTime
-import Data.ByteString (ByteString)
 import qualified Data.ByteString.Base64 as B
 import qualified Data.ByteString.Base64.Lazy as L
-import Data.Time (UTCTime, DiffTime, secondsToDiffTime)
+import Data.Time (DiffTime, secondsToDiffTime)
 import Data.Attoparsec.ByteString.Char8 hiding (count)
 import qualified Data.Attoparsec.ByteString.Char8 as A
 import Data.Attoparsec.Combinator (lookAhead)
-import Data.Text (Text)
 import qualified Data.Text as T
-import qualified Data.Text.Encoding as T
 import qualified Data.ByteString.Char8 as B
 import Data.Char (isAlphaNum)
 import Blaze.ByteString.Builder hiding (Builder)
 import qualified Blaze.ByteString.Builder as Z
 import qualified Blaze.ByteString.Builder.Char.Utf8 as Z
-import Data.IntMap.Strict (IntMap)
+import Data.IntMap.Strict ()
 import qualified Data.IntMap.Strict as I
-import Data.Map.Strict (Map)
+import Data.Map.Strict ()
 import qualified Data.Map.Strict as M
-import Data.Aeson (ToJSON, FromJSON)
+import Data.Aeson ()
 import qualified Data.Aeson as A
 import qualified Data.ByteString.Lazy as LB (ByteString)
 
