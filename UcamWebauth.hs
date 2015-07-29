@@ -148,21 +148,30 @@ parseUcamResponse' = fmap (urlDecode False) . B.split '!'
 
 ucamResponseParser :: FromJSON a => Parser (AuthResponse a)
 ucamResponseParser = do
-        responseVer <- wlsVersionParser <* "!"
-        responseStatus <- responseCodeParser <* "!"
-        responseMsg <- optionMaybe betweenBangs <* "!"
-        responseIssue <- fromMaybe ancientUTCTime <$> utcTimeParser <* "!"
-        responseId <- betweenBangs <* "!"
-        responseUrl <- betweenBangs <* "!"
-        responsePrincipal <- optionMaybe betweenBangs <* "!"
-        responsePtags <- (optionMaybe . many1) ((takeWhile1 . nots $ ",!") <* optionMaybe ",") <* "!"
-        responseAuth <- optionMaybe authTypeParser <* "!"
-        responseSso <- optionMaybe (authTypeParser `sepBy1` ",") <* "!"
-        responseLife <- optionMaybe (secondsToDiffTime <$> decimal) <* "!"
-        responseParams <- A.decodeStrict . encodeUtf8 <$> betweenBangs <* "!"
-        responseKid <- optionMaybe kidParser <* "!"
+        responseVer <- noBang wlsVersionParser
+        responseStatus <- noBang responseCodeParser
+        responseMsg <- maybeBang . urlWrapText $ betweenBangs
+        responseIssue <- noBang $ fromMaybe ancientUTCTime <$> utcTimeParser
+        responseId <- noBang . urlWrapText $ betweenBangs
+        responseUrl <- noBang . urlWrapText $ betweenBangs
+        responsePrincipal <- maybeBang . urlWrapText $ betweenBangs
+        responsePtags <- noBang . optionMaybe . fmap urlWrapText . many1 $ (takeWhile1 . nots $ ",!") <* optionMaybe ","
+        responseAuth <- noBang . optionMaybe $ authTypeParser
+        responseSso <- noBang . optionMaybe $ authTypeParser `sepBy1` ","
+        responseLife <- noBang . optionMaybe . fmap secondsToDiffTime $ decimal
+        responseParams <- A.decodeStrict <$> (noBang . urlWrap) betweenBangs
+        responseKid <- maybeBang . urlWrap $ kidParser
         responseSig <- optionMaybe ucamB64parser
         return AuthResponse{..}
+        where
+            noBang :: Parser b -> Parser b
+            noBang = (<* "!")
+            urlWrap :: Functor f => f Text -> f ByteString
+            urlWrap = fmap (urlDecode False . encodeUtf8)
+            urlWrapText :: Functor f => f Text -> f Text
+            urlWrapText = fmap (decodeUtf8 . urlDecode False . encodeUtf8)
+            maybeBang :: Parser b -> Parser (Maybe b)
+            maybeBang = noBang . optionMaybe
 
 betweenBangs :: Parser Text
 betweenBangs = takeWhile1 (/= '!')
@@ -207,7 +216,7 @@ data AuthResponse a = AuthResponse {
                 , responseSso :: Maybe [AuthType] -- ^ Comma separated list of previous authentications. Required if responseAuth is Nothing.
                 , responseLife :: Maybe DiffTime -- ^ Remaining lifetime in seconds of application
                 , responseParams :: Maybe a -- ^ A copy of the params from the request
-                , responseKid :: Maybe Text -- ^ RSA key identifier. Must be a string of 1–8 characters, chosen from digits 0–9, with no leading 0, i.e. [1-9][0-9]{0,7}
+                , responseKid :: Maybe ByteString -- ^ RSA key identifier. Must be a string of 1–8 characters, chosen from digits 0–9, with no leading 0, i.e. [1-9][0-9]{0,7}
                 , responseSig :: Maybe UcamBase64BS -- ^ Required if status is 200, otherwise Nothing. Public key signature of everything up to kid, using the private key identified by kid, the SHA-1 algorithm and RSASSA-PKCS1-v1_5 (PKCS #1 v2.1 RFC 3447), encoded using the base64 scheme (RFC 1521) but with "-._" replacing "+/="
                 }
     deriving (Show, Eq, Ord)
