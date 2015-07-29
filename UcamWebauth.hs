@@ -63,7 +63,7 @@ app time req sendResponse = case pathInfo req of
     ["foo", "query"] -> sendResponse $ responseBuilder
         status200
         [("Content-Type", "text/plain")]
-        (displayWLSResponse req)
+        (displayWLSQuery req)
     ["foo", "requestHeaders"] -> sendResponse $ responseBuilder
         status200
         [("Content-Type", "text/plain")]
@@ -128,7 +128,7 @@ ucamWebauthQuery url AuthRequest{..} = (hLocation, toByteString $ url <> theQuer
                  ]
         dataQs :: Query
         dataQs = toQuery [
-                   ("params", A.encode <$> requestParams) :: (ByteString, Maybe LBS)
+                   ("params", A.encode <$> requestParams) :: (Text, Maybe LBS)
                  ]
 
 {-|
