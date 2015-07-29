@@ -155,7 +155,7 @@ ucamResponseParser = do
         responseId <- noBang . urlWrapText $ betweenBangs
         responseUrl <- noBang . urlWrapText $ betweenBangs
         responsePrincipal <- maybeBang . urlWrapText $ betweenBangs
-        responsePtags <- noBang . optionMaybe . fmap urlWrapText . many1 $ (takeWhile1 . nots $ ",!") <* optionMaybe ","
+        responsePtags <- parsePtags responseVer
         responseAuth <- noBang . optionMaybe $ authTypeParser
         responseSso <- noBang . optionMaybe $ authTypeParser `sepBy1` ","
         responseLife <- noBang . optionMaybe . fmap secondsToDiffTime $ decimal
@@ -172,6 +172,9 @@ ucamResponseParser = do
             urlWrapText = fmap (decodeUtf8 . urlDecode False . encodeUtf8)
             maybeBang :: Parser b -> Parser (Maybe b)
             maybeBang = noBang . optionMaybe
+            parsePtags :: WLSVersion -> Parser (Maybe [Text])
+            parsePtags WLS3 = noBang . optionMaybe . fmap urlWrapText . many1 $ (takeWhile1 . nots $ ",!") <* optionMaybe ","
+            parsePtags _ = pure empty
 
 betweenBangs :: Parser Text
 betweenBangs = takeWhile1 (/= '!')
