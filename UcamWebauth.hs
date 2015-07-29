@@ -64,6 +64,10 @@ app time req sendResponse = case pathInfo req of
     ["foo", "query"] -> sendResponse $ responseBuilder
         status200
         [("Content-Type", "text/plain")]
+        (displayWLSResponse req)
+    ["foo", "queryR"] -> sendResponse $ responseBuilder
+        status200
+        [("Content-Type", "text/plain")]
         (displayWLSQuery req)
     ["foo", "requestHeaders"] -> sendResponse $ responseBuilder
         status200
@@ -73,15 +77,10 @@ app time req sendResponse = case pathInfo req of
         seeOther303
         [("Content-Type", "text/plain"), ucamWebauthQuery ravenAuth . ucamWebauthHello (Just "This is 100% of the data! And it’s really quite cool" :: Maybe Text) $ time]
         mempty
-    ["foo", "sampleResponse"] -> sendResponse $ responseBuilder
-        status200
-        [("Content-Type", "text/plain")]
-        (Z.fromByteString sampleResponse)
     _ -> sendResponse $ responseBuilder
         status200
         [("Content-Type", "text/plain")]
         (fromByteString "You requested something else")
-
 
 displayWLSQuery :: W.Request -> Z.Builder
 displayWLSQuery = maybe mempty Z.fromShow . lookUpWLSResponse
@@ -138,18 +137,6 @@ ucamWebauthQuery url AuthRequest{..} = (hLocation, toByteString $ url <> theQuer
 {-|
   Parse the response to the authentication server as a request
 -}
-sampleResponse2 :: ByteString
-sampleResponse2 = "1!410!!20150728T232246Z!1438125766-850-13!http://localhost:3000/foo/query!!!!!\"Haha, some data%21\"!2!OlOHvAuTphMkVERNJNfdGINbPEsSWzXt3.ZgkQDEC094UPvs6FGAKfhyGkzIvy7VHqYA29kni5VqUaHV4VAYlNWNB6vdYqd3DQywvW5otpG.JeERiRXZbi6-5N2Inbg9PEDvzyfthzPotpfMZpfw85pLPqVhjsH.M9bdg0wfUv8_"
-
-sampleResponse :: ByteString
-sampleResponse = "3!200!!20150728T234914Z!1438127354-62345-8!http://localhost:3000/foo/query!db506!current!pwd!!36000!\"Haha, some data%21\"!2!VWpePKPTygBm4tgYB8ZxwMCAZI2x-njD6bLZw3PaSWJWqXQJUXmroT2Q5Gjzzi2TpmHQWRPulSVPliDsvzdekVtkc6XYsQX1Krq59ml5iwI.ZwtqbHM9UjKN1qdbwa7A72apkt641k9TsXLMBi3u8ngcqoUu1rqD-TUYk4TrP.s_"
-
-sampleResponse1 :: ByteString
-sampleResponse1 = "3!200!!20150729T004428Z!1438130663-14168-14!http://localhost:3000/foo/query!db506!current!!pwd!32691!\"Haha, some data%21\"!2!a6WyPwaDvKmqs40wl68N1k--GcYXZJHROcD0Vh474qrbY4l5rKBFRXuDtFA-1mH9wRsKywkbjTCfayNzMq51oSzZquyGDCr6dGE7Jj6iFnYQ16FwVaV9FZN4l6ypk-HAeBIODBm2JG06.gQXim0litt5CgHXYnpNDhUe89geuxY_"
-
-parseUcamResponse' :: ByteString -> [ByteString]
-parseUcamResponse' = fmap (urlDecode False) . B.split '!'
-
 ucamResponseParser :: FromJSON a => Parser (AuthResponse a)
 ucamResponseParser = do
         responseVer <- noBang wlsVersionParser
