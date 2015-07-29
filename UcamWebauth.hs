@@ -105,7 +105,7 @@ ucamWebauthHello params time = AuthRequest {
                 , ucamQMsg = Just "This is a private resource, or something."
                 , ucamQParams = params
                 , ucamQDate = pure time
-                , ucamQFail = Just "Failure to launch"
+                , ucamQFail = pure True
                 }
 
 ucamWebauthQuery :: ToJSON a => Z.Builder -> AuthRequest a -> Header
@@ -117,15 +117,15 @@ ucamWebauthQuery url AuthRequest{..} = (hLocation, toByteString $ url <> theQuer
         strictQs = toQuery [
                    ("ver", pure . textWLSVersion $ ucamQVer) :: (Text, Maybe ByteString)
                  , ("desc", encodeUtf8 <$> ucamQDesc)
+                 , ("iact", boolToYNS <$> ucamQIact)
+                 , ("fail", boolToYNS <$> ucamQFail)
                  ]
         textQs :: Query
         textQs = toQuery [
                    ("url" , pure ucamQUrl) :: (Text, Maybe Text)
                  , ("date", unUcamTime . ucamTime <$> ucamQDate)
                  , ("aauth", T.intercalate "," . fmap displayAuthType <$> ucamQAauth)
-                 , ("iact", boolToYN <$> ucamQIact)
                  , ("msg", ucamQMsg)
-                 , ("fail", ucamQFail)
                  ]
         lazyQs :: Query
         lazyQs = toQuery [
@@ -191,7 +191,7 @@ data AuthRequest a = AuthRequest {
                 , ucamQMsg :: Maybe Text -- ^ Why is authentication being requested?
                 , ucamQParams :: Maybe a -- ^ Data to be returned to the application
                 , ucamQDate :: Maybe UTCTime -- ^ RFC 3339 representation of application’s time
-                , ucamQFail :: Maybe Text -- ^ Error token
+                , ucamQFail :: Maybe Bool -- ^ Error token. If 'yes', the WLS implements error handling
                 }
     deriving (Show, Eq, Ord)
 
@@ -238,8 +238,11 @@ wlsVersionParser = choice [
                           ]
 
 boolToYN :: IsString a => Bool -> a
-boolToYN True = "Yes"
-boolToYN _ = "No"
+boolToYN True = "yes"
+boolToYN _ = "no"
+
+boolToYNS :: Bool -> StringType
+boolToYNS = boolToYN
 
 trueOrFalse :: StringType -> Maybe Bool
 trueOrFalse = maybeResult . parse ynToBool
