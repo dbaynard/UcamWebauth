@@ -87,7 +87,7 @@ displayWLSResponse :: W.Request -> Z.Builder
 displayWLSResponse = maybe mempty Z.fromShow . maybeAuthCode
     where
         maybeAuthCode :: W.Request -> Maybe (AuthResponse Text)
-        maybeAuthCode = maybeResult . parse ucamResponseParser <=< lookUpWLSResponse
+        maybeAuthCode = validateAuthResponse <=< maybeResult . parse ucamResponseParser <=< lookUpWLSResponse
 
 lookUpWLSResponse :: W.Request -> Maybe ByteString
 lookUpWLSResponse = join . M.lookup "WLS-Response" . M.fromList . W.queryString
@@ -182,6 +182,20 @@ kidParser :: Parser StringType
 kidParser = fmap B.pack $ (:)
         <$> (satisfy . inClass $ "1-9")
         <*> (fmap catMaybes . A.count 7 . optionMaybe $ digit) <* (lookAhead . satisfy $ not . isDigit)
+
+{-|
+  Validate the Authentication Response
+-}
+validateAuthResponse :: AuthResponse a -> Maybe (AuthResponse a)
+validateAuthResponse x@AuthResponse{..} = do
+        guard . validateKid =<< ucamAKid
+        return x
+
+{-|
+  Check the kid is valid
+-}
+validateKid :: StringType -> Bool
+validateKid = flip elem ["2"]
 
 newtype ASCII = ASCII { unASCII :: ByteString }
     deriving (Show, Read, Eq, Ord, Semigroup, Monoid, IsString)
