@@ -46,6 +46,7 @@ import qualified Data.ByteString.Lazy as LB (ByteString)
 import Network.Wai.Handler.Warp
 
 type LBS = LB.ByteString
+type StringType = Text
 
 warpit :: IO ()
 warpit = run 3000 . app =<< getCurrentTime
@@ -166,9 +167,9 @@ ucamResponseParser = do
         where
             noBang :: Parser b -> Parser b
             noBang = (<* "!")
-            urlWrap :: Functor f => f Text -> f ByteString
+            urlWrap :: Functor f => f StringType -> f ByteString
             urlWrap = fmap (urlDecode False . encodeUtf8)
-            urlWrapText :: Functor f => f Text -> f Text
+            urlWrapText :: Functor f => f StringType -> f Text
             urlWrapText = fmap (decodeUtf8 . urlDecode False . encodeUtf8)
             maybeBang :: Parser b -> Parser (Maybe b)
             maybeBang = noBang . optionMaybe
@@ -176,10 +177,10 @@ ucamResponseParser = do
             parsePtags WLS3 = noBang . optionMaybe . fmap urlWrapText . many1 $ (takeWhile1 . nots $ ",!") <* optionMaybe ","
             parsePtags _ = pure empty
 
-betweenBangs :: Parser Text
+betweenBangs :: Parser StringType
 betweenBangs = takeWhile1 (/= '!')
 
-kidParser :: Parser Text
+kidParser :: Parser StringType
 kidParser = fmap T.pack $ (:)
         <$> (satisfy . inClass $ "1-9")
         <*> (fmap catMaybes . A.count 7 . optionMaybe $ digit) <* (lookAhead . satisfy $ not . isDigit)
@@ -232,13 +233,13 @@ displayWLSVersion WLS1 = "1"
 displayWLSVersion WLS2 = "2"
 displayWLSVersion WLS3 = "3"
 
-textWLSVersion :: WLSVersion -> Text
+textWLSVersion :: WLSVersion -> StringType
 textWLSVersion = displayWLSVersion
 
 instance Show WLSVersion where
     show = displayWLSVersion
 
-parseWLSVersion :: Text -> Maybe WLSVersion
+parseWLSVersion :: StringType -> Maybe WLSVersion
 parseWLSVersion = maybeResult . parse wlsVersionParser
 
 wlsVersionParser :: Parser WLSVersion
@@ -252,7 +253,7 @@ boolToYN :: IsString a => Bool -> a
 boolToYN True = "Yes"
 boolToYN _ = "No"
 
-trueOrFalse :: Text -> Maybe Bool
+trueOrFalse :: StringType -> Maybe Bool
 trueOrFalse = maybeResult . parse ynToBool
     where
         ynToBool :: Parser Bool
@@ -268,7 +269,7 @@ displayAuthType Pwd = "pwd"
 instance Show AuthType where
     show = show . displayAuthType
 
-parseAuthType :: Text -> Maybe AuthType
+parseAuthType :: StringType -> Maybe AuthType
 parseAuthType = maybeResult . parse authTypeParser
 
 authTypeParser :: Parser AuthType
@@ -285,7 +286,7 @@ noInteract540 = mkStatus 540 "Interaction would be required but has been blocked
 unAuthAgent560 = mkStatus 560 "Application agent is not authorised"
 declined570 = mkStatus 570 "Authentication declined"
 
-parseResponseCode :: Text -> Maybe Status
+parseResponseCode :: StringType -> Maybe Status
 parseResponseCode = maybeResult . parse responseCodeParser
 
 responseCodeParser :: Parser Status
@@ -312,7 +313,7 @@ convertUcamB64 = B64 . B.map camFilter . unUcamB64
         camFilter '_' = '='
         camFilter x = x
 
-encodeUcamB64 :: Text -> UcamBase64BS
+encodeUcamB64 :: StringType -> UcamBase64BS
 encodeUcamB64 = UcamB64 . B.encode . encodeUtf8
 
 ucamB64parser :: Parser UcamBase64BS
