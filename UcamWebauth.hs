@@ -24,14 +24,14 @@ import Data.Time.RFC3339
 import Data.Time.LocalTime
 import qualified Data.ByteString.Base64 as B
 import Data.Time (UTCTime, DiffTime, secondsToDiffTime)
-import Data.Attoparsec.Text hiding (count)
-import qualified Data.Attoparsec.Text as A
+import Data.Attoparsec.ByteString.Char8 hiding (count)
+import qualified Data.Attoparsec.ByteString.Char8 as A
 import Data.Attoparsec.Combinator (lookAhead)
 import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
-import qualified Data.ByteString.Char8 as B (map, split)
-import Data.Char (isAlphaNum, isDigit)
+import qualified Data.ByteString.Char8 as B
+import Data.Char (isAlphaNum)
 import Blaze.ByteString.Builder hiding (Builder)
 import qualified Blaze.ByteString.Builder as Z
 import qualified Blaze.ByteString.Builder.Char.Utf8 as Z
@@ -46,7 +46,7 @@ import qualified Data.ByteString.Lazy as LB (ByteString)
 import Network.Wai.Handler.Warp
 
 type LBS = LB.ByteString
-type StringType = Text
+type StringType = ByteString
 
 warpit :: IO ()
 warpit = run 3000 . app =<< getCurrentTime
@@ -90,7 +90,7 @@ displayWLSResponse :: W.Request -> Z.Builder
 displayWLSResponse = maybe mempty Z.fromShow . maybeAuthCode
     where
         maybeAuthCode :: W.Request -> Maybe (AuthResponse Text)
-        maybeAuthCode = maybeResult . parse ucamResponseParser . decodeUtf8 <=< lookUpWLSResponse
+        maybeAuthCode = maybeResult . parse ucamResponseParser <=< lookUpWLSResponse
 
 lookUpWLSResponse :: W.Request -> Maybe ByteString
 lookUpWLSResponse = join . M.lookup "WLS-Response" . M.fromList . W.queryString
@@ -115,20 +115,23 @@ ucamWebauthQuery :: ToJSON a => Z.Builder -> AuthRequest a -> Header
 ucamWebauthQuery url AuthRequest{..} = (hLocation, toByteString $ url <> theQuery)
     where
         theQuery :: Z.Builder
-        theQuery = renderQueryBuilder True $ textQs <> dataQs
+        theQuery = renderQueryBuilder True $ strictQs <> textQs <> lazyQs
+        strictQs :: Query
+        strictQs = toQuery [
+                   ("ver", pure . textWLSVersion $ requestVer) :: (Text, Maybe ByteString)
+                 , ("desc", encodeUtf8 <$> requestDesc)
+                 ]
         textQs :: Query
         textQs = toQuery [
-                   ("ver" :: Text, pure . textWLSVersion $ requestVer)
-                 , ("url", pure requestUrl)
-                 , ("desc", decodeASCII <$> requestDesc)
-                 , ("aauth", fromString . show <$> requestAauth)
+                   ("url" , pure requestUrl) :: (Text, Maybe Text)
+                 , ("date", unUcamTime . ucamTime <$> requestDate)
+                 , ("aauth", T.intercalate "," . fmap displayAuthType <$> requestAauth)
                  , ("iact", boolToYN <$> requestIact)
                  , ("msg", requestMsg)
-                 , ("date", unUcamTime . ucamTime <$> requestDate)
                  , ("fail", requestFail)
                  ]
-        dataQs :: Query
-        dataQs = toQuery [
+        lazyQs :: Query
+        lazyQs = toQuery [
                    ("params", A.encode <$> requestParams) :: (Text, Maybe LBS)
                  ]
 
@@ -168,9 +171,9 @@ ucamResponseParser = do
             noBang :: Parser b -> Parser b
             noBang = (<* "!")
             urlWrap :: Functor f => f StringType -> f ByteString
-            urlWrap = fmap (urlDecode False . encodeUtf8)
+            urlWrap = fmap (urlDecode False)
             urlWrapText :: Functor f => f StringType -> f Text
-            urlWrapText = fmap (decodeUtf8 . urlDecode False . encodeUtf8)
+            urlWrapText = fmap (decodeUtf8 . urlDecode False)
             maybeBang :: Parser b -> Parser (Maybe b)
             maybeBang = noBang . optionMaybe
             parsePtags :: WLSVersion -> Parser (Maybe [Text])
@@ -181,7 +184,7 @@ betweenBangs :: Parser StringType
 betweenBangs = takeWhile1 (/= '!')
 
 kidParser :: Parser StringType
-kidParser = fmap T.pack $ (:)
+kidParser = fmap B.pack $ (:)
         <$> (satisfy . inClass $ "1-9")
         <*> (fmap catMaybes . A.count 7 . optionMaybe $ digit) <* (lookAhead . satisfy $ not . isDigit)
 
@@ -197,7 +200,7 @@ newtype UcamBase64BS = UcamB64 { unUcamB64 :: ByteString }
 data AuthRequest a = AuthRequest {
                   requestVer :: WLSVersion -- ^ The version of WLS. 1, 2 or 3.
                 , requestUrl :: Text -- ^ Full http(s) url of resource request for display
-                , requestDesc :: Maybe ASCII -- ^ ASCII description
+                , requestDesc :: Maybe Text -- ^ Description, transmitted as ASCII
                 , requestAauth :: Maybe [AuthType] -- ^ Comma delimited sequence of text tokens representing satisfactory authentication methods
                 , requestIact :: Maybe Bool -- ^ A token (Yes/No). Yes requires re-authentication. No required no re-authentication.
                 , requestMsg :: Maybe Text -- ^ Why is authentication being requested?
@@ -267,7 +270,7 @@ displayAuthType :: IsString a => AuthType -> a
 displayAuthType Pwd = "pwd"
 
 instance Show AuthType where
-    show = show . displayAuthType
+    show = displayAuthType
 
 parseAuthType :: StringType -> Maybe AuthType
 parseAuthType = maybeResult . parse authTypeParser
@@ -314,7 +317,7 @@ convertUcamB64 = B64 . B.map camFilter . unUcamB64
         camFilter x = x
 
 encodeUcamB64 :: StringType -> UcamBase64BS
-encodeUcamB64 = UcamB64 . B.encode . encodeUtf8
+encodeUcamB64 = UcamB64 . B.encode
 
 ucamB64parser :: Parser UcamBase64BS
 ucamB64parser = encodeUcamB64 <$> takeWhile1 (ors [isAlphaNum, inClass ".-_"])
@@ -326,7 +329,7 @@ ucamTime :: UTCTime -> UcamTime
 ucamTime = UcamTime . T.filter isAlphaNum . formatTimeRFC3339 . utcToZonedTime utc
 
 parseUcamTime :: UcamTime -> Maybe UTCTime
-parseUcamTime = join . maybeResult . parse utcTimeParser . unUcamTime
+parseUcamTime = join . maybeResult . parse utcTimeParser . encodeUtf8 . unUcamTime
 
 utcTimeParser :: Parser (Maybe UTCTime)
 utcTimeParser = fmap zonedTimeToUTC . parseTimeRFC3339 . unUcamTime <$> ucamTimeParser
@@ -339,7 +342,7 @@ ucamTimeParser = do
         hour <- take 2
         minute <- take 2
         sec <- take 2 <* "Z"
-        return . UcamTime . mconcat $ [year, "-", month, "-", day, "T", hour, ":", minute, ":", sec, "Z"]
+        return . UcamTime . decodeUtf8 . mconcat $ [year, "-", month, "-", day, "T", hour, ":", minute, ":", sec, "Z"]
 
 ravenAuth :: Z.Builder
 ravenAuth = "https://raven.cam.ac.uk/auth/authenticate.html"
