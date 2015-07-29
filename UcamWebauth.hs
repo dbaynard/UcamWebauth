@@ -312,7 +312,7 @@ ucamB64parser :: Parser UcamBase64BS
 ucamB64parser = encodeUcamB64 <$> takeWhile1 (ors [isAlphaNum, inClass ".-_"])
 
 decodeASCII :: ASCII -> Text
-decodeASCII = T.decodeASCII . unASCII
+decodeASCII = decodeUtf8 . B.filter isAlpha_ascii . unASCII
 
 ucamTime :: UTCTime -> UcamTime
 ucamTime = UcamTime . T.filter isAlphaNum . formatTimeRFC3339 . utcToZonedTime utc
