@@ -47,10 +47,10 @@ type LBS = LB.ByteString
 type StringType = ByteString
 
 warpit :: IO ()
-warpit = run 3000 . app =<< getCurrentTime
+warpit = run 3000 . application =<< getCurrentTime
 
-app :: UTCTime -> Application
-app time req response = case pathInfo req of
+application :: UTCTime -> Application
+application time req response = case pathInfo req of
     ["foo", "bar"] -> response $ responseBuilder
         status200
         [("Content-Type", "text/plain")]
@@ -105,7 +105,7 @@ ucamWebauthHello params time = AuthRequest {
                 , ucamQMsg = Just "This is a private resource, or something."
                 , ucamQParams = params
                 , ucamQDate = pure time
-                , ucamQFail = pure True
+                , ucamQFail = pure False
                 }
 
 ucamWebauthQuery :: ToJSON a => Z.Builder -> AuthRequest a -> Header
@@ -143,14 +143,13 @@ ucamResponseParser = do
         ucamAIssue <- noBang $ fromMaybe ancientUTCTime <$> utcTimeParser
         ucamAId <- noBang . urlWrapText $ betweenBangs
         ucamAUrl <- noBang . urlWrapText $ betweenBangs
-        ucamAPrincipal <- maybeBang . urlWrapText $ betweenBangs
+        ucamAPrincipal <- parsePrincipal ucamAStatus
         ucamAPtags <- parsePtags ucamAVer
         ucamAAuth <- noBang . optionMaybe $ authTypeParser
-        ucamASso <- noBang . optionMaybe $ authTypeParser `sepBy1` ","
+        ucamASso <- parseSso ucamAStatus ucamAAuth
         ucamALife <- noBang . optionMaybe . fmap secondsToDiffTime $ decimal
         ucamAParams <- A.decodeStrict . B.decodeLenient <$> noBang betweenBangs
-        ucamAKid <- maybeBang . urlWrap $ kidParser
-        ucamASig <- optionMaybe ucamB64parser
+        (ucamAKid, ucamASig) <- parseKidSig ucamAStatus
         return AuthResponse{..}
         where
             noBang :: Parser b -> Parser b
@@ -164,6 +163,17 @@ ucamResponseParser = do
             parsePtags :: WLSVersion -> Parser (Maybe [Text])
             parsePtags WLS3 = noBang . optionMaybe . fmap urlWrapText . many1 $ (takeWhile1 . nots $ ",!") <* optionMaybe ","
             parsePtags _ = pure empty
+            parsePrincipal :: Status -> Parser (Maybe Text)
+            parsePrincipal (statusCode -> 200) = maybeBang . urlWrapText $ betweenBangs
+            parsePrincipal _ = noBang . pure $ empty
+            parseSso :: Status -> Maybe AuthType -> Parser (Maybe [AuthType])
+            parseSso (statusCode -> 200) Nothing = noBang . fmap pure $ authTypeParser `sepBy1` ","
+            parseSso _ _ = noBang . pure $ empty
+            parseKidSig :: Status -> Parser (Maybe StringType, Maybe UcamBase64BS)
+            parseKidSig (statusCode -> 200) = curry (pure *** pure)
+                                       <$> noBang kidParser
+                                       <*> ucamB64parser
+            parseKidSig _ = (,) <$> noBang (optionMaybe kidParser) <*> optionMaybe ucamB64parser
 
 betweenBangs :: Parser StringType
 betweenBangs = takeWhile1 (/= '!')
