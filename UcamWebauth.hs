@@ -8,7 +8,7 @@ https://raven.cam.ac.uk/project/waa2wls-protocol.txt
 -}
 
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module UcamWebauth (
     module UcamWebauth
@@ -63,11 +63,11 @@ app time req sendResponse = case pathInfo req of
     ["foo", "query"] -> sendResponse $ responseBuilder
         status200
         [("Content-Type", "text/plain")]
-        (maybe mempty (Z.fromText . decodeUtf8) . join . M.lookup "WLS-Response" . M.fromList . W.queryString $ req)
+        (displayWLSResponse req)
     ["foo", "requestHeaders"] -> sendResponse $ responseBuilder
         status200
         [("Content-Type", "text/plain")]
-        (fromString . show . W.requestHeaders $ req)
+        (Z.fromShow . W.requestHeaders $ req)
     ["foo", "authenticate"] -> sendResponse $ responseBuilder
         seeOther303
         [("Content-Type", "text/plain"), ucamWebauthQuery ravenAuth . ucamWebauthHello (Just "This is 100% of the data! And it’s really quite cool" :: Maybe Text) $ time]
@@ -80,6 +80,19 @@ app time req sendResponse = case pathInfo req of
         status200
         [("Content-Type", "text/plain")]
         (fromByteString "You requested something else")
+
+
+displayWLSQuery :: W.Request -> Z.Builder
+displayWLSQuery = maybe mempty Z.fromShow . lookUpWLSResponse
+
+displayWLSResponse :: W.Request -> Z.Builder
+displayWLSResponse = maybe mempty Z.fromShow . maybeAuthCode
+    where
+        maybeAuthCode :: W.Request -> Maybe (AuthResponse Text)
+        maybeAuthCode = maybeResult . parse ucamResponseParser . decodeUtf8 <=< lookUpWLSResponse
+
+lookUpWLSResponse :: W.Request -> Maybe ByteString
+lookUpWLSResponse = join . M.lookup "WLS-Response" . M.fromList . W.queryString
 
 {-|
   Produce the request to the authentication server as a response
