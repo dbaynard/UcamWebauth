@@ -50,32 +50,32 @@ warpit :: IO ()
 warpit = run 3000 . app =<< getCurrentTime
 
 app :: UTCTime -> Application
-app time req sendResponse = case pathInfo req of
-    ["foo", "bar"] -> sendResponse $ responseBuilder
+app time req response = case pathInfo req of
+    ["foo", "bar"] -> response $ responseBuilder
         status200
         [("Content-Type", "text/plain")]
         (fromByteString "You requested /foo/bar")
-    ["foo", "rawquery"] -> sendResponse $ responseBuilder
+    ["foo", "rawquery"] -> response $ responseBuilder
         status200
         [("Content-Type", "text/plain")]
         (fromByteString . rawQueryString $ req)
-    ["foo", "query"] -> sendResponse $ responseBuilder
+    ["foo", "query"] -> response $ responseBuilder
         status200
         [("Content-Type", "text/plain")]
         (displayWLSResponse req)
-    ["foo", "queryR"] -> sendResponse $ responseBuilder
+    ["foo", "queryR"] -> response $ responseBuilder
         status200
         [("Content-Type", "text/plain")]
         (displayWLSQuery req)
-    ["foo", "requestHeaders"] -> sendResponse $ responseBuilder
+    ["foo", "requestHeaders"] -> response $ responseBuilder
         status200
         [("Content-Type", "text/plain")]
         (Z.fromShow . W.requestHeaders $ req)
-    ["foo", "authenticate"] -> sendResponse $ responseBuilder
+    ["foo", "authenticate"] -> response $ responseBuilder
         seeOther303
         [("Content-Type", "text/plain"), ucamWebauthQuery ravenAuth . ucamWebauthHello (Just "This is 100% of the data! And it’s really quite cool" :: Maybe Text) $ time]
         mempty
-    _ -> sendResponse $ responseBuilder
+    _ -> response $ responseBuilder
         status200
         [("Content-Type", "text/plain")]
         (fromByteString "You requested something else")
@@ -97,15 +97,15 @@ lookUpWLSResponse = join . M.lookup "WLS-Response" . M.fromList . W.queryString
 -}
 ucamWebauthHello :: ToJSON a => Maybe a -> UTCTime -> AuthRequest a
 ucamWebauthHello params time = AuthRequest {
-                  requestVer = WLS3
-                , requestUrl = "http://localhost:3000/foo/query"
-                , requestDesc = Just "This is a sample; it’s rather excellent!"
-                , requestAauth = Nothing
-                , requestIact = Nothing
-                , requestMsg = Just "This is a private resource, or something."
-                , requestParams = params
-                , requestDate = pure time
-                , requestFail = Just "Failure to launch"
+                  ucamQVer = WLS3
+                , ucamQUrl = "http://localhost:3000/foo/query"
+                , ucamQDesc = Just "This is a sample; it’s rather excellent!"
+                , ucamQAauth = Nothing
+                , ucamQIact = Nothing
+                , ucamQMsg = Just "This is a private resource, or something."
+                , ucamQParams = params
+                , ucamQDate = pure time
+                , ucamQFail = Just "Failure to launch"
                 }
 
 ucamWebauthQuery :: ToJSON a => Z.Builder -> AuthRequest a -> Header
@@ -115,21 +115,21 @@ ucamWebauthQuery url AuthRequest{..} = (hLocation, toByteString $ url <> theQuer
         theQuery = renderQueryBuilder True $ strictQs <> textQs <> lazyQs
         strictQs :: Query
         strictQs = toQuery [
-                   ("ver", pure . textWLSVersion $ requestVer) :: (Text, Maybe ByteString)
-                 , ("desc", encodeUtf8 <$> requestDesc)
+                   ("ver", pure . textWLSVersion $ ucamQVer) :: (Text, Maybe ByteString)
+                 , ("desc", encodeUtf8 <$> ucamQDesc)
                  ]
         textQs :: Query
         textQs = toQuery [
-                   ("url" , pure requestUrl) :: (Text, Maybe Text)
-                 , ("date", unUcamTime . ucamTime <$> requestDate)
-                 , ("aauth", T.intercalate "," . fmap displayAuthType <$> requestAauth)
-                 , ("iact", boolToYN <$> requestIact)
-                 , ("msg", requestMsg)
-                 , ("fail", requestFail)
+                   ("url" , pure ucamQUrl) :: (Text, Maybe Text)
+                 , ("date", unUcamTime . ucamTime <$> ucamQDate)
+                 , ("aauth", T.intercalate "," . fmap displayAuthType <$> ucamQAauth)
+                 , ("iact", boolToYN <$> ucamQIact)
+                 , ("msg", ucamQMsg)
+                 , ("fail", ucamQFail)
                  ]
         lazyQs :: Query
         lazyQs = toQuery [
-                   ("params", L.encode . A.encode <$> requestParams) :: (Text, Maybe LBS)
+                   ("params", L.encode . A.encode <$> ucamQParams) :: (Text, Maybe LBS)
                  ]
 
 {-|
@@ -137,20 +137,20 @@ ucamWebauthQuery url AuthRequest{..} = (hLocation, toByteString $ url <> theQuer
 -}
 ucamResponseParser :: FromJSON a => Parser (AuthResponse a)
 ucamResponseParser = do
-        responseVer <- noBang wlsVersionParser
-        responseStatus <- noBang responseCodeParser
-        responseMsg <- maybeBang . urlWrapText $ betweenBangs
-        responseIssue <- noBang $ fromMaybe ancientUTCTime <$> utcTimeParser
-        responseId <- noBang . urlWrapText $ betweenBangs
-        responseUrl <- noBang . urlWrapText $ betweenBangs
-        responsePrincipal <- maybeBang . urlWrapText $ betweenBangs
-        responsePtags <- parsePtags responseVer
-        responseAuth <- noBang . optionMaybe $ authTypeParser
-        responseSso <- noBang . optionMaybe $ authTypeParser `sepBy1` ","
-        responseLife <- noBang . optionMaybe . fmap secondsToDiffTime $ decimal
-        responseParams <- A.decodeStrict . B.decodeLenient <$> noBang betweenBangs
-        responseKid <- maybeBang . urlWrap $ kidParser
-        responseSig <- optionMaybe ucamB64parser
+        ucamAVer <- noBang wlsVersionParser
+        ucamAStatus <- noBang responseCodeParser
+        ucamAMsg <- maybeBang . urlWrapText $ betweenBangs
+        ucamAIssue <- noBang $ fromMaybe ancientUTCTime <$> utcTimeParser
+        ucamAId <- noBang . urlWrapText $ betweenBangs
+        ucamAUrl <- noBang . urlWrapText $ betweenBangs
+        ucamAPrincipal <- maybeBang . urlWrapText $ betweenBangs
+        ucamAPtags <- parsePtags ucamAVer
+        ucamAAuth <- noBang . optionMaybe $ authTypeParser
+        ucamASso <- noBang . optionMaybe $ authTypeParser `sepBy1` ","
+        ucamALife <- noBang . optionMaybe . fmap secondsToDiffTime $ decimal
+        ucamAParams <- A.decodeStrict . B.decodeLenient <$> noBang betweenBangs
+        ucamAKid <- maybeBang . urlWrap $ kidParser
+        ucamASig <- optionMaybe ucamB64parser
         return AuthResponse{..}
         where
             noBang :: Parser b -> Parser b
@@ -183,33 +183,33 @@ newtype UcamBase64BS = UcamB64 { unUcamB64 :: ByteString }
     deriving (Show, Read, Eq, Ord, Semigroup, Monoid, IsString)
 
 data AuthRequest a = AuthRequest {
-                  requestVer :: WLSVersion -- ^ The version of WLS. 1, 2 or 3.
-                , requestUrl :: Text -- ^ Full http(s) url of resource request for display
-                , requestDesc :: Maybe Text -- ^ Description, transmitted as ASCII
-                , requestAauth :: Maybe [AuthType] -- ^ Comma delimited sequence of text tokens representing satisfactory authentication methods
-                , requestIact :: Maybe Bool -- ^ A token (Yes/No). Yes requires re-authentication. No required no re-authentication.
-                , requestMsg :: Maybe Text -- ^ Why is authentication being requested?
-                , requestParams :: Maybe a -- ^ Data to be returned to the application
-                , requestDate :: Maybe UTCTime -- ^ RFC 3339 representation of application’s time
-                , requestFail :: Maybe Text -- ^ Error token
+                  ucamQVer :: WLSVersion -- ^ The version of WLS. 1, 2 or 3.
+                , ucamQUrl :: Text -- ^ Full http(s) url of resource request for display
+                , ucamQDesc :: Maybe Text -- ^ Description, transmitted as ASCII
+                , ucamQAauth :: Maybe [AuthType] -- ^ Comma delimited sequence of text tokens representing satisfactory authentication methods
+                , ucamQIact :: Maybe Bool -- ^ A token (Yes/No). Yes requires re-authentication. No required no re-authentication.
+                , ucamQMsg :: Maybe Text -- ^ Why is authentication being requested?
+                , ucamQParams :: Maybe a -- ^ Data to be returned to the application
+                , ucamQDate :: Maybe UTCTime -- ^ RFC 3339 representation of application’s time
+                , ucamQFail :: Maybe Text -- ^ Error token
                 }
     deriving (Show, Eq, Ord)
 
 data AuthResponse a = AuthResponse {
-                  responseVer :: WLSVersion -- ^ The version of WLS. 1, 2 or 3, <= the request
-                , responseStatus :: Status -- ^ 3 digit status code (200 is success)
-                , responseMsg :: Maybe Text -- ^ The status, for users
-                , responseIssue :: UTCTime -- ^ RFC 3339 representation of response’s time
-                , responseId :: Text -- ^ Not unguessable identifier, id + issue are unique
-                , responseUrl :: Text -- ^ Same as request
-                , responsePrincipal :: Maybe Text -- ^ Identity of authenticated user. Must be present if responseStatus is 200, otherwise must be Nothing
-                , responsePtags :: Maybe [Text] -- ^ Comma separated attributes of principal. Optional in version 3, must be Nothing otherwise.
-                , responseAuth :: Maybe AuthType -- ^ Authentication type if successful, else Nothing
-                , responseSso :: Maybe [AuthType] -- ^ Comma separated list of previous authentications. Required if responseAuth is Nothing.
-                , responseLife :: Maybe DiffTime -- ^ Remaining lifetime in seconds of application
-                , responseParams :: Maybe a -- ^ A copy of the params from the request
-                , responseKid :: Maybe ByteString -- ^ RSA key identifier. Must be a string of 1–8 characters, chosen from digits 0–9, with no leading 0, i.e. [1-9][0-9]{0,7}
-                , responseSig :: Maybe UcamBase64BS -- ^ Required if status is 200, otherwise Nothing. Public key signature of everything up to kid, using the private key identified by kid, the SHA-1 algorithm and RSASSA-PKCS1-v1_5 (PKCS #1 v2.1 RFC 3447), encoded using the base64 scheme (RFC 1521) but with "-._" replacing "+/="
+                  ucamAVer :: WLSVersion -- ^ The version of WLS. 1, 2 or 3, <= the request
+                , ucamAStatus :: Status -- ^ 3 digit status code (200 is success)
+                , ucamAMsg :: Maybe Text -- ^ The status, for users
+                , ucamAIssue :: UTCTime -- ^ RFC 3339 representation of response’s time
+                , ucamAId :: Text -- ^ Not unguessable identifier, id + issue are unique
+                , ucamAUrl :: Text -- ^ Same as request
+                , ucamAPrincipal :: Maybe Text -- ^ Identity of authenticated user. Must be present if ucamAStatus is 200, otherwise must be Nothing
+                , ucamAPtags :: Maybe [Text] -- ^ Comma separated attributes of principal. Optional in version 3, must be Nothing otherwise.
+                , ucamAAuth :: Maybe AuthType -- ^ Authentication type if successful, else Nothing
+                , ucamASso :: Maybe [AuthType] -- ^ Comma separated list of previous authentications. Required if ucamAAuth is Nothing.
+                , ucamALife :: Maybe DiffTime -- ^ Remaining lifetime in seconds of application
+                , ucamAParams :: Maybe a -- ^ A copy of the params from the request
+                , ucamAKid :: Maybe ByteString -- ^ RSA key identifier. Must be a string of 1–8 characters, chosen from digits 0–9, with no leading 0, i.e. [1-9][0-9]{0,7}
+                , ucamASig :: Maybe UcamBase64BS -- ^ Required if status is 200, otherwise Nothing. Public key signature of everything up to kid, using the private key identified by kid, the SHA-1 algorithm and RSASSA-PKCS1-v1_5 (PKCS #1 v2.1 RFC 3447), encoded using the base64 scheme (RFC 1521) but with "-._" replacing "+/="
                 }
     deriving (Show, Eq, Ord)
 
