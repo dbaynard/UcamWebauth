@@ -15,6 +15,7 @@ module UcamWebauth (
 )   where
 
 import Import.NoFoundation hiding (take)
+import Control.Applicative (empty)
 import Network.HTTP.Types
 import Network.Wai
 import qualified Network.Wai as W
@@ -22,15 +23,18 @@ import Network.Wai.Parse
 import Data.Time.RFC3339
 import Data.Time.LocalTime
 import qualified Data.ByteString.Base64 as B
-import Data.Time (UTCTime, DiffTime)
-import Data.Attoparsec.Text
+import Data.Time (UTCTime, DiffTime, secondsToDiffTime)
+import Data.Attoparsec.Text hiding (count)
+import qualified Data.Attoparsec.Text as A
+import Data.Attoparsec.Combinator (lookAhead)
 import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
-import qualified Data.ByteString.Char8 as B (map)
-import Data.Char (isAlphaNum)
+import qualified Data.ByteString.Char8 as B (map, split)
+import Data.Char (isAlphaNum, isDigit)
 import Blaze.ByteString.Builder hiding (Builder)
 import qualified Blaze.ByteString.Builder as Z
+import qualified Blaze.ByteString.Builder.Char.Utf8 as Z
 import Data.IntMap.Strict (IntMap)
 import qualified Data.IntMap.Strict as I
 import Data.Aeson (ToJSON, FromJSON)
@@ -66,6 +70,10 @@ app time req sendResponse = case pathInfo req of
         seeOther303
         [("Content-Type", "text/plain"), ucamWebauthQuery ravenAuth . ucamWebauthHello $ time]
         mempty
+    ["foo", "sampleResponse"] -> sendResponse $ responseBuilder
+        status200
+        [("Content-Type", "text/plain")]
+        (Z.fromText sampleResponse)
     _ -> sendResponse $ responseBuilder
         status200
         [("Content-Type", "text/plain")]
@@ -111,6 +119,43 @@ ucamWebauthQuery url AuthRequest{..} = (hLocation, toByteString $ url <> theQuer
 {-|
   Parse the response to the authentication server as a request
 -}
+sampleResponse2 :: ByteString
+sampleResponse2 = "1!410!!20150728T232246Z!1438125766-850-13!http://localhost:3000/foo/query!!!!!\"Haha, some data%21\"!2!OlOHvAuTphMkVERNJNfdGINbPEsSWzXt3.ZgkQDEC094UPvs6FGAKfhyGkzIvy7VHqYA29kni5VqUaHV4VAYlNWNB6vdYqd3DQywvW5otpG.JeERiRXZbi6-5N2Inbg9PEDvzyfthzPotpfMZpfw85pLPqVhjsH.M9bdg0wfUv8_"
+
+sampleResponse :: Text
+sampleResponse = "3!200!!20150728T234914Z!1438127354-62345-8!http://localhost:3000/foo/query!db506!current!pwd!!36000!\"Haha, some data%21\"!2!VWpePKPTygBm4tgYB8ZxwMCAZI2x-njD6bLZw3PaSWJWqXQJUXmroT2Q5Gjzzi2TpmHQWRPulSVPliDsvzdekVtkc6XYsQX1Krq59ml5iwI.ZwtqbHM9UjKN1qdbwa7A72apkt641k9TsXLMBi3u8ngcqoUu1rqD-TUYk4TrP.s_"
+
+sampleResponse1 :: Text
+sampleResponse1 = "3!200!!20150729T004428Z!1438130663-14168-14!http://localhost:3000/foo/query!db506!current!!pwd!32691!\"Haha, some data%21\"!2!a6WyPwaDvKmqs40wl68N1k--GcYXZJHROcD0Vh474qrbY4l5rKBFRXuDtFA-1mH9wRsKywkbjTCfayNzMq51oSzZquyGDCr6dGE7Jj6iFnYQ16FwVaV9FZN4l6ypk-HAeBIODBm2JG06.gQXim0litt5CgHXYnpNDhUe89geuxY_"
+
+parseUcamResponse' :: ByteString -> [ByteString]
+parseUcamResponse' = fmap (urlDecode False) . B.split '!'
+
+ucamResponseParser :: Parser AuthResponse
+ucamResponseParser = do
+        responseVer <- wlsVersionParser <* "!"
+        responseStatus <- responseCodeParser <* "!"
+        responseMsg <- optionMaybe betweenBangs <* "!"
+        responseIssue <- fromMaybe ancientUTCTime <$> utcTimeParser <* "!"
+        responseId <- betweenBangs <* "!"
+        responseUrl <- betweenBangs <* "!"
+        responsePrincipal <- optionMaybe betweenBangs <* "!"
+        responsePtags <- (optionMaybe . many1) ((takeWhile1 . nots $ ",!") <* optionMaybe ",") <* "!"
+        responseAuth <- optionMaybe authTypeParser <* "!"
+        responseSso <- optionMaybe (authTypeParser `sepBy1` ",") <* "!"
+        responseLife <- optionMaybe (secondsToDiffTime <$> decimal) <* "!"
+        responseParams <- A.decode <$> betweenBangs <* "!"
+        responseKid <- optionMaybe kidParser <* "!"
+        responseSig <- optionMaybe ucamB64parser
+        return AuthResponse{..}
+
+betweenBangs :: Parser Text
+betweenBangs = takeWhile1 (/= '!')
+
+kidParser :: Parser Text
+kidParser = fmap T.pack $ (:)
+        <$> (satisfy . inClass $ "1-9")
+        <*> (fmap catMaybes . A.count 7 . optionMaybe $ digit) <* (lookAhead . satisfy $ not . isDigit)
 
 newtype ASCII = ASCII { unASCII :: ByteString }
     deriving (Show, Read, Eq, Ord, Semigroup, Monoid, IsString)
@@ -133,7 +178,7 @@ data AuthRequest = forall a . ToJSON a => AuthRequest {
                 , requestFail :: Maybe Text -- ^ Error token
                 }
 
-data AuthResponse a = AuthResponse {
+data AuthResponse = forall a . ToJSON a => AuthResponse {
                   responseVer :: WLSVersion -- ^ The version of WLS. 1, 2 or 3, <= the request
                 , responseStatus :: Status -- ^ 3 digit status code (200 is success)
                 , responseMsg :: Maybe Text -- ^ The status, for users
@@ -149,7 +194,6 @@ data AuthResponse a = AuthResponse {
                 , responseKid :: Maybe Text -- ^ RSA key identifier. Must be a string of 1–8 characters, chosen from digits 0–9, with no leading 0, i.e. [1-9][0-9]{0,7}
                 , responseSig :: Maybe UcamBase64BS -- ^ Required if status is 200, otherwise Nothing. Public key signature of everything up to kid, using the private key identified by kid, the SHA-1 algorithm and RSASSA-PKCS1-v1_5 (PKCS #1 v2.1 RFC 3447), encoded using the base64 scheme (RFC 1521) but with "-._" replacing "+/="
                 }
-    deriving (Show, Eq, Ord)
 
 data WLSVersion = WLS1 | WLS2 | WLS3
     deriving (Read, Eq, Ord, Enum, Bounded)
@@ -187,7 +231,19 @@ trueOrFalse = maybeResult . parse ynToBool
              <|> ("N" <|> "n") *> "o" *> pure False
 
 data AuthType = Pwd -- ^ pwd: Username and password
-    deriving (Show, Read, Eq, Ord, Enum, Bounded)
+    deriving (Read, Eq, Ord, Enum, Bounded)
+
+displayAuthType :: IsString a => AuthType -> a
+displayAuthType Pwd = "pwd"
+
+instance Show AuthType where
+    show = show . displayAuthType
+
+parseAuthType :: Text -> Maybe AuthType
+parseAuthType = maybeResult . parse authTypeParser
+
+authTypeParser :: Parser AuthType
+authTypeParser = "pwd" *> pure Pwd
 
 responseCodes :: IntMap Status
 responseCodes = I.fromList . fmap (statusCode &&& id) $ [ok200, gone410, noAuth510, protoErr520, paramErr530, noInteract540, unAuthAgent560, declined570]
@@ -201,7 +257,10 @@ unAuthAgent560 = mkStatus 560 "Application agent is not authorised"
 declined570 = mkStatus 570 "Authentication declined"
 
 parseResponseCode :: Text -> Maybe Status
-parseResponseCode = flip lookup responseCodes <=< maybeResult . parse decimal
+parseResponseCode = maybeResult . parse responseCodeParser
+
+responseCodeParser :: Parser Status
+responseCodeParser = fromMaybe badRequest400 . flip lookup responseCodes <$> decimal
 
 newtype UcamTime = UcamTime { unUcamTime :: Text }
     deriving (Show, Read, Eq, Ord, Semigroup, Monoid, IsString)
@@ -224,8 +283,11 @@ convertUcamB64 = B64 . B.map camFilter . unUcamB64
         camFilter '_' = '='
         camFilter x = x
 
-encodeB64 :: Text -> Base64BS
-encodeB64 = B64 . B.encode . encodeUtf8
+encodeUcamB64 :: Text -> UcamBase64BS
+encodeUcamB64 = UcamB64 . B.encode . encodeUtf8
+
+ucamB64parser :: Parser UcamBase64BS
+ucamB64parser = encodeUcamB64 <$> takeWhile1 (ors [isAlphaNum, inClass ".-_"])
 
 decodeASCII :: ASCII -> Text
 decodeASCII = T.decodeASCII . unASCII
@@ -234,7 +296,10 @@ ucamTime :: UTCTime -> UcamTime
 ucamTime = UcamTime . T.filter isAlphaNum . formatTimeRFC3339 . utcToZonedTime utc
 
 parseUcamTime :: UcamTime -> Maybe UTCTime
-parseUcamTime = fmap zonedTimeToUTC . parseTimeRFC3339 . unUcamTime <=< maybeResult . parse ucamTimeParser . unUcamTime
+parseUcamTime = join . maybeResult . parse utcTimeParser . unUcamTime
+
+utcTimeParser :: Parser (Maybe UTCTime)
+utcTimeParser = fmap zonedTimeToUTC . parseTimeRFC3339 . unUcamTime <$> ucamTimeParser
 
 ucamTimeParser :: Parser UcamTime
 ucamTimeParser = do
@@ -248,3 +313,24 @@ ucamTimeParser = do
 
 ravenAuth :: Z.Builder
 ravenAuth = "https://raven.cam.ac.uk/auth/authenticate.html"
+
+optionMaybe :: Parser a -> Parser (Maybe a)
+optionMaybe = option empty . fmap pure
+
+ands :: (Applicative f, Traversable t, MonoFoldable (t a), Element (t a) ~ Bool)
+    => t (f a) -> f Bool
+ands = fmap and . sequenceA
+
+ors :: (Applicative f, Traversable t, MonoFoldable (t a), Element (t a) ~ Bool)
+    => t (f a) -> f Bool
+ors = fmap or . sequenceA
+
+nots :: String -> Char -> Bool
+nots = ands . fmap (/=)
+
+oneOf :: (Eq a, Traversable t, MonoFoldable (t Bool), Element (t Bool) ~ Bool)
+    => t a -> a -> Bool
+oneOf = ors . fmap (==)
+
+ancientUTCTime :: UTCTime
+ancientUTCTime = UTCTime (ModifiedJulianDay 0) 0
