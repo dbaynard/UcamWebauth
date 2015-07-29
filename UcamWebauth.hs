@@ -86,7 +86,7 @@ displayWLSQuery = maybe mempty Z.fromShow . lookUpWLSResponse
 displayWLSResponse :: W.Request -> Z.Builder
 displayWLSResponse = maybe mempty Z.fromShow . maybeAuthCode
     where
-        maybeAuthCode :: W.Request -> Maybe (AuthResponse Text)
+        maybeAuthCode :: W.Request -> Maybe (SignedAuthResponse Text)
         maybeAuthCode = validateAuthResponse <=< maybeResult . parse ucamResponseParser <=< lookUpWLSResponse
 
 lookUpWLSResponse :: W.Request -> Maybe ByteString
@@ -135,23 +135,27 @@ ucamWebauthQuery url AuthRequest{..} = (hLocation, toByteString $ url <> theQuer
 {-|
   Parse the response to the authentication server as a request
 -}
-ucamResponseParser :: FromJSON a => Parser (AuthResponse a)
+ucamResponseParser :: forall a . FromJSON a => Parser (SignedAuthResponse a)
 ucamResponseParser = do
-        ucamAVer <- noBang wlsVersionParser
-        ucamAStatus <- noBang responseCodeParser
-        ucamAMsg <- maybeBang . urlWrapText $ betweenBangs
-        ucamAIssue <- noBang $ fromMaybe ancientUTCTime <$> utcTimeParser
-        ucamAId <- noBang . urlWrapText $ betweenBangs
-        ucamAUrl <- noBang . urlWrapText $ betweenBangs
-        ucamAPrincipal <- parsePrincipal ucamAStatus
-        ucamAPtags <- parsePtags ucamAVer
-        ucamAAuth <- noBang . optionMaybe $ authTypeParser
-        ucamASso <- parseSso ucamAStatus ucamAAuth
-        ucamALife <- noBang . optionMaybe . fmap secondsToDiffTime $ decimal
-        ucamAParams <- A.decodeStrict . B.decodeLenient <$> noBang betweenBangs
+        (ucamAToSign, ucamAResponse@AuthResponse{..}) <- noBang . match $ ucamAuthResponseParser
         (ucamAKid, ucamASig) <- parseKidSig ucamAStatus
-        return AuthResponse{..}
+        return SignedAuthResponse{..}
         where
+            ucamAuthResponseParser :: Parser (AuthResponse a)
+            ucamAuthResponseParser = do
+                    ucamAVer <- noBang wlsVersionParser
+                    ucamAStatus <- noBang responseCodeParser
+                    ucamAMsg <- maybeBang . urlWrapText $ betweenBangs
+                    ucamAIssue <- noBang $ fromMaybe ancientUTCTime <$> utcTimeParser
+                    ucamAId <- noBang . urlWrapText $ betweenBangs
+                    ucamAUrl <- noBang . urlWrapText $ betweenBangs
+                    ucamAPrincipal <- parsePrincipal ucamAStatus
+                    ucamAPtags <- parsePtags ucamAVer
+                    ucamAAuth <- noBang . optionMaybe $ authTypeParser
+                    ucamASso <- parseSso ucamAStatus ucamAAuth
+                    ucamALife <- noBang . optionMaybe . fmap secondsToDiffTime $ decimal
+                    ucamAParams <- A.decodeStrict . B.decodeLenient <$> betweenBangs
+                    return AuthResponse{..}
             noBang :: Parser b -> Parser b
             noBang = (<* "!")
             urlWrap :: Functor f => f StringType -> f ByteString
@@ -186,8 +190,8 @@ kidParser = fmap B.pack $ (:)
 {-|
   Validate the Authentication Response
 -}
-validateAuthResponse :: AuthResponse a -> Maybe (AuthResponse a)
-validateAuthResponse x@AuthResponse{..} = do
+validateAuthResponse :: SignedAuthResponse a -> Maybe (SignedAuthResponse a)
+validateAuthResponse x@SignedAuthResponse{..} = do
         guard . validateKid =<< ucamAKid
         return x
 
@@ -219,6 +223,14 @@ data AuthRequest a = AuthRequest {
                 }
     deriving (Show, Eq, Ord)
 
+data SignedAuthResponse a = SignedAuthResponse {
+                  ucamAResponse :: AuthResponse a -- ^ The bit of the response that is signed
+                , ucamAToSign :: ByteString
+                , ucamAKid :: Maybe ByteString -- ^ RSA key identifier. Must be a string of 1–8 characters, chosen from digits 0–9, with no leading 0, i.e. [1-9][0-9]{0,7}
+                , ucamASig :: Maybe UcamBase64BS -- ^ Required if status is 200, otherwise Nothing. Public key signature of everything up to kid, using the private key identified by kid, the SHA-1 algorithm and RSASSA-PKCS1-v1_5 (PKCS #1 v2.1 RFC 3447), encoded using the base64 scheme (RFC 1521) but with "-._" replacing "+/="
+                }
+    deriving (Show, Eq, Ord)
+
 data AuthResponse a = AuthResponse {
                   ucamAVer :: WLSVersion -- ^ The version of WLS. 1, 2 or 3, <= the request
                 , ucamAStatus :: Status -- ^ 3 digit status code (200 is success)
@@ -232,8 +244,6 @@ data AuthResponse a = AuthResponse {
                 , ucamASso :: Maybe [AuthType] -- ^ Comma separated list of previous authentications. Required if ucamAAuth is Nothing.
                 , ucamALife :: Maybe DiffTime -- ^ Remaining lifetime in seconds of application
                 , ucamAParams :: Maybe a -- ^ A copy of the params from the request
-                , ucamAKid :: Maybe ByteString -- ^ RSA key identifier. Must be a string of 1–8 characters, chosen from digits 0–9, with no leading 0, i.e. [1-9][0-9]{0,7}
-                , ucamASig :: Maybe UcamBase64BS -- ^ Required if status is 200, otherwise Nothing. Public key signature of everything up to kid, using the private key identified by kid, the SHA-1 algorithm and RSASSA-PKCS1-v1_5 (PKCS #1 v2.1 RFC 3447), encoded using the base64 scheme (RFC 1521) but with "-._" replacing "+/="
                 }
     deriving (Show, Eq, Ord)
 
