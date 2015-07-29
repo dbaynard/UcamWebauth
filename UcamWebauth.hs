@@ -22,7 +22,9 @@ import qualified Network.Wai as W
 import Network.Wai.Parse
 import Data.Time.RFC3339
 import Data.Time.LocalTime
+import Data.ByteString (ByteString)
 import qualified Data.ByteString.Base64 as B
+import qualified Data.ByteString.Base64.Lazy as L
 import Data.Time (UTCTime, DiffTime, secondsToDiffTime)
 import Data.Attoparsec.ByteString.Char8 hiding (count)
 import qualified Data.Attoparsec.ByteString.Char8 as A
@@ -131,7 +133,7 @@ ucamWebauthQuery url AuthRequest{..} = (hLocation, toByteString $ url <> theQuer
                  ]
         lazyQs :: Query
         lazyQs = toQuery [
-                   ("params", A.encode <$> requestParams) :: (Text, Maybe LBS)
+                   ("params", L.encode . A.encode <$> requestParams) :: (Text, Maybe LBS)
                  ]
 
 {-|
@@ -150,7 +152,7 @@ ucamResponseParser = do
         responseAuth <- noBang . optionMaybe $ authTypeParser
         responseSso <- noBang . optionMaybe $ authTypeParser `sepBy1` ","
         responseLife <- noBang . optionMaybe . fmap secondsToDiffTime $ decimal
-        responseParams <- A.decodeStrict <$> (noBang . urlWrap) betweenBangs
+        responseParams <- A.decodeStrict . B.decodeLenient <$> noBang betweenBangs
         responseKid <- maybeBang . urlWrap $ kidParser
         responseSig <- optionMaybe ucamB64parser
         return AuthResponse{..}
