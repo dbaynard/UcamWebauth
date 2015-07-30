@@ -140,6 +140,7 @@ ucamResponseParser :: forall a . FromJSON a => Parser (SignedAuthResponse a)
 ucamResponseParser = do
         (ucamAToSign, ucamAResponse@AuthResponse{..}) <- noBang . match $ ucamAuthResponseParser
         (ucamAKid, ucamASig) <- parseKidSig ucamAStatus
+        endOfInput
         return SignedAuthResponse{..}
         where
             ucamAuthResponseParser :: Parser (AuthResponse a)
@@ -343,7 +344,7 @@ encodeUcamB64 :: StringType -> UcamBase64BS
 encodeUcamB64 = UcamB64 . B.encode
 
 ucamB64parser :: Parser UcamBase64BS
-ucamB64parser = encodeUcamB64 <$> takeWhile1 (ors [isAlphaNum, inClass ".-_"])
+ucamB64parser = encodeUcamB64 <$> takeWhile1 (ors [isAlphaNum, inClass "-._"])
 
 decodeASCII :: ASCII -> Text
 decodeASCII = decodeUtf8 . B.filter isAlpha_ascii . unASCII
