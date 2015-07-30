@@ -14,8 +14,9 @@ module UcamWebauth (
     module UcamWebauth
 )   where
 
-import Import.NoFoundation hiding (take)
+import Import.NoFoundation hiding (take, catMaybes)
 import Control.Applicative (empty)
+import Control.Error
 import Network.HTTP.Types ()
 import Network.Wai
 import qualified Network.Wai as W

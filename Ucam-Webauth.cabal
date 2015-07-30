@@ -83,6 +83,7 @@ library
                  , time
                  , timerep
                  , blaze-builder
+                 , errors
 
 executable         Ucam-Webauth
     if flag(library-only)
