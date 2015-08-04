@@ -14,41 +14,61 @@ module UcamWebauth (
     module UcamWebauth
 )   where
 
+-- Prelude
 import ClassyPrelude hiding (take, catMaybes)
+
 import Control.Applicative (empty, Alternative)
 import Control.Error
-import Network.HTTP.Types
+
+import System.IO (withFile, IOMode(..))
+
+-- Wai and http protocol
 import Network.Wai
-import qualified Network.Wai as W
+import Network.HTTP.Types
+
+-- Time
 import Data.Time.RFC3339
 import Data.Time.LocalTime
+import Data.Time (DiffTime, secondsToDiffTime, NominalDiffTime, diffUTCTime)
+
+-- Character encoding
+import Data.Char (isAlphaNum)
+
 import qualified Data.ByteString.Base64 as B
 import qualified Data.ByteString.Base64.Lazy as L
-import Data.Time (DiffTime, secondsToDiffTime, NominalDiffTime, diffUTCTime)
-import Data.Attoparsec.ByteString.Char8 hiding (count)
-import qualified Data.Attoparsec.ByteString.Char8 as A
-import Data.Attoparsec.Combinator (lookAhead)
+
 import qualified Data.Text as T
+
 import qualified Data.ByteString.Char8 as B
-import Data.Char (isAlphaNum)
+
 import Blaze.ByteString.Builder hiding (Builder)
 import qualified Blaze.ByteString.Builder as Z
 import qualified Blaze.ByteString.Builder.Char.Utf8 as Z
+
+-- Parsing
+import Data.Attoparsec.Combinator (lookAhead)
+import Data.Attoparsec.ByteString.Char8 hiding (count)
+import qualified Data.Attoparsec.ByteString.Char8 as A
+
+-- Map structures
 import Data.IntMap.Strict ()
 import qualified Data.IntMap.Strict as I
 import Data.Map.Strict ()
 import qualified Data.Map.Strict as M
+
+-- JSON (Aeson)
 import Data.Aeson (ToJSON, FromJSON)
 import qualified Data.Aeson as A
 import qualified Data.ByteString.Lazy as LB (ByteString)
 
+-- Crypto
 import Crypto.PubKey.RSA.Types
 import Crypto.PubKey.RSA.PKCS15
 import Crypto.Hash.Algorithms
 import Data.X509
-import System.IO (withFile, IOMode(..))
 import Data.PEM
 
+-- Warp server
 import Network.Wai.Handler.Warp
 
 type LBS = LB.ByteString
@@ -82,7 +102,7 @@ application time req response = case pathInfo req of
     ["foo", "requestHeaders"] -> response $ responseBuilder
         status200
         [("Content-Type", "text/plain")]
-        (Z.fromShow . W.requestHeaders $ req)
+        (Z.fromShow . requestHeaders $ req)
     ["foo", "authenticate"] -> response $ responseBuilder
         seeOther303
         [("Content-Type", "text/plain"), ucamWebauthQuery ravenAuth . ucamWebauthHello (Just "This is 100% of the data! And it’s really quite cool" :: Maybe Text) $ time]
@@ -92,13 +112,13 @@ application time req response = case pathInfo req of
         [("Content-Type", "text/plain")]
         (fromByteString "You requested something else")
 
-displayWLSQuery :: W.Request -> Z.Builder
+displayWLSQuery :: Request -> Z.Builder
 displayWLSQuery = maybe mempty Z.fromShow . lookUpWLSResponse
 
-displayAuthInfo :: W.Request -> IO Z.Builder
+displayAuthInfo :: Request -> IO Z.Builder
 displayAuthInfo = displayAuthResponse <=< liftMaybe . lookUpWLSResponse
 
-displayWLSResponse :: W.Request -> IO Z.Builder
+displayWLSResponse :: Request -> IO Z.Builder
 displayWLSResponse = displayAuthResponseFull <=< liftMaybe . lookUpWLSResponse
 
 displayAuthResponseFull :: ByteString -> IO Z.Builder
@@ -113,8 +133,8 @@ maybeAuthInfo = extractAuthInfo . ucamAResponse <=< maybeAuthCode
 maybeAuthCode :: (MonadIO m, MonadPlus m) => ByteString -> m (SignedAuthResponse Text)
 maybeAuthCode = validateAuthResponse <=< liftMaybe . maybeResult . flip feed "" . parse ucamResponseParser
 
-lookUpWLSResponse :: W.Request -> Maybe ByteString
-lookUpWLSResponse = join . M.lookup "WLS-Response" . M.fromList . W.queryString
+lookUpWLSResponse :: Request -> Maybe ByteString
+lookUpWLSResponse = join . M.lookup "WLS-Response" . M.fromList . queryString
 
 {-|
   Produce the request to the authentication server as a response
