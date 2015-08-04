@@ -185,8 +185,8 @@ ucamResponseParser = do
             urlWrapText = fmap (decodeUtf8 . urlDecode False)
             maybeBang :: Parser b -> Parser (Maybe b)
             maybeBang = noBang . optionMaybe
-            parsePtags :: WLSVersion -> Parser (Maybe [Text])
-            parsePtags WLS3 = noBang . optionMaybe . fmap urlWrapText . many1 $ (takeWhile1 . nots $ ",!") <* optionMaybe ","
+            parsePtags :: WLSVersion -> Parser (Maybe [Ptag])
+            parsePtags WLS3 = noBang . optionMaybe $ ptagParser `sepBy` ","
             parsePtags _ = pure empty
             parsePrincipal :: Status -> Parser (Maybe Text)
             parsePrincipal (statusCode -> 200) = maybeBang . urlWrapText $ betweenBangs
@@ -337,7 +337,7 @@ data AuthResponse a = AuthResponse {
                 , ucamAId :: Text -- ^ Not unguessable identifier, id + issue are unique
                 , ucamAUrl :: Text -- ^ Same as request
                 , ucamAPrincipal :: Maybe Text -- ^ Identity of authenticated user. Must be present if ucamAStatus is 200, otherwise must be Nothing
-                , ucamAPtags :: Maybe [Text] -- ^ Comma separated attributes of principal. Optional in version 3, must be Nothing otherwise.
+                , ucamAPtags :: Maybe [Ptag] -- ^ Comma separated attributes of principal. Optional in version 3, must be Nothing otherwise.
                 , ucamAAuth :: Maybe AuthType -- ^ Authentication type if successful, else Nothing
                 , ucamASso :: Maybe [AuthType] -- ^ Comma separated list of previous authentications. Required if ucamAAuth is Nothing.
                 , ucamALife :: Maybe DiffTime -- ^ Remaining lifetime in seconds of application
@@ -400,6 +400,21 @@ parseAuthType = maybeResult . parse authTypeParser
 
 authTypeParser :: Parser AuthType
 authTypeParser = "pwd" *> pure Pwd
+
+data Ptag = Current -- ^ User is current member of university
+    deriving (Read, Eq, Ord, Enum, Bounded)
+
+displayPtag :: IsString a => Ptag -> a
+displayPtag Current = "current"
+
+instance Show Ptag where
+    show = displayPtag
+
+parsePtag :: StringType -> Maybe Ptag
+parsePtag = maybeResult . parse ptagParser
+
+ptagParser :: Parser Ptag
+ptagParser = "current" *> pure Current
 
 responseCodes :: IntMap Status
 responseCodes = I.fromList . fmap (statusCode &&& id) $ [ok200, gone410, noAuth510, protoErr520, paramErr530, noInteract540, unAuthAgent560, declined570]
