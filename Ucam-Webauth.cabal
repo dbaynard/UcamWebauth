@@ -36,24 +36,24 @@ library
                 RecordWildCards
 
     build-depends: base                          >= 4          && < 5
-                 , attoparsec
-                 , wai
-                 , classy-prelude                >= 0.10.2
-                 , bytestring                    >= 0.9        && < 0.11
-                 , base64-bytestring
-                 , text                          >= 0.11       && < 2.0
-                 , http-types
-                 , warp                          >= 3.0        && < 3.1
                  , aeson                         >= 0.6
-                 , unordered-containers
+                 , attoparsec
+                 , base64-bytestring
+                 , blaze-builder
+                 , bytestring                    >= 0.9        && < 0.11
+                 , classy-prelude                >= 0.10.2
                  , containers
+                 , cryptonite
+                 , errors
+                 , http-types
+                 , pem
+                 , text                          >= 0.11       && < 2.0
                  , time
                  , timerep
-                 , blaze-builder
-                 , errors
-                 , cryptonite
+                 , unordered-containers
+                 , wai
+                 , warp                          >= 3.0        && < 3.1
                  , x509
-                 , pem
 
 test-suite test
     type:              exitcode-stdio-1.0
