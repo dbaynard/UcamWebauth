@@ -84,6 +84,11 @@ library
                  , timerep
                  , blaze-builder
                  , errors
+                 , cryptonite
+                 , crypto-pubkey-types
+                 , RSA
+                 , x509
+                 , pem
 
 executable         Ucam-Webauth
     if flag(library-only)

@@ -15,7 +15,7 @@ module UcamWebauth (
 )   where
 
 import Import.NoFoundation hiding (take, catMaybes)
-import Control.Applicative (empty)
+import Control.Applicative (empty, Alternative)
 import Control.Error
 import Network.HTTP.Types ()
 import Network.Wai
@@ -42,6 +42,13 @@ import Data.Aeson ()
 import qualified Data.Aeson as A
 import qualified Data.ByteString.Lazy as LB (ByteString)
 
+import Crypto.PubKey.RSA.Types
+import qualified Crypto.Types.PubKey.RSA as R (PublicKey(PublicKey)) -- ^ This is a temporary kludge, for the RSA package
+import Codec.Crypto.RSA.Pure hiding (PublicKey)
+import Data.X509
+import System.IO (withFile, IOMode(..))
+import Data.PEM
+
 import Network.Wai.Handler.Warp
 
 type LBS = LB.ByteString
@@ -60,10 +67,10 @@ application time req response = case pathInfo req of
         status200
         [("Content-Type", "text/plain")]
         (fromByteString . rawQueryString $ req)
-    ["foo", "query"] -> response $ responseBuilder
+    ["foo", "query"] -> response . responseBuilder
         status200
         [("Content-Type", "text/plain")]
-        (displayWLSResponse req)
+        =<< displayWLSResponse req 
     ["foo", "queryR"] -> response $ responseBuilder
         status200
         [("Content-Type", "text/plain")]
@@ -84,11 +91,14 @@ application time req response = case pathInfo req of
 displayWLSQuery :: W.Request -> Z.Builder
 displayWLSQuery = maybe mempty Z.fromShow . lookUpWLSResponse
 
-displayWLSResponse :: W.Request -> Z.Builder
-displayWLSResponse = maybe mempty Z.fromShow . maybeAuthCode
-    where
-        maybeAuthCode :: W.Request -> Maybe (SignedAuthResponse Text)
-        maybeAuthCode = validateAuthResponse <=< maybeResult . parse ucamResponseParser <=< lookUpWLSResponse
+displayWLSResponse :: W.Request -> IO Z.Builder
+displayWLSResponse = displayAuthResponse <=< liftMaybe . lookUpWLSResponse
+
+displayAuthResponse :: ByteString -> IO Z.Builder
+displayAuthResponse = maybeT empty (pure . Z.fromShow) . maybeAuthCode
+
+maybeAuthCode :: (MonadIO m, MonadPlus m) => ByteString -> m (SignedAuthResponse Text)
+maybeAuthCode = validateAuthResponse <=< liftMaybe . maybeResult . flip feed "" . parse ucamResponseParser
 
 lookUpWLSResponse :: W.Request -> Maybe ByteString
 lookUpWLSResponse = join . M.lookup "WLS-Response" . M.fromList . W.queryString
@@ -192,9 +202,10 @@ kidParser = fmap B.pack $ (:)
 {-|
   Validate the Authentication Response
 -}
-validateAuthResponse :: SignedAuthResponse a -> Maybe (SignedAuthResponse a)
+validateAuthResponse :: (MonadIO m, MonadPlus m) => SignedAuthResponse a -> m (SignedAuthResponse a)
 validateAuthResponse x@SignedAuthResponse{..} = do
-        guard . validateKid =<< ucamAKid
+        guard . validateKid =<< liftMaybe ucamAKid
+        guard <=< validateSig $ x
         return x
 
 {-|
@@ -202,6 +213,33 @@ validateAuthResponse x@SignedAuthResponse{..} = do
 -}
 validateKid :: StringType -> Bool
 validateKid = flip elem ["2"]
+
+{-|
+  Validate the signature
+-}
+
+validateSig :: (MonadPlus m, MonadIO m) => SignedAuthResponse a -> m Bool
+validateSig = validateSigKey getKey 
+
+decodePubKey :: ByteString -> Maybe PublicKey
+decodePubKey = hush . f
+    where
+        f :: ByteString -> Either String PublicKey
+        f = getRSAKey . certPubKey . getCertificate <=< decodeSignedCertificate . pemContent <=< headErr "Empty list" <=< pemParseBS
+
+getKey :: (MonadIO m, Alternative m) => StringType -> m PublicKey
+getKey key = liftMaybe <=< liftIO . withFile ("pubkey" <> B.unpack key <> ".crt") ReadMode $ 
+        pure . decodePubKey <=< B.hGetContents
+
+validateSigKey :: forall m a . MonadPlus m => (StringType -> m PublicKey) -> SignedAuthResponse a -> m Bool
+validateSigKey importKey SignedAuthResponse{..} = rsaValidate . marshallPublicKey =<< importKey =<< liftMaybe ucamAKid
+    where
+        rsaValidate :: R.PublicKey -> m Bool
+        rsaValidate key = liftMaybe . hush $ rsassa_pkcs1_v1_5_verify hashSHA1 key message signature
+        message :: LBS
+        message = fromStrict ucamAToSign
+        signature :: LBS
+        signature = maybe mempty (fromStrict . decodeUcamB64) ucamASig
 
 newtype ASCII = ASCII { unASCII :: ByteString }
     deriving (Show, Read, Eq, Ord, Semigroup, Monoid, IsString)
@@ -340,8 +378,11 @@ convertUcamB64 = B64 . B.map camFilter . unUcamB64
         camFilter '_' = '='
         camFilter x = x
 
+decodeUcamB64 :: UcamBase64BS -> StringType
+decodeUcamB64 = B.decodeLenient . unB64 . convertUcamB64
+
 encodeUcamB64 :: StringType -> UcamBase64BS
-encodeUcamB64 = UcamB64 . B.encode
+encodeUcamB64 = convertB64Ucam . B64 . B.encode
 
 ucamB64parser :: Parser UcamBase64BS
 ucamB64parser = encodeUcamB64 <$> takeWhile1 (ors [isAlphaNum, inClass "-._"])
@@ -391,3 +432,13 @@ oneOf = ors . fmap (==)
 
 ancientUTCTime :: UTCTime
 ancientUTCTime = UTCTime (ModifiedJulianDay 0) 0
+
+liftMaybe :: Alternative f => Maybe a -> f a
+liftMaybe = maybe empty pure
+
+getRSAKey :: Alternative f => PubKey -> f PublicKey
+getRSAKey (PubKeyRSA x) = pure x
+getRSAKey _ = empty
+
+marshallPublicKey :: PublicKey -> R.PublicKey
+marshallPublicKey PublicKey{..} = R.PublicKey {public_size, public_n, public_e}
