@@ -106,10 +106,13 @@ lookUpWLSResponse = join . M.lookup "WLS-Response" . M.fromList . W.queryString
 {-|
   Produce the request to the authentication server as a response
 -}
+urlToTransmit :: Text
+urlToTransmit = "http://localhost:3000/foo/query"
+
 ucamWebauthHello :: ToJSON a => Maybe a -> UTCTime -> AuthRequest a
 ucamWebauthHello params time = AuthRequest {
                   ucamQVer = WLS3
-                , ucamQUrl = "http://localhost:3000/foo/query"
+                , ucamQUrl = urlToTransmit
                 , ucamQDesc = Just "This is a sample; it’s rather excellent!"
                 , ucamQAauth = Nothing
                 , ucamQIact = Nothing
@@ -205,12 +208,14 @@ kidParser = fmap B.pack $ (:)
   1. Validate the key id
   2. Validate the cryptographic signature against the relevant key
   3. Validate the issue time
+  4. Validate the url is the same as that transmitted
 -}
 validateAuthResponse :: (MonadIO m, MonadPlus m) => SignedAuthResponse a -> m (SignedAuthResponse a)
 validateAuthResponse x@SignedAuthResponse{..} = do
         guard . validateKid =<< liftMaybe ucamAKid
         guard <=< validateSig $ x
         guard <=< validateIssueTime $ ucamAResponse
+        guard . validateUrl $ ucamAResponse
         return x
 
 {-|
@@ -255,6 +260,12 @@ allowedSyncTime = 40
 
 validateIssueTime :: (MonadIO m) => AuthResponse a -> m Bool
 validateIssueTime AuthResponse{..} = (>) allowedSyncTime . flip diffUTCTime ucamAIssue <$> liftIO getCurrentTime
+
+{-|
+  Check the url parameter matches that sent
+-}
+validateUrl :: AuthResponse a -> Bool
+validateUrl = (==) urlToTransmit . ucamAUrl
 
 newtype ASCII = ASCII { unASCII :: ByteString }
     deriving (Show, Read, Eq, Ord, Semigroup, Monoid, IsString)
