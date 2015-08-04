@@ -24,7 +24,7 @@ import Data.Time.RFC3339
 import Data.Time.LocalTime
 import qualified Data.ByteString.Base64 as B
 import qualified Data.ByteString.Base64.Lazy as L
-import Data.Time (DiffTime, secondsToDiffTime)
+import Data.Time (DiffTime, secondsToDiffTime, NominalDiffTime, diffUTCTime)
 import Data.Attoparsec.ByteString.Char8 hiding (count)
 import qualified Data.Attoparsec.ByteString.Char8 as A
 import Data.Attoparsec.Combinator (lookAhead)
@@ -206,6 +206,7 @@ validateAuthResponse :: (MonadIO m, MonadPlus m) => SignedAuthResponse a -> m (S
 validateAuthResponse x@SignedAuthResponse{..} = do
         guard . validateKid =<< liftMaybe ucamAKid
         guard <=< validateSig $ x
+        guard <=< validateIssueTime $ ucamAResponse
         return x
 
 {-|
@@ -240,6 +241,16 @@ validateSigKey importKey SignedAuthResponse{..} = pure . rsaValidate =<< importK
         message = ucamAToSign
         signature :: ByteString
         signature = maybe mempty decodeUcamB64 ucamASig
+
+{-|
+  Validate the time of issue
+-}
+
+allowedSyncTime :: NominalDiffTime
+allowedSyncTime = 40
+
+validateIssueTime :: (MonadIO m) => AuthResponse a -> m Bool
+validateIssueTime AuthResponse{..} = (>) allowedSyncTime . flip diffUTCTime ucamAIssue <$> liftIO getCurrentTime
 
 newtype ASCII = ASCII { unASCII :: ByteString }
     deriving (Show, Read, Eq, Ord, Semigroup, Monoid, IsString)
