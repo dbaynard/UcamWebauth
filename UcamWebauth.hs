@@ -7,9 +7,6 @@ https://raven.cam.ac.uk/project/waa2wls-protocol.txt
 
 -}
 
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-
 module UcamWebauth (
     module UcamWebauth
 )   where
