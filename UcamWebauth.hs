@@ -1,6 +1,6 @@
 {-|
 Module      : Ucam-Webauth
-Description : Authenticate with the University of Cambridge protocol
+Description : Authenticate using the University of Cambridge protocol
 Maintainer  : David Baynard <davidbaynard@gmail.com>
 
 https://raven.cam.ac.uk/project/waa2wls-protocol.txt
@@ -65,14 +65,8 @@ import Crypto.Hash.Algorithms
 import Data.X509
 import Data.PEM
 
--- Warp server
-import Network.Wai.Handler.Warp
-
 type LBS = LB.ByteString
 type StringType = ByteString
-
-warpit :: IO ()
-warpit = run 3000 . application =<< getCurrentTime
 
 application :: UTCTime -> Application
 application time req response = case pathInfo req of
