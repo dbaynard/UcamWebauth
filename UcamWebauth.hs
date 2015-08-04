@@ -385,7 +385,7 @@ encodeUcamB64 :: StringType -> UcamBase64BS
 encodeUcamB64 = convertB64Ucam . B64 . B.encode
 
 ucamB64parser :: Parser UcamBase64BS
-ucamB64parser = encodeUcamB64 <$> takeWhile1 (ors [isAlphaNum, inClass "-._"])
+ucamB64parser = UcamB64 <$> takeWhile1 (ors [isAlphaNum, inClass "-._"])
 
 decodeASCII :: ASCII -> Text
 decodeASCII = decodeUtf8 . B.filter isAlpha_ascii . unASCII
