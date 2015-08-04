@@ -70,6 +70,10 @@ application time req response = case pathInfo req of
     ["foo", "query"] -> response . responseBuilder
         status200
         [("Content-Type", "text/plain")]
+        =<< displayAuthInfo req 
+    ["foo", "queryAll"] -> response . responseBuilder
+        status200
+        [("Content-Type", "text/plain")]
         =<< displayWLSResponse req 
     ["foo", "queryR"] -> response $ responseBuilder
         status200
@@ -91,11 +95,20 @@ application time req response = case pathInfo req of
 displayWLSQuery :: W.Request -> Z.Builder
 displayWLSQuery = maybe mempty Z.fromShow . lookUpWLSResponse
 
+displayAuthInfo :: W.Request -> IO Z.Builder
+displayAuthInfo = displayAuthResponse <=< liftMaybe . lookUpWLSResponse
+
 displayWLSResponse :: W.Request -> IO Z.Builder
-displayWLSResponse = displayAuthResponse <=< liftMaybe . lookUpWLSResponse
+displayWLSResponse = displayAuthResponseFull <=< liftMaybe . lookUpWLSResponse
+
+displayAuthResponseFull :: ByteString -> IO Z.Builder
+displayAuthResponseFull = maybeT empty (pure . Z.fromShow) . maybeAuthCode
 
 displayAuthResponse :: ByteString -> IO Z.Builder
-displayAuthResponse = maybeT empty (pure . Z.fromShow) . maybeAuthCode
+displayAuthResponse = maybeT empty (pure . Z.fromShow) . maybeAuthInfo
+
+maybeAuthInfo :: (MonadIO m, MonadPlus m) => ByteString -> m (AuthInfo Text)
+maybeAuthInfo = extractAuthInfo . ucamAResponse <=< maybeAuthCode
 
 maybeAuthCode :: (MonadIO m, MonadPlus m) => ByteString -> m (SignedAuthResponse Text)
 maybeAuthCode = validateAuthResponse <=< liftMaybe . maybeResult . flip feed "" . parse ucamResponseParser
@@ -344,6 +357,25 @@ data AuthResponse a = AuthResponse {
                 , ucamAParams :: Maybe a -- ^ A copy of the params from the request
                 }
     deriving (Show, Eq, Ord)
+
+data AuthInfo a = AuthInfo {
+                  approveUniq :: (UTCTime, Text) -- ^ Unique representation of response, composed of issue and id
+                , approveUser :: Text -- ^ Identity of authenticated user
+                , approveAttribs :: [Ptag] -- ^ Comma separated attributes of user
+                , approveLife :: Maybe DiffTime -- ^ Remaining lifetime in seconds of application
+                , approveParams :: Maybe a -- ^ A copy of the params from the request
+                }
+    deriving (Show, Eq, Ord)
+
+extractAuthInfo :: Alternative f => AuthResponse a -> f (AuthInfo a)
+extractAuthInfo AuthResponse{..} = liftMaybe $ do
+        let approveUniq = (ucamAIssue, ucamAId)
+        approveUser <- ucamAPrincipal
+        let approveAttribs = fromMaybe empty ucamAPtags
+        let approveLife = ucamALife
+        let approveParams = ucamAParams
+        return AuthInfo{..}
+
 
 data WLSVersion = WLS1 | WLS2 | WLS3
     deriving (Read, Eq, Ord, Enum, Bounded)
