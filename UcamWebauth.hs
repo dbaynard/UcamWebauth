@@ -201,6 +201,10 @@ kidParser = fmap B.pack $ (:)
 
 {-|
   Validate the Authentication Response
+
+  1. Validate the key id
+  2. Validate the cryptographic signature against the relevant key
+  3. Validate the issue time
 -}
 validateAuthResponse :: (MonadIO m, MonadPlus m) => SignedAuthResponse a -> m (SignedAuthResponse a)
 validateAuthResponse x@SignedAuthResponse{..} = do
