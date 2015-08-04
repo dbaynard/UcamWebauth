@@ -85,8 +85,6 @@ library
                  , blaze-builder
                  , errors
                  , cryptonite
-                 , crypto-pubkey-types
-                 , RSA
                  , x509
                  , pem
 

@@ -4,7 +4,6 @@ resolver: ghc-7.10
 packages:
 - '.'
 extra-deps:
-- RSA-2.1.0.1
 - ReadArgs-1.2.2
 - basic-prelude-0.5.0
 - bytestring-builder-0.10.6.0.0

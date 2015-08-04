@@ -43,8 +43,8 @@ import qualified Data.Aeson as A
 import qualified Data.ByteString.Lazy as LB (ByteString)
 
 import Crypto.PubKey.RSA.Types
-import qualified Crypto.Types.PubKey.RSA as R (PublicKey(PublicKey)) -- ^ This is a temporary kludge, for the RSA package
-import Codec.Crypto.RSA.Pure hiding (PublicKey)
+import Crypto.PubKey.RSA.PKCS15
+import Crypto.Hash.Algorithms
 import Data.X509
 import System.IO (withFile, IOMode(..))
 import Data.PEM
@@ -232,14 +232,14 @@ getKey key = liftMaybe <=< liftIO . withFile ("pubkey" <> B.unpack key <> ".crt"
         pure . decodePubKey <=< B.hGetContents
 
 validateSigKey :: forall m a . MonadPlus m => (StringType -> m PublicKey) -> SignedAuthResponse a -> m Bool
-validateSigKey importKey SignedAuthResponse{..} = rsaValidate . marshallPublicKey =<< importKey =<< liftMaybe ucamAKid
+validateSigKey importKey SignedAuthResponse{..} = pure . rsaValidate =<< importKey =<< liftMaybe ucamAKid
     where
-        rsaValidate :: R.PublicKey -> m Bool
-        rsaValidate key = liftMaybe . hush $ rsassa_pkcs1_v1_5_verify hashSHA1 key message signature
-        message :: LBS
-        message = fromStrict ucamAToSign
-        signature :: LBS
-        signature = maybe mempty (fromStrict . decodeUcamB64) ucamASig
+        rsaValidate :: PublicKey -> Bool
+        rsaValidate key = verify (Just SHA1) key message signature
+        message :: ByteString
+        message = ucamAToSign
+        signature :: ByteString
+        signature = maybe mempty decodeUcamB64 ucamASig
 
 newtype ASCII = ASCII { unASCII :: ByteString }
     deriving (Show, Read, Eq, Ord, Semigroup, Monoid, IsString)
@@ -439,6 +439,3 @@ liftMaybe = maybe empty pure
 getRSAKey :: Alternative f => PubKey -> f PublicKey
 getRSAKey (PubKeyRSA x) = pure x
 getRSAKey _ = empty
-
-marshallPublicKey :: PublicKey -> R.PublicKey
-marshallPublicKey PublicKey{..} = R.PublicKey {public_size, public_n, public_e}
