@@ -109,13 +109,19 @@ lookUpWLSResponse = join . M.lookup "WLS-Response" . M.fromList . W.queryString
 urlToTransmit :: Text
 urlToTransmit = "http://localhost:3000/foo/query"
 
+authAccepted :: Maybe [AuthType]
+authAccepted = pure [Pwd]
+
+needReauthentication :: Maybe Bool
+needReauthentication = Nothing
+
 ucamWebauthHello :: ToJSON a => Maybe a -> UTCTime -> AuthRequest a
 ucamWebauthHello params time = AuthRequest {
                   ucamQVer = WLS3
                 , ucamQUrl = urlToTransmit
                 , ucamQDesc = Just "This is a sample; it’s rather excellent!"
-                , ucamQAauth = Nothing
-                , ucamQIact = Nothing
+                , ucamQAauth = authAccepted
+                , ucamQIact = needReauthentication
                 , ucamQMsg = Just "This is a private resource, or something."
                 , ucamQParams = params
                 , ucamQDate = pure time
@@ -209,6 +215,7 @@ kidParser = fmap B.pack $ (:)
   2. Validate the cryptographic signature against the relevant key
   3. Validate the issue time
   4. Validate the url is the same as that transmitted
+  5. Validate the auth and sso values are valid
 -}
 validateAuthResponse :: (MonadIO m, MonadPlus m) => SignedAuthResponse a -> m (SignedAuthResponse a)
 validateAuthResponse x@SignedAuthResponse{..} = do
@@ -216,6 +223,7 @@ validateAuthResponse x@SignedAuthResponse{..} = do
         guard <=< validateSig $ x
         guard <=< validateIssueTime $ ucamAResponse
         guard . validateUrl $ ucamAResponse
+        guard <=< validateAuthTypes $ ucamAResponse
         return x
 
 {-|
@@ -267,6 +275,30 @@ validateIssueTime AuthResponse{..} = (>) allowedSyncTime . flip diffUTCTime ucam
 validateUrl :: AuthResponse a -> Bool
 validateUrl = (==) urlToTransmit . ucamAUrl
 
+{-|
+  Check the authentication type matches that sent.
+
+  If the iact variable is Yes, only return 'True' if the aauth value is acceptable.
+  If the iact variable is No, only return 'True' if sso contains a value that is acceptable.
+  If the iact variable is unset, return 'True' if there is an acceptable value in either field.
+
+-}
+
+validateAuthTypes :: forall a f . (Alternative f) => AuthResponse a -> f Bool
+validateAuthTypes AuthResponse{..} = maybe validateAnyAuth validateSpecificAuth needReauthentication
+    where
+        isAcceptableAuth :: AuthType -> Bool
+        isAcceptableAuth = flip elem (fromMaybe defaultAuthAccepted authAccepted)
+        anyAuth :: Maybe AuthType -> Maybe [AuthType] -> Bool
+        anyAuth Nothing (Just x) = any isAcceptableAuth x
+        anyAuth (Just x) Nothing = isAcceptableAuth x
+        anyAuth _ _ = False
+        validateAnyAuth :: f Bool
+        validateAnyAuth = pure $ anyAuth ucamAAuth ucamASso
+        validateSpecificAuth :: Bool -> f Bool
+        validateSpecificAuth True = isAcceptableAuth <$> liftMaybe ucamAAuth
+        validateSpecificAuth _ = any isAcceptableAuth <$> liftMaybe ucamASso
+
 newtype ASCII = ASCII { unASCII :: ByteString }
     deriving (Show, Read, Eq, Ord, Semigroup, Monoid, IsString)
 
@@ -281,7 +313,7 @@ data AuthRequest a = AuthRequest {
                 , ucamQUrl :: Text -- ^ Full http(s) url of resource request for display
                 , ucamQDesc :: Maybe Text -- ^ Description, transmitted as ASCII
                 , ucamQAauth :: Maybe [AuthType] -- ^ Comma delimited sequence of text tokens representing satisfactory authentication methods
-                , ucamQIact :: Maybe Bool -- ^ A token (Yes/No). Yes requires re-authentication. No required no re-authentication.
+                , ucamQIact :: Maybe Bool -- ^ A token (Yes/No). Yes requires re-authentication. No requires no interaction.
                 , ucamQMsg :: Maybe Text -- ^ Why is authentication being requested?
                 , ucamQParams :: Maybe a -- ^ Data to be returned to the application
                 , ucamQDate :: Maybe UTCTime -- ^ RFC 3339 representation of application’s time
@@ -353,6 +385,9 @@ trueOrFalse = maybeResult . parse ynToBool
 
 data AuthType = Pwd -- ^ pwd: Username and password
     deriving (Read, Eq, Ord, Enum, Bounded)
+
+defaultAuthAccepted :: [AuthType]
+defaultAuthAccepted = [Pwd]
 
 displayAuthType :: IsString a => AuthType -> a
 displayAuthType Pwd = "pwd"
