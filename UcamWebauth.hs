@@ -14,10 +14,10 @@ module UcamWebauth (
     module UcamWebauth
 )   where
 
-import Import.NoFoundation hiding (take, catMaybes)
+import ClassyPrelude hiding (take, catMaybes)
 import Control.Applicative (empty, Alternative)
 import Control.Error
-import Network.HTTP.Types ()
+import Network.HTTP.Types
 import Network.Wai
 import qualified Network.Wai as W
 import Data.Time.RFC3339
@@ -38,7 +38,7 @@ import Data.IntMap.Strict ()
 import qualified Data.IntMap.Strict as I
 import Data.Map.Strict ()
 import qualified Data.Map.Strict as M
-import Data.Aeson ()
+import Data.Aeson (ToJSON, FromJSON)
 import qualified Data.Aeson as A
 import qualified Data.ByteString.Lazy as LB (ByteString)
 
