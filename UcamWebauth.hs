@@ -44,9 +44,9 @@ import qualified Data.Text as T
 
 import qualified Data.ByteString.Char8 as B
 
+-- ByteString building
 import Blaze.ByteString.Builder hiding (Builder)
-import qualified Blaze.ByteString.Builder as Z
-import qualified Blaze.ByteString.Builder.Char.Utf8 as Z
+import qualified Blaze.ByteString.Builder as Z (Builder)
 
 -- Parsing
 import Data.Attoparsec.Combinator (lookAhead)
@@ -70,41 +70,6 @@ import Crypto.PubKey.RSA.PKCS15
 import Crypto.Hash.Algorithms
 import Data.X509
 import Data.PEM
-
-application :: UTCTime -> Application
-application time req response = case pathInfo req of
-    ["foo", "bar"] -> response $ responseBuilder
-        status200
-        [("Content-Type", "text/plain")]
-        (fromByteString "You requested /foo/bar")
-    ["foo", "rawquery"] -> response $ responseBuilder
-        status200
-        [("Content-Type", "text/plain")]
-        (fromByteString . rawQueryString $ req)
-    ["foo", "query"] -> response . responseBuilder
-        status200
-        [("Content-Type", "text/plain")]
-        =<< displayAuthInfo req 
-    ["foo", "queryAll"] -> response . responseBuilder
-        status200
-        [("Content-Type", "text/plain")]
-        =<< displayWLSResponse req 
-    ["foo", "queryR"] -> response $ responseBuilder
-        status200
-        [("Content-Type", "text/plain")]
-        (displayWLSQuery req)
-    ["foo", "requestHeaders"] -> response $ responseBuilder
-        status200
-        [("Content-Type", "text/plain")]
-        (Z.fromShow . requestHeaders $ req)
-    ["foo", "authenticate"] -> response $ responseBuilder
-        seeOther303
-        [("Content-Type", "text/plain"), ucamWebauthQuery ravenAuth . ucamWebauthHello (Just "This is 100% of the data! And it’s really quite cool" :: Maybe Text) $ time]
-        mempty
-    _ -> response $ responseBuilder
-        status200
-        [("Content-Type", "text/plain")]
-        (fromByteString "You requested something else")
 
 ------------------------------------------------------------------------------
 -- * Core data types and associated functions
@@ -217,38 +182,23 @@ data AuthResponse a = AuthResponse {
     deriving (Show, Eq, Ord)
 
 ------------------------------------------------------------------------------
--- * <`1`>
+-- * 
 
+{-|
+  'maybeAuthInfo' takes the 'AuthRequest' from its environment, and a 'ByteString' containing the WLS
+  response, and if the response is valid, returns a 'UcamWebauthInfo' value.
 
-displayWLSQuery :: Request -> Z.Builder
-displayWLSQuery = maybe mempty Z.fromShow . lookUpWLSResponse
-
-displayAuthInfo :: Request -> IO Z.Builder
-displayAuthInfo = displayAuthResponse <=< liftMaybe . lookUpWLSResponse
-
-displayWLSResponse :: Request -> IO Z.Builder
-displayWLSResponse = displayAuthResponseFull <=< liftMaybe . lookUpWLSResponse
-
-displayAuthResponseFull :: ByteString -> IO Z.Builder
-displayAuthResponseFull = maybeT empty (pure . Z.fromShow) . maybeAuthCode
-
-displayAuthResponse :: ByteString -> IO Z.Builder
-displayAuthResponse = maybeT empty (pure . Z.fromShow) . maybeAuthInfo
-
-maybeAuthInfo :: (MonadIO m, MonadPlus m) => ByteString -> m (UcamWebauthInfo Text)
+  TODO When the errors returned can be usefully used, ensure this correctly returns a lifted
+  'Either b (UcanWebauthInfo a)' response.
+-}
+maybeAuthInfo :: (MonadReader (AuthRequest a) m, MonadIO m, MonadPlus m, a ~ Text) => ByteString -> m (UcamWebauthInfo a)
 maybeAuthInfo = extractAuthInfo . ucamAResponse <=< maybeAuthCode
 
-maybeAuthCode :: (MonadIO m, MonadPlus m) => ByteString -> m (SignedAuthResponse Text)
+maybeAuthCode :: (MonadReader (AuthRequest a) m, MonadIO m, MonadPlus m, a ~ Text) => ByteString -> m (SignedAuthResponse a)
 maybeAuthCode = validateAuthResponse <=< liftMaybe . maybeResult . flip feed "" . parse ucamResponseParser
 
 lookUpWLSResponse :: Request -> Maybe ByteString
 lookUpWLSResponse = join . M.lookup "WLS-Response" . M.fromList . queryString
-
-{-|
-  Produce the request to the authentication server as a response
--}
-urlToTransmit :: Text
-urlToTransmit = "http://localhost:3000/foo/query"
 
 {-|
   Accepted authentication types, by the implementation.
@@ -258,19 +208,6 @@ authAccepted = pure [Pwd]
 
 needReauthentication :: Maybe Bool
 needReauthentication = Nothing
-
-ucamWebauthHello :: ToJSON a => Maybe a -> UTCTime -> AuthRequest a
-ucamWebauthHello params time = AuthRequest {
-                  ucamQVer = WLS3
-                , ucamQUrl = urlToTransmit
-                , ucamQDesc = Just "This is a sample; it’s rather excellent!"
-                , ucamQAauth = authAccepted
-                , ucamQIact = needReauthentication
-                , ucamQMsg = Just "This is a private resource, or something."
-                , ucamQParams = params
-                , ucamQDate = pure time
-                , ucamQFail = pure False
-                }
 
 ucamWebauthQuery :: ToJSON a => Z.Builder -> AuthRequest a -> Header
 ucamWebauthQuery url AuthRequest{..} = (hLocation, toByteString $ url <> theQuery)
@@ -361,12 +298,12 @@ kidParser = fmap B.pack $ (:)
   4. Validate the url is the same as that transmitted
   5. Validate the auth and sso values are valid
 -}
-validateAuthResponse :: (MonadIO m, MonadPlus m) => SignedAuthResponse a -> m (SignedAuthResponse a)
+validateAuthResponse :: (MonadReader (AuthRequest a) m, MonadIO m, MonadPlus m) => SignedAuthResponse a -> m (SignedAuthResponse a)
 validateAuthResponse x@SignedAuthResponse{..} = do
         guard . validateKid =<< liftMaybe ucamAKid
         guard <=< validateSig $ x
         guard <=< validateIssueTime $ ucamAResponse
-        guard . validateUrl $ ucamAResponse
+        guard <=< validateUrl $ ucamAResponse
         guard <=< validateAuthTypes $ ucamAResponse
         return x
 
@@ -416,8 +353,8 @@ validateIssueTime AuthResponse{..} = (>) allowedSyncTime . flip diffUTCTime ucam
 {-|
   Check the url parameter matches that sent
 -}
-validateUrl :: AuthResponse a -> Bool
-validateUrl = (==) urlToTransmit . ucamAUrl
+validateUrl :: (MonadReader (AuthRequest a) m) => AuthResponse a -> m Bool
+validateUrl AuthResponse{..} = (==) ucamAUrl . ucamQUrl <$> ask
 
 {-|
   Check the authentication type matches that sent.
@@ -593,9 +530,6 @@ ucamTimeParser = do
         minute <- take 2
         sec <- take 2 <* "Z"
         return . UcamTime . decodeUtf8 . mconcat $ [year, "-", month, "-", day, "T", hour, ":", minute, ":", sec, "Z"]
-
-ravenAuth :: Z.Builder
-ravenAuth = "https://raven.cam.ac.uk/auth/authenticate.html"
 
 optionMaybe :: Parser a -> Parser (Maybe a)
 optionMaybe = option empty . fmap pure

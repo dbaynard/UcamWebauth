@@ -17,9 +17,9 @@ import ClassyPrelude
 -- The protocol
 import UcamWebauth
 
--- Warp server
-import Network.Wai.Handler.Warp
+-- String handling
+import qualified Blaze.ByteString.Builder as Z (Builder)
 
-warpit :: IO ()
-warpit = run 3000 . application =<< getCurrentTime
+ravenAuth :: Z.Builder
+ravenAuth = "https://raven.cam.ac.uk/auth/authenticate.html"
 
