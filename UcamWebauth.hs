@@ -1,7 +1,13 @@
 {-|
 Module      : Ucam-Webauth
-Description : Authenticate using the University of Cambridge protocol
+Description : Authenticate using the Ucam-Webauth protocol
 Maintainer  : David Baynard <davidbaynard@gmail.com>
+
+This module implements the University of Cambridge’s Ucam-Webauth protocol,
+as in the link below. The protocol is a handshake between the
+
+* WAA - the application wishing to authenticate (whatever usese this module!), and
+* WLS - the server which can authenticate the user, and return relevant information
 
 https://raven.cam.ac.uk/project/waa2wls-protocol.txt
 
@@ -65,9 +71,6 @@ import Crypto.Hash.Algorithms
 import Data.X509
 import Data.PEM
 
-type LBS = LB.ByteString
-type StringType = ByteString
-
 application :: UTCTime -> Application
 application time req response = case pathInfo req of
     ["foo", "bar"] -> response $ responseBuilder
@@ -103,6 +106,120 @@ application time req response = case pathInfo req of
         [("Content-Type", "text/plain")]
         (fromByteString "You requested something else")
 
+------------------------------------------------------------------------------
+-- * Core data types and associated functions
+
+------------------------------------------------------------------------------
+-- ** Return type
+
+{-|
+  'UcamWebauthInfo' is returned from this module. The parameter 'a' represents data sent
+  in the initial connection, that must be returned. The constructor and accessors are *not*
+  exported from the module, to present an abstract API.
+-}
+data UcamWebauthInfo a = AuthInfo {
+                  approveUniq :: (UTCTime, Text) -- ^ Unique representation of response, composed of issue and id
+                , approveUser :: Text -- ^ Identity of authenticated user
+                , approveAttribs :: [Ptag] -- ^ Comma separated attributes of user
+                , approveLife :: Maybe DiffTime -- ^ Remaining lifetime in seconds of application
+                , approveParams :: Maybe a -- ^ A copy of the params from the request
+                }
+    deriving (Show, Eq, Ord)
+
+------------------------------------------------------------------------------
+-- ** Type Synonyms
+
+{-|
+  Shorter type synonym for lazy ByteString, and a synonym to abstract much behaviour over a generic string type.
+-}
+type LBS = LB.ByteString
+type StringType = ByteString
+
+------------------------------------------------------------------------------
+-- ** 'ByteString' newtypes
+
+{-|
+  Ensure ASCII text is not confused with other ByteStrings
+-}
+newtype ASCII = ASCII { unASCII :: ByteString }
+    deriving (Show, Read, Eq, Ord, Semigroup, Monoid, IsString)
+
+{-|
+  Ensure Base 64 text is not confused with other ByteStrings
+-}
+newtype Base64BS = B64 { unB64 :: ByteString }
+    deriving (Show, Read, Eq, Ord, Semigroup, Monoid, IsString)
+
+{-|
+  Ensure Base 64 text modified to fit the Ucam-Webauth protocol is not confused with other ByteStrings
+-}
+newtype UcamBase64BS = UcamB64 { unUcamB64 :: ByteString }
+    deriving (Show, Read, Eq, Ord, Semigroup, Monoid, IsString)
+
+------------------------------------------------------------------------------
+-- ** Request and response
+{- $request
+  The handshake between the WLS and WAA are represented using the 'AuthRequest'
+  and 'SignedAuthResponse' data types. The 'AuthResponse' type represents the
+  content of a 'SignedAuthResponse'. Constructors and accessors are not exported,
+  and the 'AuthRequest' should be build using the smart constructors provided.
+-}
+
+{-|
+  An 'AuthRequest' is constructed by the WAA, using the constructor functions
+  of this module. The parameter represents data to be returned to the application
+  after authentication.
+-}
+data AuthRequest a = AuthRequest {
+                  ucamQVer :: WLSVersion -- ^ The version of WLS. 1, 2 or 3.
+                , ucamQUrl :: Text -- ^ Full http(s) url of resource request for display
+                , ucamQDesc :: Maybe Text -- ^ Description, transmitted as ASCII
+                , ucamQAauth :: Maybe [AuthType] -- ^ Comma delimited sequence of text tokens representing satisfactory authentication methods
+                , ucamQIact :: Maybe Bool -- ^ A token (Yes/No). Yes requires re-authentication. No requires no interaction.
+                , ucamQMsg :: Maybe Text -- ^ Why is authentication being requested?
+                , ucamQParams :: Maybe a -- ^ Data to be returned to the application
+                , ucamQDate :: Maybe UTCTime -- ^ RFC 3339 representation of application’s time
+                , ucamQFail :: Maybe Bool -- ^ Error token. If 'yes', the WLS implements error handling
+                }
+    deriving (Show, Eq, Ord)
+
+{-|
+  A 'SignedAuthResponse' represents the data returned by the WLS, including a
+  representation of the content returned (in the 'AuthResponse' data type), and
+  the cryptographic signature, for verification.
+-}
+data SignedAuthResponse a = SignedAuthResponse {
+                  ucamAResponse :: AuthResponse a -- ^ The bit of the response that is signed
+                , ucamAToSign :: ByteString -- ^ The raw text of the response, used to verify the signature
+                , ucamAKid :: Maybe ByteString -- ^ RSA key identifier. Must be a string of 1–8 characters, chosen from digits 0–9, with no leading 0, i.e. [1-9][0-9]{0,7}
+                , ucamASig :: Maybe UcamBase64BS -- ^ Required if status is 200, otherwise Nothing. Public key signature of everything up to kid, using the private key identified by kid, the SHA-1 algorithm and RSASSA-PKCS1-v1_5 (PKCS #1 v2.1 RFC 3447), encoded using the base64 scheme (RFC 1521) but with "-._" replacing "+/="
+                }
+    deriving (Show, Eq, Ord)
+
+{-|
+  An 'AuthResponse' represents the content returned by the WLS. The validation
+  machinery in this module returns the required data as a 'UcamWebauthInfo' value.
+-}
+data AuthResponse a = AuthResponse {
+                  ucamAVer :: WLSVersion -- ^ The version of WLS. 1, 2 or 3, <= the request
+                , ucamAStatus :: Status -- ^ 3 digit status code (200 is success)
+                , ucamAMsg :: Maybe Text -- ^ The status, for users
+                , ucamAIssue :: UTCTime -- ^ RFC 3339 representation of response’s time
+                , ucamAId :: Text -- ^ Not unguessable identifier, id + issue are unique
+                , ucamAUrl :: Text -- ^ Same as request
+                , ucamAPrincipal :: Maybe Text -- ^ Identity of authenticated user. Must be present if ucamAStatus is 200, otherwise must be Nothing
+                , ucamAPtags :: Maybe [Ptag] -- ^ Comma separated attributes of principal. Optional in version 3, must be Nothing otherwise.
+                , ucamAAuth :: Maybe AuthType -- ^ Authentication type if successful, else Nothing
+                , ucamASso :: Maybe [AuthType] -- ^ Comma separated list of previous authentications. Required if ucamAAuth is Nothing.
+                , ucamALife :: Maybe DiffTime -- ^ Remaining lifetime in seconds of application
+                , ucamAParams :: Maybe a -- ^ A copy of the params from the request
+                }
+    deriving (Show, Eq, Ord)
+
+------------------------------------------------------------------------------
+-- * <`1`>
+
+
 displayWLSQuery :: Request -> Z.Builder
 displayWLSQuery = maybe mempty Z.fromShow . lookUpWLSResponse
 
@@ -118,7 +235,7 @@ displayAuthResponseFull = maybeT empty (pure . Z.fromShow) . maybeAuthCode
 displayAuthResponse :: ByteString -> IO Z.Builder
 displayAuthResponse = maybeT empty (pure . Z.fromShow) . maybeAuthInfo
 
-maybeAuthInfo :: (MonadIO m, MonadPlus m) => ByteString -> m (AuthInfo Text)
+maybeAuthInfo :: (MonadIO m, MonadPlus m) => ByteString -> m (UcamWebauthInfo Text)
 maybeAuthInfo = extractAuthInfo . ucamAResponse <=< maybeAuthCode
 
 maybeAuthCode :: (MonadIO m, MonadPlus m) => ByteString -> m (SignedAuthResponse Text)
@@ -133,6 +250,9 @@ lookUpWLSResponse = join . M.lookup "WLS-Response" . M.fromList . queryString
 urlToTransmit :: Text
 urlToTransmit = "http://localhost:3000/foo/query"
 
+{-|
+  Accepted authentication types, by the implementation.
+-}
 authAccepted :: Maybe [AuthType]
 authAccepted = pure [Pwd]
 
@@ -323,62 +443,8 @@ validateAuthTypes AuthResponse{..} = maybe validateAnyAuth validateSpecificAuth 
         validateSpecificAuth True = isAcceptableAuth <$> liftMaybe ucamAAuth
         validateSpecificAuth _ = any isAcceptableAuth <$> liftMaybe ucamASso
 
-newtype ASCII = ASCII { unASCII :: ByteString }
-    deriving (Show, Read, Eq, Ord, Semigroup, Monoid, IsString)
 
-newtype Base64BS = B64 { unB64 :: ByteString }
-    deriving (Show, Read, Eq, Ord, Semigroup, Monoid, IsString)
-
-newtype UcamBase64BS = UcamB64 { unUcamB64 :: ByteString }
-    deriving (Show, Read, Eq, Ord, Semigroup, Monoid, IsString)
-
-data AuthRequest a = AuthRequest {
-                  ucamQVer :: WLSVersion -- ^ The version of WLS. 1, 2 or 3.
-                , ucamQUrl :: Text -- ^ Full http(s) url of resource request for display
-                , ucamQDesc :: Maybe Text -- ^ Description, transmitted as ASCII
-                , ucamQAauth :: Maybe [AuthType] -- ^ Comma delimited sequence of text tokens representing satisfactory authentication methods
-                , ucamQIact :: Maybe Bool -- ^ A token (Yes/No). Yes requires re-authentication. No requires no interaction.
-                , ucamQMsg :: Maybe Text -- ^ Why is authentication being requested?
-                , ucamQParams :: Maybe a -- ^ Data to be returned to the application
-                , ucamQDate :: Maybe UTCTime -- ^ RFC 3339 representation of application’s time
-                , ucamQFail :: Maybe Bool -- ^ Error token. If 'yes', the WLS implements error handling
-                }
-    deriving (Show, Eq, Ord)
-
-data SignedAuthResponse a = SignedAuthResponse {
-                  ucamAResponse :: AuthResponse a -- ^ The bit of the response that is signed
-                , ucamAToSign :: ByteString
-                , ucamAKid :: Maybe ByteString -- ^ RSA key identifier. Must be a string of 1–8 characters, chosen from digits 0–9, with no leading 0, i.e. [1-9][0-9]{0,7}
-                , ucamASig :: Maybe UcamBase64BS -- ^ Required if status is 200, otherwise Nothing. Public key signature of everything up to kid, using the private key identified by kid, the SHA-1 algorithm and RSASSA-PKCS1-v1_5 (PKCS #1 v2.1 RFC 3447), encoded using the base64 scheme (RFC 1521) but with "-._" replacing "+/="
-                }
-    deriving (Show, Eq, Ord)
-
-data AuthResponse a = AuthResponse {
-                  ucamAVer :: WLSVersion -- ^ The version of WLS. 1, 2 or 3, <= the request
-                , ucamAStatus :: Status -- ^ 3 digit status code (200 is success)
-                , ucamAMsg :: Maybe Text -- ^ The status, for users
-                , ucamAIssue :: UTCTime -- ^ RFC 3339 representation of response’s time
-                , ucamAId :: Text -- ^ Not unguessable identifier, id + issue are unique
-                , ucamAUrl :: Text -- ^ Same as request
-                , ucamAPrincipal :: Maybe Text -- ^ Identity of authenticated user. Must be present if ucamAStatus is 200, otherwise must be Nothing
-                , ucamAPtags :: Maybe [Ptag] -- ^ Comma separated attributes of principal. Optional in version 3, must be Nothing otherwise.
-                , ucamAAuth :: Maybe AuthType -- ^ Authentication type if successful, else Nothing
-                , ucamASso :: Maybe [AuthType] -- ^ Comma separated list of previous authentications. Required if ucamAAuth is Nothing.
-                , ucamALife :: Maybe DiffTime -- ^ Remaining lifetime in seconds of application
-                , ucamAParams :: Maybe a -- ^ A copy of the params from the request
-                }
-    deriving (Show, Eq, Ord)
-
-data AuthInfo a = AuthInfo {
-                  approveUniq :: (UTCTime, Text) -- ^ Unique representation of response, composed of issue and id
-                , approveUser :: Text -- ^ Identity of authenticated user
-                , approveAttribs :: [Ptag] -- ^ Comma separated attributes of user
-                , approveLife :: Maybe DiffTime -- ^ Remaining lifetime in seconds of application
-                , approveParams :: Maybe a -- ^ A copy of the params from the request
-                }
-    deriving (Show, Eq, Ord)
-
-extractAuthInfo :: Alternative f => AuthResponse a -> f (AuthInfo a)
+extractAuthInfo :: Alternative f => AuthResponse a -> f (UcamWebauthInfo a)
 extractAuthInfo AuthResponse{..} = liftMaybe $ do
         let approveUniq = (ucamAIssue, ucamAId)
         approveUser <- ucamAPrincipal
