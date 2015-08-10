@@ -14,16 +14,10 @@ The functions in this file shadow the names in the "Network.Wai.Protocol.Raven.A
 -}
 module Network.Wai.Protocol.Raven.Test {-# WARNING "Do not use this module for production code. It is only for testing." #-} (
     module Network.Wai.Protocol.Raven.Test
+  , module X
 )   where
 
--- Prelude
-import ClassyPrelude
-
--- The protocol
-import Network.Wai.Protocol.UcamWebauth 
-
--- String handling
-import qualified Blaze.ByteString.Builder as Z (Builder)
+import Network.Wai.Protocol.Raven.Internal as X
 
 ------------------------------------------------------------------------------
 -- * Raven servers
@@ -33,7 +27,7 @@ import qualified Blaze.ByteString.Builder as Z (Builder)
 
   > ravenAuth = "https://demo.raven.cam.ac.uk/auth/authenticate.html"
 -}
-ravenAuth :: Z.Builder
+ravenAuth :: BBuilder
 ravenAuth = "https://demo.raven.cam.ac.uk/auth/authenticate.html"
 
 

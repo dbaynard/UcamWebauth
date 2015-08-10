@@ -17,6 +17,9 @@ library
                      Network.Wai.Protocol.Raven.Auth
                      Network.Wai.Protocol.Raven.Test
 
+    other-modules:   Network.Wai.Protocol.UcamWebauth.Internal
+                     Network.Wai.Protocol.Raven.Internal
+
     if flag(dev) || flag(library-only)
         cpp-options:   -DDEVELOPMENT
         ghc-options:   -Wall -fwarn-tabs -O0

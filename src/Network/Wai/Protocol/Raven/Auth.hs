@@ -13,16 +13,10 @@ It is possible to test applications using the "Network.Wai.Protocol.Raven.Test" 
 -}
 module Network.Wai.Protocol.Raven.Auth (
     module Network.Wai.Protocol.Raven.Auth
+  , module X
 )   where
 
--- Prelude
-import ClassyPrelude
-
--- The protocol
-import Network.Wai.Protocol.UcamWebauth 
-
--- String handling
-import qualified Blaze.ByteString.Builder as Z (Builder)
+import Network.Wai.Protocol.Raven.Internal as X
 
 ------------------------------------------------------------------------------
 -- * Raven servers
@@ -32,6 +26,6 @@ import qualified Blaze.ByteString.Builder as Z (Builder)
 
   > ravenAuth = "https://raven.cam.ac.uk/auth/authenticate.html"
 -}
-ravenAuth :: Z.Builder
+ravenAuth :: BBuilder
 ravenAuth = "https://raven.cam.ac.uk/auth/authenticate.html"
 
