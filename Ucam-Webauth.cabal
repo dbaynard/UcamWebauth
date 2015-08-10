@@ -24,6 +24,9 @@ library
         ghc-options:   -Wall -fwarn-tabs -O2
 
     extensions: OverloadedStrings
+                DeriveGeneric
+                StandaloneDeriving
+                DataKinds
                 NoImplicitPrelude
                 MultiParamTypeClasses
                 TypeFamilies

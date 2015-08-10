@@ -6,10 +6,12 @@ Maintainer  : David Baynard <davidbaynard@gmail.com>
 This module implements the University of Cambridge’s Ucam-Webauth protocol,
 as in the link below. The protocol is a handshake between the
 
-* WAA - the application wishing to authenticate (whatever usese this module!), and
-* WLS - the server which can authenticate the user, and return relevant information
+  [@WAA@] application wishing to authenticate (whatever uses this module!), and
+  [@WLS@] server which can authenticate the user, and return relevant information
 
-https://raven.cam.ac.uk/project/waa2wls-protocol.txt
+<https://raven.cam.ac.uk/project/waa2wls-protocol.txt>
+
+See the "RavenAuth" module for a specific implementation.
 
 -}
 
@@ -19,6 +21,9 @@ module UcamWebauth (
 
 -- Prelude
 import ClassyPrelude hiding (take, catMaybes)
+import Data.Data
+import GHC.Generics
+import Data.Coerce
 
 import Control.Applicative (empty, Alternative)
 import Control.Error
@@ -89,7 +94,7 @@ data UcamWebauthInfo a = AuthInfo {
                 , approveLife :: Maybe DiffTime -- ^ Remaining lifetime in seconds of application
                 , approveParams :: Maybe a -- ^ A copy of the params from the request
                 }
-    deriving (Show, Eq, Ord)
+    deriving (Show, Eq, Ord, Generic1, Typeable, Data)
 
 ------------------------------------------------------------------------------
 -- ** Type Synonyms
@@ -100,6 +105,8 @@ data UcamWebauthInfo a = AuthInfo {
 type LBS = LB.ByteString
 type StringType = ByteString
 
+deriving instance Data Status
+
 ------------------------------------------------------------------------------
 -- ** 'ByteString' newtypes
 
@@ -107,36 +114,36 @@ type StringType = ByteString
   Ensure ASCII text is not confused with other ByteStrings
 -}
 newtype ASCII = ASCII { unASCII :: ByteString }
-    deriving (Show, Read, Eq, Ord, Semigroup, Monoid, IsString)
+    deriving (Show, Read, Eq, Ord, Semigroup, Monoid, IsString, Generic, Typeable, Data)
 
 {-|
   Ensure Base 64 text is not confused with other ByteStrings
 -}
 newtype Base64BS = B64 { unB64 :: ByteString }
-    deriving (Show, Read, Eq, Ord, Semigroup, Monoid, IsString)
+    deriving (Show, Read, Eq, Ord, Semigroup, Monoid, IsString, Generic, Typeable, Data)
 
 {-|
   Ensure Base 64 text modified to fit the Ucam-Webauth protocol is not confused with other ByteStrings
 -}
 newtype UcamBase64BS = UcamB64 { unUcamB64 :: ByteString }
-    deriving (Show, Read, Eq, Ord, Semigroup, Monoid, IsString)
+    deriving (Show, Read, Eq, Ord, Semigroup, Monoid, IsString, Generic, Typeable, Data)
 
 ------------------------------------------------------------------------------
 -- ** Request and response
 {- $request
-  The handshake between the WLS and WAA are represented using the 'AuthRequest'
+  The handshake between the @WLS@ and @WAA@ are represented using the 'AuthRequest'
   and 'SignedAuthResponse' data types. The 'AuthResponse' type represents the
   content of a 'SignedAuthResponse'. Constructors and accessors are not exported,
   and the 'AuthRequest' should be build using the smart constructors provided.
 -}
 
 {-|
-  An 'AuthRequest' is constructed by the WAA, using the constructor functions
+  An 'AuthRequest' is constructed by the @WAA@, using the constructor functions
   of this module. The parameter represents data to be returned to the application
   after authentication.
 -}
 data AuthRequest a = AuthRequest {
-                  ucamQVer :: WLSVersion -- ^ The version of WLS. 1, 2 or 3.
+                  ucamQVer :: WLSVersion -- ^ The version of @WLS.@ 1, 2 or 3.
                 , ucamQUrl :: Text -- ^ Full http(s) url of resource request for display
                 , ucamQDesc :: Maybe Text -- ^ Description, transmitted as ASCII
                 , ucamQAauth :: Maybe [AuthType] -- ^ Comma delimited sequence of text tokens representing satisfactory authentication methods
@@ -144,29 +151,42 @@ data AuthRequest a = AuthRequest {
                 , ucamQMsg :: Maybe Text -- ^ Why is authentication being requested?
                 , ucamQParams :: Maybe a -- ^ Data to be returned to the application
                 , ucamQDate :: Maybe UTCTime -- ^ RFC 3339 representation of application’s time
-                , ucamQFail :: Maybe Bool -- ^ Error token. If 'yes', the WLS implements error handling
+                , ucamQFail :: Maybe Bool -- ^ Error token. If 'yes', the @WLS@ implements error handling
                 }
-    deriving (Show, Eq, Ord)
+    deriving (Show, Eq, Ord, Generic1, Typeable, Data)
 
 {-|
-  A 'SignedAuthResponse' represents the data returned by the WLS, including a
+  A 'SignedAuthResponse' represents the data returned by the @WLS@, including a
   representation of the content returned (in the 'AuthResponse' data type), and
   the cryptographic signature, for verification.
+
+  The phantom parameter 'valid' corr
 -}
-data SignedAuthResponse a = SignedAuthResponse {
+data SignedAuthResponse (valid :: IsValid) a = SignedAuthResponse {
                   ucamAResponse :: AuthResponse a -- ^ The bit of the response that is signed
                 , ucamAToSign :: ByteString -- ^ The raw text of the response, used to verify the signature
                 , ucamAKid :: Maybe ByteString -- ^ RSA key identifier. Must be a string of 1–8 characters, chosen from digits 0–9, with no leading 0, i.e. [1-9][0-9]{0,7}
                 , ucamASig :: Maybe UcamBase64BS -- ^ Required if status is 200, otherwise Nothing. Public key signature of everything up to kid, using the private key identified by kid, the SHA-1 algorithm and RSASSA-PKCS1-v1_5 (PKCS #1 v2.1 RFC 3447), encoded using the base64 scheme (RFC 1521) but with "-._" replacing "+/="
                 }
-    deriving (Show, Eq, Ord)
+    deriving (Show, Eq, Ord, Generic1, Typeable, Data)
 
 {-|
-  An 'AuthResponse' represents the content returned by the WLS. The validation
+  The intended use of this is with 'IsValid' as a kind (requires the 'DataKinds' extension).
+  The data constructors 'Valid' and 'MaybeValid' are now type constructors, which indicate the
+  validity of a 'SignedAuthResponse'.
+
+  TODO This is not exported.
+-}
+data IsValid = MaybeValid
+             | Valid
+             deriving (Show, Read, Eq, Ord, Enum, Bounded, Generic, Typeable, Data)
+
+{-|
+  An 'AuthResponse' represents the content returned by the @WLS@. The validation
   machinery in this module returns the required data as a 'UcamWebauthInfo' value.
 -}
 data AuthResponse a = AuthResponse {
-                  ucamAVer :: WLSVersion -- ^ The version of WLS. 1, 2 or 3, <= the request
+                  ucamAVer :: WLSVersion -- ^ The version of @WLS@: 1, 2 or 3
                 , ucamAStatus :: Status -- ^ 3 digit status code (200 is success)
                 , ucamAMsg :: Maybe Text -- ^ The status, for users
                 , ucamAIssue :: UTCTime -- ^ RFC 3339 representation of response’s time
@@ -179,22 +199,46 @@ data AuthResponse a = AuthResponse {
                 , ucamALife :: Maybe DiffTime -- ^ Remaining lifetime in seconds of application
                 , ucamAParams :: Maybe a -- ^ A copy of the params from the request
                 }
-    deriving (Show, Eq, Ord)
+    deriving (Show, Eq, Ord, Generic1, Typeable, Data)
+
+{-|
+  Takes a validated 'SignedAuthResponse', and returns the corresponding 'UcamWebauthInfo'.
+-}
+getAuthInfo :: Alternative f => SignedAuthResponse 'Valid a -> f (UcamWebauthInfo a)
+getAuthInfo = extractAuthInfo . ucamAResponse
+
+{-|
+  Convert an 'AuthResponse' into a 'UcamWebauthInfo' for export.
+
+  TODO This should not be exported. Instead export 'getAuthInfo'
+-}
+extractAuthInfo :: Alternative f => AuthResponse a -> f (UcamWebauthInfo a)
+extractAuthInfo AuthResponse{..} = liftMaybe $ do
+        approveUser <- ucamAPrincipal
+        return AuthInfo{..}
+        where
+            approveUniq = (ucamAIssue, ucamAId)
+            approveAttribs = fromMaybe empty ucamAPtags
+            approveLife = ucamALife
+            approveParams = ucamAParams
 
 ------------------------------------------------------------------------------
 -- * 
 
 {-|
-  'maybeAuthInfo' takes the 'AuthRequest' from its environment, and a 'ByteString' containing the WLS
+  'maybeAuthInfo' takes the 'AuthRequest' from its environment, and a 'ByteString' containing the @WLS@
   response, and if the response is valid, returns a 'UcamWebauthInfo' value.
 
   TODO When the errors returned can be usefully used, ensure this correctly returns a lifted
   'Either b (UcanWebauthInfo a)' response.
 -}
 maybeAuthInfo :: (MonadReader (AuthRequest a) m, MonadIO m, MonadPlus m, a ~ Text) => ByteString -> m (UcamWebauthInfo a)
-maybeAuthInfo = extractAuthInfo . ucamAResponse <=< maybeAuthCode
+maybeAuthInfo = getAuthInfo <=< maybeAuthCode
 
-maybeAuthCode :: (MonadReader (AuthRequest a) m, MonadIO m, MonadPlus m, a ~ Text) => ByteString -> m (SignedAuthResponse a)
+{-|
+  A helper function to parse and validate a response from a @WLS@.
+-}
+maybeAuthCode :: (MonadReader (AuthRequest a) m, MonadIO m, MonadPlus m, a ~ Text) => ByteString -> m (SignedAuthResponse 'Valid a)
 maybeAuthCode = validateAuthResponse <=< liftMaybe . maybeResult . flip feed "" . parse ucamResponseParser
 
 lookUpWLSResponse :: Request -> Maybe ByteString
@@ -236,7 +280,7 @@ ucamWebauthQuery url AuthRequest{..} = (hLocation, toByteString $ url <> theQuer
 {-|
   Parse the response to the authentication server as a request
 -}
-ucamResponseParser :: forall a . FromJSON a => Parser (SignedAuthResponse a)
+ucamResponseParser :: forall a . FromJSON a => Parser (SignedAuthResponse 'MaybeValid a)
 ucamResponseParser = do
         (ucamAToSign, ucamAResponse@AuthResponse{..}) <- noBang . match $ ucamAuthResponseParser
         (ucamAKid, ucamASig) <- parseKidSig ucamAStatus
@@ -298,14 +342,17 @@ kidParser = fmap B.pack $ (:)
   4. Validate the url is the same as that transmitted
   5. Validate the auth and sso values are valid
 -}
-validateAuthResponse :: (MonadReader (AuthRequest a) m, MonadIO m, MonadPlus m) => SignedAuthResponse a -> m (SignedAuthResponse a)
+validateAuthResponse :: forall a m . (MonadReader (AuthRequest a) m, MonadIO m, MonadPlus m) => SignedAuthResponse 'MaybeValid a -> m (SignedAuthResponse 'Valid a)
 validateAuthResponse x@SignedAuthResponse{..} = do
         guard . validateKid =<< liftMaybe ucamAKid
         guard <=< validateSig $ x
         guard <=< validateIssueTime $ ucamAResponse
         guard <=< validateUrl $ ucamAResponse
         guard <=< validateAuthTypes $ ucamAResponse
-        return x
+        return . makeValid $ x
+        where
+            makeValid :: SignedAuthResponse 'MaybeValid a -> SignedAuthResponse 'Valid a
+            makeValid = coerce
 
 {-|
   Check the kid is valid
@@ -317,7 +364,7 @@ validateKid = flip elem ["2"]
   Validate the signature
 -}
 
-validateSig :: (MonadPlus m, MonadIO m) => SignedAuthResponse a -> m Bool
+validateSig :: (MonadPlus m, MonadIO m) => SignedAuthResponse 'MaybeValid a -> m Bool
 validateSig = validateSigKey getKey 
 
 decodePubKey :: ByteString -> Maybe PublicKey
@@ -330,7 +377,7 @@ getKey :: (MonadIO m, Alternative m) => StringType -> m PublicKey
 getKey key = liftMaybe <=< liftIO . withFile ("pubkey" <> B.unpack key <> ".crt") ReadMode $ 
         pure . decodePubKey <=< B.hGetContents
 
-validateSigKey :: forall m a . MonadPlus m => (StringType -> m PublicKey) -> SignedAuthResponse a -> m Bool
+validateSigKey :: forall m a . MonadPlus m => (StringType -> m PublicKey) -> SignedAuthResponse 'MaybeValid a -> m Bool
 validateSigKey importKey SignedAuthResponse{..} = pure . rsaValidate =<< importKey =<< liftMaybe ucamAKid
     where
         rsaValidate :: PublicKey -> Bool
@@ -381,18 +428,8 @@ validateAuthTypes AuthResponse{..} = maybe validateAnyAuth validateSpecificAuth 
         validateSpecificAuth _ = any isAcceptableAuth <$> liftMaybe ucamASso
 
 
-extractAuthInfo :: Alternative f => AuthResponse a -> f (UcamWebauthInfo a)
-extractAuthInfo AuthResponse{..} = liftMaybe $ do
-        let approveUniq = (ucamAIssue, ucamAId)
-        approveUser <- ucamAPrincipal
-        let approveAttribs = fromMaybe empty ucamAPtags
-        let approveLife = ucamALife
-        let approveParams = ucamAParams
-        return AuthInfo{..}
-
-
 data WLSVersion = WLS1 | WLS2 | WLS3
-    deriving (Read, Eq, Ord, Enum, Bounded)
+    deriving (Read, Eq, Ord, Enum, Bounded, Generic, Typeable, Data)
 
 displayWLSVersion :: IsString a => WLSVersion -> a
 displayWLSVersion WLS1 = "1"
@@ -430,7 +467,7 @@ trueOrFalse = maybeResult . parse ynToBool
              <|> ("N" <|> "n") *> "o" *> pure False
 
 data AuthType = Pwd -- ^ pwd: Username and password
-    deriving (Read, Eq, Ord, Enum, Bounded)
+    deriving (Read, Eq, Ord, Enum, Bounded, Generic, Typeable, Data)
 
 defaultAuthAccepted :: [AuthType]
 defaultAuthAccepted = [Pwd]
@@ -448,7 +485,7 @@ authTypeParser :: Parser AuthType
 authTypeParser = "pwd" *> pure Pwd
 
 data Ptag = Current -- ^ User is current member of university
-    deriving (Read, Eq, Ord, Enum, Bounded)
+    deriving (Read, Eq, Ord, Enum, Bounded, Generic, Typeable, Data)
 
 displayPtag :: IsString a => Ptag -> a
 displayPtag Current = "current"
@@ -480,7 +517,7 @@ responseCodeParser :: Parser Status
 responseCodeParser = fromMaybe badRequest400 . flip lookup responseCodes <$> decimal
 
 newtype UcamTime = UcamTime { unUcamTime :: Text }
-    deriving (Show, Read, Eq, Ord, Semigroup, Monoid, IsString)
+    deriving (Show, Read, Eq, Ord, Semigroup, Monoid, IsString, Generic, Typeable, Data)
 
 convertB64Ucam :: Base64BS -> UcamBase64BS
 convertB64Ucam = UcamB64 . B.map camFilter . unB64
