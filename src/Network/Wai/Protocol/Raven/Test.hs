@@ -17,6 +17,12 @@ module Network.Wai.Protocol.Raven.Test {-# WARNING "Do not use this module for p
   , module X
 )   where
 
+-- Prelude
+import ClassyPrelude
+
+-- The protocol
+import Network.Wai.Protocol.UcamWebauth
+
 import Network.Wai.Protocol.Raven.Internal as X
 
 ------------------------------------------------------------------------------

@@ -16,6 +16,7 @@ library
     exposed-modules: Network.Wai.Protocol.UcamWebauth 
                      Network.Wai.Protocol.Raven.Auth
                      Network.Wai.Protocol.Raven.Test
+                     Network.Wai.Protocol.Raven.Example
 
     other-modules:   Network.Wai.Protocol.UcamWebauth.Internal
                      Network.Wai.Protocol.Raven.Internal

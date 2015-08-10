@@ -103,14 +103,20 @@ data UcamWebauthInfo a = AuthInfo {
   TODO When the errors returned can be usefully used, ensure this correctly returns a lifted
   'Either b (UcanWebauthInfo a)' response.
 -}
-maybeAuthInfo :: (MonadReader (AuthRequest a) m, MonadIO m, MonadPlus m, a ~ Text) => ByteString -> m (UcamWebauthInfo a)
+maybeAuthInfo :: (FromJSON a, MonadReader (AuthRequest a) m, MonadIO m, MonadPlus m) => ByteString -> m (UcamWebauthInfo a)
 maybeAuthInfo = getAuthInfo <=< maybeAuthCode
 
 {-|
   A helper function to parse and validate a response from a @WLS@.
 -}
-maybeAuthCode :: (MonadReader (AuthRequest a) m, MonadIO m, MonadPlus m, a ~ Text) => ByteString -> m (SignedAuthResponse 'Valid a)
-maybeAuthCode = validateAuthResponse <=< liftMaybe . maybeResult . flip feed "" . parse ucamResponseParser
+maybeAuthCode :: (FromJSON a, MonadReader (AuthRequest a) m, MonadIO m, MonadPlus m) => ByteString -> m (SignedAuthResponse 'Valid a)
+maybeAuthCode = validateAuthResponse <=< authCode
+
+{-|
+  Parse the response from a @WLS@.
+-}
+authCode :: (FromJSON a, MonadReader (AuthRequest a) m, MonadIO m, MonadPlus m) => ByteString -> m (SignedAuthResponse 'MaybeValid a)
+authCode = liftMaybe . maybeResult . flip feed "" . parse ucamResponseParser
 
 {-|
   Extract the 'ByteString' response from the @WLS@ in the full response header.
@@ -623,7 +629,7 @@ validateAuthResponse x@SignedAuthResponse{..} = do
   Check the kid is valid
 -}
 validateKid :: KeyID -> Bool
-validateKid = flip elem ["2"]
+validateKid = flip elem ["2","901"]
 
 {-|
   Validate the signature

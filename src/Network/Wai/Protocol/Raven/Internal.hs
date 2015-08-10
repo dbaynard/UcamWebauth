@@ -7,15 +7,13 @@ Maintainer  : David Baynard <davidbaynard@gmail.com>
 
 module Network.Wai.Protocol.Raven.Internal (
     module Network.Wai.Protocol.Raven.Internal
-  , module X
 )   where
 
-
 -- Prelude
-import ClassyPrelude as X
+import ClassyPrelude
 
 -- The protocol
-import Network.Wai.Protocol.UcamWebauth  as X
+import Network.Wai.Protocol.UcamWebauth
 
 -- String handling
 import qualified Blaze.ByteString.Builder as Z (Builder)

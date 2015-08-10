@@ -16,6 +16,12 @@ module Network.Wai.Protocol.Raven.Auth (
   , module X
 )   where
 
+-- Prelude
+import ClassyPrelude
+
+-- The protocol
+import Network.Wai.Protocol.UcamWebauth
+
 import Network.Wai.Protocol.Raven.Internal as X
 
 ------------------------------------------------------------------------------
