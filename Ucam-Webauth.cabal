@@ -15,6 +15,7 @@ library
     hs-source-dirs:  .
     exposed-modules: UcamWebauth
                      RavenAuth
+                     RavenTest
 
     if flag(dev) || flag(library-only)
         cpp-options:   -DDEVELOPMENT
