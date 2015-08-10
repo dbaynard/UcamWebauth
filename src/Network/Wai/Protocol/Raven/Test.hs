@@ -1,5 +1,5 @@
 {-|
-Module      : RavenTest
+Module      : Network.Wai.Protocol.Raven.Test
 Description : Test Raven authentication
 Maintainer  : David Baynard <davidbaynard@gmail.com>
 
@@ -9,19 +9,18 @@ __Do Not__ use for real implementations, as the server’s private key is availa
 
 https://raven.cam.ac.uk/project/test-demo/
 
-The functions in this file shadow the names in the "RavenAuth" module. This is deliberate.
+The functions in this file shadow the names in the "Network.Wai.Protocol.Raven.Auth" module. This is deliberate.
 
 -}
-
-module RavenTest {-# WARNING "Do not use this module for production code. It is only for testing." #-} (
-    module RavenTest
+module Network.Wai.Protocol.Raven.Test {-# WARNING "Do not use this module for production code. It is only for testing." #-} (
+    module Network.Wai.Protocol.Raven.Test
 )   where
 
 -- Prelude
 import ClassyPrelude
 
 -- The protocol
-import UcamWebauth
+import Network.Wai.Protocol.UcamWebauth 
 
 -- String handling
 import qualified Blaze.ByteString.Builder as Z (Builder)

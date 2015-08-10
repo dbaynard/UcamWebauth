@@ -1,26 +1,25 @@
 {-|
-Module      : RavenAuth
+Module      : Network.Wai.Protocol.Raven.Auth 
 Description : Authenticate with Raven
 Maintainer  : David Baynard <davidbaynard@gmail.com>
 
 Authenticate with Raven, using the University of Cambridge protocol as implemented
-in the "UcamWebauth" module.
+in the "Network.Wai.Protocol.UcamWebauth" module.
 
 <https://raven.cam.ac.uk/project/>
 
-It is possible to test applications using the "RavenTest" module, instead.
+It is possible to test applications using the "Network.Wai.Protocol.Raven.Test" module, instead.
 
 -}
-
-module RavenAuth (
-    module RavenAuth
+module Network.Wai.Protocol.Raven.Auth (
+    module Network.Wai.Protocol.Raven.Auth
 )   where
 
 -- Prelude
 import ClassyPrelude
 
 -- The protocol
-import UcamWebauth
+import Network.Wai.Protocol.UcamWebauth 
 
 -- String handling
 import qualified Blaze.ByteString.Builder as Z (Builder)

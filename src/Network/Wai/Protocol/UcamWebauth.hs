@@ -1,5 +1,5 @@
 {-|
-Module      : Ucam-Webauth
+Module      : Network.Wai.Protocol.UcamWebauth
 Description : Authenticate using the Ucam-Webauth protocol
 Maintainer  : David Baynard <davidbaynard@gmail.com>
 
@@ -11,12 +11,12 @@ as in the link below. The protocol is a handshake between the
 
 <https://raven.cam.ac.uk/project/waa2wls-protocol.txt>
 
-See the "RavenAuth" module for a specific implementation.
+See the "Network.Wai.Protocol.Raven.Auth" module for a specific implementation.
 
 -}
 
-module UcamWebauth (
-    module UcamWebauth
+module Network.Wai.Protocol.UcamWebauth (
+    module Network.Wai.Protocol.UcamWebauth
 )   where
 
 -- Prelude
@@ -639,7 +639,7 @@ decodePubKey = hush . f
         f = getRSAKey . certPubKey . getCertificate <=< decodeSignedCertificate . pemContent <=< headErr "Empty list" <=< pemParseBS
 
 getKey :: (MonadIO m, Alternative m) => KeyID -> m PublicKey
-getKey key = liftMaybe <=< liftIO . withFile ("pubkey" <> (B.unpack . unKeyID) key <> ".crt") ReadMode $ 
+getKey key = liftMaybe <=< liftIO . withFile ("static/pubkey" <> (B.unpack . unKeyID) key <> ".crt") ReadMode $ 
         pure . decodePubKey <=< B.hGetContents
 
 validateSigKey :: forall m a . MonadPlus m => (KeyID -> m PublicKey) -> SignedAuthResponse 'MaybeValid a -> m Bool

@@ -12,10 +12,10 @@ Flag library-only
     Default:       False
 
 library
-    hs-source-dirs:  .
-    exposed-modules: UcamWebauth
-                     RavenAuth
-                     RavenTest
+    hs-source-dirs:  src
+    exposed-modules: Network.Wai.Protocol.UcamWebauth 
+                     Network.Wai.Protocol.Raven.Auth
+                     Network.Wai.Protocol.Raven.Test
 
     if flag(dev) || flag(library-only)
         cpp-options:   -DDEVELOPMENT
