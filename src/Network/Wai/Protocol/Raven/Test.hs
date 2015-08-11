@@ -40,3 +40,4 @@ ravenSettings :: Mod WAASettings
 ravenSettings = do
         ravenDefSettings
         validKids .= ["901"]
+        syncTimeOut .= 600

@@ -14,6 +14,9 @@ as in the link below. The protocol is a handshake between the
 See the "Network.Wai.Protocol.Raven.Auth" module for a specific implementation, and
 "Network.Wai.Protocol.Raven.Example" for an example.
 
+It is necessary to store the relevant public keys, as described in the documentation
+for 'readRSAKeyFile'.
+
 -}
 
 module Network.Wai.Protocol.UcamWebauth (
@@ -542,6 +545,9 @@ def = return ()
 config :: a -> Mod a -> a
 config = flip execState
 
+------------------------------------------------------------------------------
+-- ** 'WAASettings' and lenses
+
 {-|
   The settings for the application.
 
@@ -554,9 +560,6 @@ data WAASettings = WAASettings {
                  , _validKids :: [KeyID]
                  }
                  deriving (Show, Eq, Ord, Generic, Typeable, Data)
-
-------------------------------------------------------------------------------
--- ** Lenses
 
 {-|
   Accepted authentication types by the protocol.
@@ -604,7 +607,6 @@ validKids f WAASettings{..} = (\_validKids -> WAASettings{_validKids, ..}) <$> f
 
   To modify settings, use the provided lenses.
 -}
-
 configWAA :: Mod WAASettings -> WAASettings
 configWAA = config WAASettings {
                    _authAccepted = [Pwd]
@@ -613,10 +615,18 @@ configWAA = config WAASettings {
                  , _validKids = empty
                  }
 
+{-|
+  To access settings, use the lenses. In the default case,
+
+  @viewConfigWAA /lens/ def@
+-}
 viewConfigWAA :: Lens' WAASettings a -> Mod WAASettings -> a
 {-# INLINE viewConfigWAA #-}
 viewConfigWAA lens = view lens . configWAA
 
+{-|
+  TODO This is a default time. It doesn’t make much sense. Needs replacing.
+-}
 ancientUTCTime :: UTCTime
 ancientUTCTime = UTCTime (ModifiedJulianDay 0) 0
 
@@ -707,19 +717,15 @@ ucamResponseParser = do
                                        <$> noBang kidParser
                                        <*> ucamB64parser
             parseKidSig _ = (,) <$> noBang (optionMaybe kidParser) <*> optionMaybe ucamB64parser
+            {-|
+              The Ucam-Webauth protocol uses @!@ characters to separate the fields in the response. Any @!@
+              characters in the data itself must be url encoded. The representations used in this module
+              meet this criterion.
 
-------------------------------------------------------------------------------
--- *** Helpers
-
-{-|
-  The Ucam-Webauth protocol uses @!@ characters to separate the fields in the response. Any @!@
-  characters in the data itself must be url encoded. The representations used in this module
-  meet this criterion.
-
-  TODO Add tests to verify.
--}
-betweenBangs :: Parser StringType
-betweenBangs = takeWhile1 (/= '!')
+              TODO Add tests to verify.
+            -}
+            betweenBangs :: Parser StringType
+            betweenBangs = takeWhile1 (/= '!')
 
 ------------------------------------------------------------------------------
 -- * Validation
@@ -732,6 +738,11 @@ betweenBangs = takeWhile1 (/= '!')
   3. Validate the issue time
   4. Validate the url is the same as that transmitted
   5. Validate the auth and sso values are valid
+
+  The protocol requires a valid input, but 'ucamResponseParser' holds all the relevant logic
+  as the only way to produce a 'SignedAuthResponse' is with the parser.
+
+  This is the only way to produce a 'Valid' 'SignedAuthResponse', and therefore an 'AuthInfo'.
 -}
 validateAuthResponse :: forall a m . (MonadReader (AuthRequest a) m, MonadIO m, MonadPlus m)
                      => Mod WAASettings
@@ -749,7 +760,7 @@ validateAuthResponse mkConfig x@SignedAuthResponse{..} = do
             makeValid = coerce
 
 ------------------------------------------------------------------------------
--- * Helper functions
+-- ** Key ID
 
 {-|
   Check the kid is valid
@@ -757,24 +768,41 @@ validateAuthResponse mkConfig x@SignedAuthResponse{..} = do
 validateKid :: Mod WAASettings -> KeyID -> Bool
 validateKid = flip elem . viewConfigWAA validKids
 
+------------------------------------------------------------------------------
+-- ** Signature
+
 {-|
-  Validate the signature
+  Validate the signature, getting the key using 'readRSAKeyFile'
 -}
 validateSig :: (MonadPlus m, MonadIO m) => SignedAuthResponse 'MaybeValid a -> m Bool
-validateSig = validateSigKey getKey 
+validateSig = validateSigKey readRSAKeyFile 
 
-decodePubKey :: ByteString -- ^ The data representing a public key as PEM
-             -> Maybe PublicKey
-decodePubKey = hush . f
+decodeRSAPubKey :: ByteString -- ^ The data representing a public key as PEM.
+             -> Maybe PublicKey -- ^ @'Just' 'PublicKey'@ if RSA, 'Nothing' otherwise.
+decodeRSAPubKey = hush . f
     where
         f :: ByteString -> Either String PublicKey
         f = getRSAKey . certPubKey . getCertificate <=< decodeSignedCertificate . pemContent <=< headErr "Empty list" <=< pemParseBS
+        getRSAKey :: Alternative f => PubKey -> f PublicKey
+        getRSAKey (PubKeyRSA x) = pure x
+        getRSAKey _ = empty
 
-getKey :: (MonadIO m, Alternative m) => KeyID -> m PublicKey
-getKey key = liftMaybe <=< liftIO . withFile ("static/pubkey" <> (B.unpack . unKeyID) key <> ".crt") ReadMode $ 
-        pure . decodePubKey <=< B.hGetContents
+{-|
+  This assumes keys are PEM self-signed certificates in the ‘static’ directory, named
 
-validateSigKey :: forall m a . MonadPlus m => (KeyID -> m PublicKey) -> SignedAuthResponse 'MaybeValid a -> m Bool
+  @pubkey/key/.crt@
+
+  where @/key/@ should be replaced by the 'KeyID' /e.g./ @pubkey2.crt@
+-}
+readRSAKeyFile :: (MonadIO m, Alternative m) => KeyID
+                                             -> m PublicKey
+readRSAKeyFile key = liftMaybe <=< liftIO . withFile ("static/pubkey" <> (B.unpack . unKeyID) key <> ".crt") ReadMode $ 
+        pure . decodeRSAPubKey <=< B.hGetContents
+
+validateSigKey :: MonadPlus m
+               => (KeyID -> m PublicKey) -- ^ Get an RSA 'PublicKey' from somewhere, with the possibility of failing.
+               -> SignedAuthResponse 'MaybeValid a
+               -> m Bool -- ^ 'True' for a verified signature, 'False' for a verified invalid signature, and 'mzero' for an inability to validate
 validateSigKey importKey SignedAuthResponse{..} = pure . rsaValidate =<< importKey =<< liftMaybe ucamAKid
     where
         rsaValidate :: PublicKey -> Bool
@@ -784,28 +812,36 @@ validateSigKey importKey SignedAuthResponse{..} = pure . rsaValidate =<< importK
         signature :: ByteString
         signature = maybe mempty decodeUcamB64 ucamASig
 
-{-|
-  Validate the time of issue
--}
+------------------------------------------------------------------------------
+-- ** Issue time
 
+{-|
+  Validate the time of issue is within 'syncTimeOut' of the current time.
+
+  TODO Uses 'getCurrentTime'. There may be a better implementation.
+-}
 validateIssueTime :: (MonadIO m) => Mod WAASettings -> AuthResponse a -> m Bool
 validateIssueTime mkConfig AuthResponse{..} = (viewConfigWAA syncTimeOut mkConfig >) . flip diffUTCTime ucamAIssue <$> liftIO getCurrentTime
 
+------------------------------------------------------------------------------
+-- ** Url
+
 {-|
-  Check the url parameter matches that sent
+  Check the url parameter matches that sent in the 'AuthRequest'
 -}
 validateUrl :: (MonadReader (AuthRequest a) m) => AuthResponse a -> m Bool
 validateUrl AuthResponse{..} = (==) ucamAUrl . ucamQUrl <$> ask
 
+------------------------------------------------------------------------------
+-- ** Authentication type
+
 {-|
   Check the authentication type matches that sent.
 
-  If the iact variable is Yes, only return 'True' if the aauth value is acceptable.
-  If the iact variable is No, only return 'True' if sso contains a value that is acceptable.
-  If the iact variable is unset, return 'True' if there is an acceptable value in either field.
-
+  * If the iact variable is Yes, only return 'True' if the aauth value is acceptable.
+  * If the iact variable is No, only return 'True' if sso contains a value that is acceptable.
+  * If the iact variable is unset, return 'True' if there is an acceptable value in either field.
 -}
-
 validateAuthTypes :: forall a f . (Alternative f) => Mod WAASettings -> AuthResponse a -> f Bool
 validateAuthTypes mkConfig AuthResponse{..} = maybe validateAnyAuth validateSpecificAuth . viewConfigWAA needReauthentication $ mkConfig
     where
@@ -822,9 +858,7 @@ validateAuthTypes mkConfig AuthResponse{..} = maybe validateAnyAuth validateSpec
         validateSpecificAuth _ = any isAcceptableAuth <$> liftMaybe ucamASso
 
 ------------------------------------------------------------------------------
-
-------------------------------------------------------------------------------
--- *** Text encoding
+-- * Text encoding
 
 {-|
   Ensure Base 64 text is not confused with other 'ByteString's
@@ -899,30 +933,70 @@ decodeASCII = decodeUtf8 . B.filter isAlpha_ascii . unASCII
 ------------------------------------------------------------------------------
 -- * Helper functions
 
+{-|
+  * If parser succeeds, wrap return value in 'Just'
+  * If parser fails, return 'Nothing'.
+-}
 optionMaybe :: Parser a -> Parser (Maybe a)
 optionMaybe = option empty . fmap pure
 
+{-|
+  Combines a list of predicates into a single predicate. /c.f./ 'all', which applies
+  a single predicate to many items in a data structure.
+
+  Simplifies to
+
+  @ands :: ['Char' -> 'Bool'] -> 'Char' -> 'Bool'@
+-}
 ands :: (Applicative f, Traversable t, MonoFoldable (t a), Element (t a) ~ Bool)
     => t (f a) -> f Bool
 ands = fmap and . sequenceA
 
+{-|
+  Combines a list of predicates into a single predicate. /c.f./ 'any', which applies
+  a single predicate to many items in a data structure.
+
+  Simplifies to
+
+  @ors :: ['Char' -> 'Bool'] -> 'Char' -> 'Bool'@
+-}
 ors :: (Applicative f, Traversable t, MonoFoldable (t a), Element (t a) ~ Bool)
     => t (f a) -> f Bool
 ors = fmap or . sequenceA
 
-nots :: String -> Char -> Bool
+{-|
+  Produce a predicate on 'Char' values, returning 'True' if none of the characters
+  in the input list match, otherwise 'False'.
+
+  Simplifies to
+
+  @nots :: ['Char'] -> 'Char' -> 'Bool'@
+
+  Opposite of 'oneOf'
+-}
+nots :: String -- ^ List of characters, @['Char']@
+     -> Char -> Bool
 nots = ands . fmap (/=)
 
+{-|
+  Produce a predicate on 'Char' values, returning 'True' if at least one of the
+  characters in the input list match, otherwise 'False'.
+
+  Simplifies to
+
+  @oneOf :: ['Char'] -> 'Char' -> 'Bool'@
+
+  Opposite of 'nots'.
+-}
 oneOf :: (Eq a, Traversable t, MonoFoldable (t Bool), Element (t Bool) ~ Bool)
     => t a -> a -> Bool
 oneOf = ors . fmap (==)
 
+{-|
+  Lift a 'Maybe' value.
+-}
 liftMaybe :: Alternative f => Maybe a -> f a
 liftMaybe = maybe empty pure
-
-getRSAKey :: Alternative f => PubKey -> f PublicKey
-getRSAKey (PubKeyRSA x) = pure x
-getRSAKey _ = empty
 
 ------------------------------------------------------------------------------
 -- ** Lenses
