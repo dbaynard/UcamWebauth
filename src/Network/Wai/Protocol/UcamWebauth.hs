@@ -143,8 +143,6 @@ type LBS = LB.ByteString
 -}
 type StringType = ByteString
 
-deriving instance Data Status
-
 ------------------------------------------------------------------------------
 -- ** Request and response
 {- $request
@@ -204,7 +202,7 @@ data IsValid = MaybeValid
 -}
 data AuthResponse a = AuthResponse {
                   ucamAVer :: WLSVersion -- ^ The version of @WLS@: 1, 2 or 3
-                , ucamAStatus :: Status -- ^ 3 digit status code (200 is success)
+                , ucamAStatus :: StatusCode -- ^ 3 digit status code (200 is success)
                 , ucamAMsg :: Maybe Text -- ^ The status, for users
                 , ucamAIssue :: UTCTime -- ^ RFC 3339 representation of response’s time
                 , ucamAId :: Text -- ^ Not unguessable identifier, id + issue are unique
@@ -381,18 +379,66 @@ parsePtag = maybeResult . parse ptagParser
 ------------------------------------------------------------------------------
 -- *** HTTP response codes
 {- $statusCodes
-  TODO Consider converting to ADT.
+  A data type representing the HTTP status codes in the protocol. This is compatible
+  with the 'Status' type, but using the algebraic data type makes working with it
+  a little nicer.
 -}
+
+{-|
+  The valid HTTP status codes, according to the protocol.
+
+  'BadRequest400' is present as a default, if there is any other code received.
+-}
+data StatusCode = Ok200 -- ^ Authentication successful
+                | Gone410 -- ^ Cancelled by the user
+                | NoAuth510 -- ^ No mutually acceptable authentication types        
+                | ProtoErr520 -- ^ Unsupported protocol version (Only for version 1)  
+                | ParamErr530 -- ^ General request parameter error                    
+                | NoInteract540 -- ^ Interaction would be required but has been blocked 
+                | UnAuthAgent560 -- ^ Application agent is not authorised                
+                | Declined570 -- ^ Authentication declined                            
+                | BadRequest400 -- ^ Response not covered by any protocol responses
+                deriving (Show, Read, Eq, Ord, Bounded, Generic, Typeable, Data)
+
+instance Enum StatusCode where
+    toEnum = fromMaybe BadRequest400 . flip lookup responseCodes
+    fromEnum = statusCode . getStatus
 
 {-|
   An 'IntMap' of 'Status' code numbers in the protocol to their typed representations.
 -}
-responseCodes :: IntMap Status
-responseCodes = I.fromList . fmap (statusCode &&& id) $ [ok200, gone410, noAuth510, protoErr520, paramErr530, noInteract540, unAuthAgent560, declined570]
+responseCodes :: IntMap StatusCode
+responseCodes = I.fromList . fmap (statusCode . getStatus &&& id) $ [Ok200, Gone410, NoAuth510, ProtoErr520, ParamErr530, NoInteract540, UnAuthAgent560, Declined570]
 
 {-|
-  These functions implement the custom statuses returned by the @WLS@ as 'Status' values
+  Convert to the 'Status' type, defaulting to 'badRequest400' for a bad request
 -}
+getStatus :: StatusCode -> Status
+getStatus Ok200 = ok200
+getStatus Gone410 = gone410
+getStatus NoAuth510 = noAuth510
+getStatus ProtoErr520 = protoErr520
+getStatus ParamErr530 = paramErr530
+getStatus NoInteract540 = noInteract540
+getStatus UnAuthAgent560 = unAuthAgent560
+getStatus Declined570 = declined570
+getStatus _ = badRequest400
+
+{-|
+  A parser representing a typed 'Status' code within the protocol.
+-}
+responseCodeParser :: Parser StatusCode
+responseCodeParser = toEnum <$> decimal
+
+{-|
+  Parse a 'Status' from a 'StringType'.
+-}
+parseResponseCode :: StringType -> Maybe StatusCode
+parseResponseCode = maybeResult . parse responseCodeParser
+
+------------------------------------------------------------------------------
+-- *** 'Status' values
+
 noAuth510, protoErr520, paramErr530, noInteract540, unAuthAgent560, declined570 :: Status
 noAuth510 = mkStatus 510 "No mutually acceptable authentication types"
 protoErr520 = mkStatus 520 "Unsupported protocol version (Only for version 1)"
@@ -400,18 +446,6 @@ paramErr530 = mkStatus 530 "General request parameter error"
 noInteract540 = mkStatus 540 "Interaction would be required but has been blocked"
 unAuthAgent560 = mkStatus 560 "Application agent is not authorised"
 declined570 = mkStatus 570 "Authentication declined"
-
-{-|
-  A parser representing a typed 'Status' code within the protocol.
--}
-responseCodeParser :: Parser Status
-responseCodeParser = fromMaybe badRequest400 . flip lookup responseCodes <$> decimal
-
-{-|
-  Parse a 'Status' from a 'StringType'.
--}
-parseResponseCode :: StringType -> Maybe Status
-parseResponseCode = maybeResult . parse responseCodeParser
 
 ------------------------------------------------------------------------------
 -- *** Keys
@@ -662,14 +696,14 @@ ucamResponseParser = do
             parsePtags :: WLSVersion -> Parser (Maybe [Ptag])
             parsePtags WLS3 = noBang . optionMaybe $ ptagParser `sepBy` ","
             parsePtags _ = pure empty
-            parsePrincipal :: Status -> Parser (Maybe Text)
-            parsePrincipal (statusCode -> 200) = maybeBang . urlWrapText $ betweenBangs
+            parsePrincipal :: StatusCode -> Parser (Maybe Text)
+            parsePrincipal (statusCode . getStatus -> 200) = maybeBang . urlWrapText $ betweenBangs
             parsePrincipal _ = noBang . pure $ empty
-            parseSso :: Status -> Maybe AuthType -> Parser (Maybe [AuthType])
-            parseSso (statusCode -> 200) Nothing = noBang . fmap pure $ authTypeParser `sepBy1` ","
+            parseSso :: StatusCode -> Maybe AuthType -> Parser (Maybe [AuthType])
+            parseSso (statusCode . getStatus -> 200) Nothing = noBang . fmap pure $ authTypeParser `sepBy1` ","
             parseSso _ _ = noBang . pure $ empty
-            parseKidSig :: Status -> Parser (Maybe KeyID, Maybe UcamBase64BS)
-            parseKidSig (statusCode -> 200) = curry (pure *** pure)
+            parseKidSig :: StatusCode -> Parser (Maybe KeyID, Maybe UcamBase64BS)
+            parseKidSig (statusCode . getStatus -> 200) = curry (pure *** pure)
                                        <$> noBang kidParser
                                        <*> ucamB64parser
             parseKidSig _ = (,) <$> noBang (optionMaybe kidParser) <*> optionMaybe ucamB64parser
