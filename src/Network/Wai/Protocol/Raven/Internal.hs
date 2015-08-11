@@ -19,3 +19,10 @@ import Network.Wai.Protocol.UcamWebauth
 import qualified Blaze.ByteString.Builder as Z (Builder)
 
 type BBuilder = Z.Builder
+
+{-|
+  'WAASettings' for Raven
+-}
+ravenDefSettings :: Mod WAASettings
+ravenDefSettings = def
+

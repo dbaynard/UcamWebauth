@@ -64,7 +64,7 @@ application time req response = case pathInfo req of
         (Z.fromShow . requestHeaders $ req)
     ["foo", "authenticate"] -> response $ responseBuilder
         seeOther303
-        [("Content-Type", "text/plain"), ucamWebauthQuery ravenAuth . ucamWebauthHello $ time]
+        [("Content-Type", "text/plain"), ucamWebauthQuery ravenAuth . ucamWebauthHello ravenSettings $ time]
         mempty
     _ -> response $ responseBuilder
         status200
@@ -81,21 +81,21 @@ displayWLSResponse :: Request -> IO Z.Builder
 displayWLSResponse = displayAuthResponseFull <=< liftMaybe . lookUpWLSResponse
 
 displayAuthResponseFull :: ByteString -> IO Z.Builder
-displayAuthResponseFull = displaySomethingAuthy ancientUTCTime . maybeAuthCode
+displayAuthResponseFull = displaySomethingAuthy ancientUTCTime . maybeAuthCode ravenSettings
 
 displayAuthResponse :: ByteString -> IO Z.Builder
-displayAuthResponse = displaySomethingAuthy ancientUTCTime . maybeAuthInfo
+displayAuthResponse = displaySomethingAuthy ancientUTCTime . maybeAuthInfo ravenSettings
 
 displaySomethingAuthy :: (m ~ ReaderT (AuthRequest a) (MaybeT IO), Show b, a ~ Text) => UTCTime -> m b -> IO Z.Builder
-displaySomethingAuthy = flip . curry $ maybeT empty (pure . Z.fromShow) . uncurry runReaderT . second ucamWebauthHello
+displaySomethingAuthy = flip . curry $ maybeT empty (pure . Z.fromShow) . uncurry runReaderT . second (ucamWebauthHello ravenSettings)
 
-ucamWebauthHello :: (ToJSON a, IsString a, a ~ Text) => UTCTime -> AuthRequest a
-ucamWebauthHello time = AuthRequest {
+ucamWebauthHello :: (ToJSON a, IsString a, a ~ Text) => Mod WAASettings -> UTCTime -> AuthRequest a
+ucamWebauthHello mkConfig time = AuthRequest {
                   ucamQVer = WLS3
                 , ucamQUrl = urlToTransmit
                 , ucamQDesc = Just "This is a sample; it’s rather excellent!"
-                , ucamQAauth = authAccepted
-                , ucamQIact = needReauthentication
+                , ucamQAauth = pure . viewConfigWAA authAccepted $ mkConfig
+                , ucamQIact = viewConfigWAA needReauthentication mkConfig
                 , ucamQMsg = Just "This is a private resource, or something."
                 , ucamQParams = Just "This is 100% of the data! And it’s really quite cool"
                 , ucamQDate = pure time

@@ -11,7 +11,8 @@ as in the link below. The protocol is a handshake between the
 
 <https://raven.cam.ac.uk/project/waa2wls-protocol.txt>
 
-See the "Network.Wai.Protocol.Raven.Auth" module for a specific implementation.
+See the "Network.Wai.Protocol.Raven.Auth" module for a specific implementation, and
+"Network.Wai.Protocol.Raven.Example" for an example.
 
 -}
 
@@ -25,10 +26,13 @@ import Data.Data
 import GHC.Generics
 import Data.Coerce
 
-import Control.Applicative (empty, Alternative)
+import Control.Applicative (empty, Alternative, Const(..))
 import Control.Error
 
 import System.IO (withFile, IOMode(..))
+
+-- Settings
+import Control.Monad.State.Strict
 
 -- Wai and http protocol
 import Network.Wai
@@ -101,21 +105,21 @@ data UcamWebauthInfo a = AuthInfo {
   response, and if the response is valid, returns a 'UcamWebauthInfo' value.
 
   TODO When the errors returned can be usefully used, ensure this correctly returns a lifted
-  'Either b (UcanWebauthInfo a)' response.
+  'Either b (UcamWebauthInfo a)' response.
 -}
-maybeAuthInfo :: (FromJSON a, MonadReader (AuthRequest a) m, MonadIO m, MonadPlus m) => ByteString -> m (UcamWebauthInfo a)
-maybeAuthInfo = getAuthInfo <=< maybeAuthCode
+maybeAuthInfo :: (FromJSON a, MonadReader (AuthRequest a) m, MonadIO m, MonadPlus m) => Mod WAASettings -> ByteString -> m (UcamWebauthInfo a)
+maybeAuthInfo mkConfig = getAuthInfo <=< maybeAuthCode mkConfig
 
 {-|
   A helper function to parse and validate a response from a @WLS@.
 -}
-maybeAuthCode :: (FromJSON a, MonadReader (AuthRequest a) m, MonadIO m, MonadPlus m) => ByteString -> m (SignedAuthResponse 'Valid a)
-maybeAuthCode = validateAuthResponse <=< authCode
+maybeAuthCode :: (FromJSON a, MonadReader (AuthRequest a) m, MonadIO m, MonadPlus m) => Mod WAASettings -> ByteString -> m (SignedAuthResponse 'Valid a)
+maybeAuthCode mkConfig = validateAuthResponse mkConfig <=< authCode
 
 {-|
   Parse the response from a @WLS@.
 -}
-authCode :: (FromJSON a, MonadReader (AuthRequest a) m, MonadIO m, MonadPlus m) => ByteString -> m (SignedAuthResponse 'MaybeValid a)
+authCode :: (FromJSON a, MonadIO m, MonadPlus m) => ByteString -> m (SignedAuthResponse 'MaybeValid a)
 authCode = liftMaybe . maybeResult . flip feed "" . parse ucamResponseParser
 
 {-|
@@ -480,26 +484,104 @@ parseUcamTime = join . maybeResult . parse utcTimeParser . encodeUtf8 . unUcamTi
 ------------------------------------------------------------------------------
 -- * Default Settings
 {- $settings
-  TODO Implement using a State approach
+  See <https://ocharles.org.uk/blog/posts/2015-07-23-another-approach-to-default-variables.html>
+  for an explanation of this approach.
+
+  There is no need for users of the module to import "Control.Monad.State.Strict", as this section
+  exports all the necessary machinery.
 -}
+
+type Mod a = State a ()
 
 {-|
-  Accepted authentication types, by the implementation.
+  'def' means ‘use default settings’.
+
+  > def :: forall a . State a ()
+  > def = return ()
 -}
-authAccepted :: Maybe [AuthType]
-authAccepted = pure [Pwd]
+def :: Mod a
+def = return ()
 
 {-|
-  Accepted authentication types, as a sensible default for the protocol.
+  'config' modifies the default configuration for settings provided, with the 'State' function provided
 -}
-defaultAuthAccepted :: [AuthType]
-defaultAuthAccepted = [Pwd]
+config :: a -> Mod a -> a
+config = flip execState
 
-needReauthentication :: Maybe Bool
-needReauthentication = Nothing
+{-|
+  The settings for the application.
 
-allowedSyncTime :: NominalDiffTime
-allowedSyncTime = 40
+  TODO Do not export constructors or accessors, only lenses.
+-}
+data WAASettings = WAASettings {
+                   _authAccepted :: [AuthType]
+                 , _needReauthentication :: Maybe Bool
+                 , _syncTimeOut :: NominalDiffTime
+                 , _validKids :: [KeyID]
+                 }
+                 deriving (Show, Eq, Ord, Generic, Typeable, Data)
+
+------------------------------------------------------------------------------
+-- ** Lenses
+
+{-|
+  Accepted authentication types by the protocol.
+
+  Default @['Pwd']@
+-}
+authAccepted :: Lens' WAASettings [AuthType]
+authAccepted f WAASettings{..} = (\_authAccepted -> WAASettings{_authAccepted, ..}) <$> f _authAccepted
+
+{-|
+  'Just' 'True' means ‘must reauthenticate’, 'Just' 'False' means ‘non-interactive’, 'Nothing' means anything goes.
+
+  Default 'Nothing'
+-}
+needReauthentication :: Lens' WAASettings (Maybe Bool)
+needReauthentication f WAASettings{..} = (\_needReauthentication -> WAASettings{_needReauthentication, ..}) <$> f _needReauthentication
+
+{-|
+  A timeout for the response validation.
+
+  Default @40@ (seconds)
+-}
+syncTimeOut :: Lens' WAASettings NominalDiffTime
+syncTimeOut f WAASettings{..} = (\_syncTimeOut -> WAASettings{_syncTimeOut, ..}) <$> f _syncTimeOut
+
+{-|
+  Valid 'KeyID' values for the protocol.
+
+  Default @[]@ (/i.e./ no valid keys)
+-}
+validKids :: Lens' WAASettings [KeyID]
+validKids f WAASettings{..} = (\_validKids -> WAASettings{_validKids, ..}) <$> f _validKids
+
+------------------------------------------------------------------------------
+-- ** Defaults
+
+{-|
+  The default @WAA@ settings. To accept the defaults, use
+
+  > configWAA def
+
+  or
+
+  > configWAA . return $ ()
+
+  To modify settings, use the provided lenses.
+-}
+
+configWAA :: Mod WAASettings -> WAASettings
+configWAA = config WAASettings {
+                   _authAccepted = [Pwd]
+                 , _needReauthentication = Nothing
+                 , _syncTimeOut = 40
+                 , _validKids = empty
+                 }
+
+viewConfigWAA :: Lens' WAASettings a -> Mod WAASettings -> a
+{-# INLINE viewConfigWAA #-}
+viewConfigWAA lens = view lens . configWAA
 
 ancientUTCTime :: UTCTime
 ancientUTCTime = UTCTime (ModifiedJulianDay 0) 0
@@ -510,7 +592,12 @@ ancientUTCTime = UTCTime (ModifiedJulianDay 0) 0
 ------------------------------------------------------------------------------
 -- ** Printing
 
-ucamWebauthQuery :: ToJSON a => Z.Builder -> AuthRequest a -> Header
+{-|
+  Build a request header to send to the @WLS@, using an 'AuthRequest'
+-}
+ucamWebauthQuery :: ToJSON a => Z.Builder -- ^ The url of the @WLS@ api /e.g./ <https://raven.cam.ac.uk/auth/authenticate.html>
+                             -> AuthRequest a
+                             -> Header
 ucamWebauthQuery url AuthRequest{..} = (hLocation, toByteString $ url <> theQuery)
     where
         theQuery :: Z.Builder
@@ -538,7 +625,9 @@ ucamWebauthQuery url AuthRequest{..} = (hLocation, toByteString $ url <> theQuer
 -- ** Parsing
 
 {-|
-  Parse the response to the authentication server as a request
+  Parse the response from the @WLS@
+
+  As a reminder, the 'MaybeValid' symbol indicates the response has not yet been verified.
 -}
 ucamResponseParser :: forall a . FromJSON a => Parser (SignedAuthResponse 'MaybeValid a)
 ucamResponseParser = do
@@ -610,13 +699,16 @@ betweenBangs = takeWhile1 (/= '!')
   4. Validate the url is the same as that transmitted
   5. Validate the auth and sso values are valid
 -}
-validateAuthResponse :: forall a m . (MonadReader (AuthRequest a) m, MonadIO m, MonadPlus m) => SignedAuthResponse 'MaybeValid a -> m (SignedAuthResponse 'Valid a)
-validateAuthResponse x@SignedAuthResponse{..} = do
-        guard . validateKid =<< liftMaybe ucamAKid
+validateAuthResponse :: forall a m . (MonadReader (AuthRequest a) m, MonadIO m, MonadPlus m)
+                     => Mod WAASettings
+                     -> SignedAuthResponse 'MaybeValid a
+                     -> m (SignedAuthResponse 'Valid a)
+validateAuthResponse mkConfig x@SignedAuthResponse{..} = do
+        guard . validateKid mkConfig =<< liftMaybe ucamAKid
         guard <=< validateSig $ x
-        guard <=< validateIssueTime $ ucamAResponse
+        guard <=< validateIssueTime mkConfig $ ucamAResponse
         guard <=< validateUrl $ ucamAResponse
-        guard <=< validateAuthTypes $ ucamAResponse
+        guard <=< validateAuthTypes mkConfig $ ucamAResponse
         return . makeValid $ x
         where
             makeValid :: SignedAuthResponse 'MaybeValid a -> SignedAuthResponse 'Valid a
@@ -628,8 +720,8 @@ validateAuthResponse x@SignedAuthResponse{..} = do
 {-|
   Check the kid is valid
 -}
-validateKid :: KeyID -> Bool
-validateKid = flip elem ["2","901"]
+validateKid :: Mod WAASettings -> KeyID -> Bool
+validateKid = flip elem . viewConfigWAA validKids
 
 {-|
   Validate the signature
@@ -662,8 +754,8 @@ validateSigKey importKey SignedAuthResponse{..} = pure . rsaValidate =<< importK
   Validate the time of issue
 -}
 
-validateIssueTime :: (MonadIO m) => AuthResponse a -> m Bool
-validateIssueTime AuthResponse{..} = (>) allowedSyncTime . flip diffUTCTime ucamAIssue <$> liftIO getCurrentTime
+validateIssueTime :: (MonadIO m) => Mod WAASettings -> AuthResponse a -> m Bool
+validateIssueTime mkConfig AuthResponse{..} = (viewConfigWAA syncTimeOut mkConfig >) . flip diffUTCTime ucamAIssue <$> liftIO getCurrentTime
 
 {-|
   Check the url parameter matches that sent
@@ -680,11 +772,11 @@ validateUrl AuthResponse{..} = (==) ucamAUrl . ucamQUrl <$> ask
 
 -}
 
-validateAuthTypes :: forall a f . (Alternative f) => AuthResponse a -> f Bool
-validateAuthTypes AuthResponse{..} = maybe validateAnyAuth validateSpecificAuth needReauthentication
+validateAuthTypes :: forall a f . (Alternative f) => Mod WAASettings -> AuthResponse a -> f Bool
+validateAuthTypes mkConfig AuthResponse{..} = maybe validateAnyAuth validateSpecificAuth . viewConfigWAA needReauthentication $ mkConfig
     where
         isAcceptableAuth :: AuthType -> Bool
-        isAcceptableAuth = flip elem (fromMaybe defaultAuthAccepted authAccepted)
+        isAcceptableAuth = flip elem . viewConfigWAA authAccepted $ mkConfig
         anyAuth :: Maybe AuthType -> Maybe [AuthType] -> Bool
         anyAuth Nothing (Just x) = any isAcceptableAuth x
         anyAuth (Just x) Nothing = isAcceptableAuth x
@@ -797,3 +889,73 @@ liftMaybe = maybe empty pure
 getRSAKey :: Alternative f => PubKey -> f PublicKey
 getRSAKey (PubKeyRSA x) = pure x
 getRSAKey _ = empty
+
+------------------------------------------------------------------------------
+-- ** Lenses
+{- $lenses
+  Rather than import a lens library, the simple functions required can be easily
+  implemented here.
+
+  TODO The types should be compatible with other lens libraries.
+-}
+
+{-|
+  A 'Lens' takes a function to modify a value of type 'a' in a record of type 's'
+  to give a value of type 'b' under the context 'f', in a record of type 't' under
+  the context 'f', for any valid 'Functor' context 'f'.
+-}
+type Lens s t a b = forall f . (Functor f) => (a -> f b) -> s -> f t
+
+{-|
+  A 'Lens'' takes a function to modify a value of type 'a' in a record of type 's'
+  to give a value of type 'a' under the context 'f', in a record of type 's' under
+  the context 'f', for any valid 'Functor' context 'f'.
+-}
+type Lens' s a = Lens s s a a
+
+{-|
+  Also known as 'over', '%~' uses the supplied function to replace values within data types
+
+  > l %~ f = runIdentity . l (Identity . f)
+
+  For 'Lens'' the type simplifies to
+
+  > (%~) :: Lens' s a -> (a -> a) -> s -> s
+
+  'over' has not been implemented.
+-}
+(%~) :: Lens s t a b -> (a -> b) -> s -> t
+l %~ f = runIdentity . l (Identity . f)
+infixr 4 %~
+
+{-|
+  Also known as 'assign', '.=' assigns the state in a 'StateT' environment to that supplied
+
+  > l .= v = modify $ l %~ const v
+  nad-ST
+
+  For 'Lens'' the type simplifies to
+
+  > (.=) :: MonadState s m => Lens' s a -> a -> m ()
+
+  '.=' conflicts with 'Data.Aeson..=' from "Data.Aeson"
+
+  'assign' has not been implemented.
+-}
+(.=) :: MonadState s m => Lens s s a b -> b -> m ()
+l .= v = modify $ l %~ const v
+infix 4 .=
+
+{-|
+  Also know (flipped) as 'view', '^.' extracts the value from a record 's' of type 'a' by
+  the given 'Lens'.
+
+  'view' is more useful in function composition.
+-}
+(^.) :: s -> Lens s t a b -> a
+s ^. l = getConst . l Const $ s
+infixl 8 ^.
+
+view :: Lens s t a b -> s -> a
+{-# INLINE view #-}
+view l s = s ^. l

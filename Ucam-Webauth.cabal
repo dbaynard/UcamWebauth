@@ -44,6 +44,8 @@ library
                 TupleSections
                 RecordWildCards
                 ScopedTypeVariables
+                RankNTypes
+                NamedFieldPuns
 
     build-depends: base                          >= 4          && < 5
                  , aeson                         >= 0.6
@@ -56,6 +58,7 @@ library
                  , cryptonite
                  , errors
                  , http-types
+                 , mtl
                  , pem
                  , text                          >= 0.11       && < 2.0
                  , time

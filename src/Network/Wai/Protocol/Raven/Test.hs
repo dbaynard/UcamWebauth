@@ -36,4 +36,7 @@ import Network.Wai.Protocol.Raven.Internal as X
 ravenAuth :: BBuilder
 ravenAuth = "https://demo.raven.cam.ac.uk/auth/authenticate.html"
 
-
+ravenSettings :: Mod WAASettings
+ravenSettings = do
+        ravenDefSettings
+        validKids .= ["901"]
