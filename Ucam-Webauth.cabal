@@ -13,7 +13,8 @@ Flag library-only
 
 library
     hs-source-dirs:  src
-    exposed-modules: Network.Wai.Protocol.UcamWebauth 
+    exposed-modules: Network.Protocol.UcamWebauth 
+                     Network.Wai.Protocol.UcamWebauth 
                      Network.Wai.Protocol.Raven.Auth
                      Network.Wai.Protocol.Raven.Test
                      Network.Wai.Protocol.Raven.Example

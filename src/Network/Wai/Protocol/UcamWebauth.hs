@@ -27,6 +27,9 @@ module Network.Wai.Protocol.UcamWebauth (
 
 -- Prelude
 import ClassyPrelude hiding (take, catMaybes)
+
+import Network.Protocol.UcamWebauth
+
 import Data.Data
 import GHC.Generics
 import Data.Coerce
