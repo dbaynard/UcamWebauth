@@ -22,6 +22,7 @@ for 'readRSAKeyFile'.
 module Network.Wai.Protocol.UcamWebauth (
     module Network.Wai.Protocol.UcamWebauth
   , module Data.Lens.Internal
+  , module Data.Settings.Internal
 )   where
 
 -- Prelude
@@ -36,7 +37,7 @@ import Control.Error
 import System.IO (withFile, IOMode(..))
 
 -- Settings
-import Control.Monad.State.Strict
+import Data.Settings.Internal
 import Data.Lens.Internal
 
 -- Wai and http protocol
@@ -513,34 +514,7 @@ parseUcamTime :: UcamTime -> Maybe UTCTime
 parseUcamTime = join . maybeResult . parse utcTimeParser . encodeUtf8 . unUcamTime
 
 ------------------------------------------------------------------------------
--- * Default Settings
-{- $settings
-  See <https://ocharles.org.uk/blog/posts/2015-07-23-another-approach-to-default-variables.html>
-  for an explanation of this approach.
-
-  There is no need for users of the module to import "Control.Monad.State.Strict", as this section
-  exports all the necessary machinery.
--}
-
-type Mod a = State a ()
-
-{-|
-  'def' means ‘use default settings’.
-
-  > def :: forall a . State a ()
-  > def = return ()
--}
-def :: Mod a
-def = return ()
-
-{-|
-  'config' modifies the default configuration for settings provided, with the 'State' function provided
--}
-config :: a -> Mod a -> a
-config = flip execState
-
-------------------------------------------------------------------------------
--- ** 'WAASettings' and lenses
+-- * 'WAASettings' and lenses
 
 {-|
   The settings for the application.

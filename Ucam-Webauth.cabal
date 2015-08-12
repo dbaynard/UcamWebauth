@@ -21,6 +21,7 @@ library
     other-modules:   Network.Wai.Protocol.UcamWebauth.Internal
                      Network.Wai.Protocol.Raven.Internal
                      Data.Lens.Internal
+                     Data.Settings.Internal
 
     if flag(dev) || flag(library-only)
         cpp-options:   -DDEVELOPMENT
