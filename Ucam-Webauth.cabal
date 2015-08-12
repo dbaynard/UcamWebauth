@@ -18,7 +18,7 @@ library
                      Network.Wai.Protocol.Raven.Test
                      Network.Wai.Protocol.Raven.Example
 
-    other-modules:   Network.Wai.Protocol.UcamWebauth.Internal
+    other-modules:   Network.Protocol.UcamWebauth.Internal
                      Network.Wai.Protocol.Raven.Internal
                      Data.Lens.Internal
                      Data.Settings.Internal
