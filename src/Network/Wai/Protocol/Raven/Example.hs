@@ -11,7 +11,7 @@ module Network.Wai.Protocol.Raven.Example (
 
 -- Prelude
 import ClassyPrelude
-import Control.Applicative (empty, Alternative)
+import Control.Applicative (empty)
 import Control.Error
 
 -- The protocol
@@ -23,7 +23,7 @@ import Network.Wai
 import Network.HTTP.Types
 
 -- JSON
-import Data.Aeson (ToJSON, FromJSON)
+import Data.Aeson (ToJSON)
 
 -- ByteString building
 import Blaze.ByteString.Builder hiding (Builder)

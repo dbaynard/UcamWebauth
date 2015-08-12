@@ -252,7 +252,7 @@ ucamWebauthQuery url AuthRequest{..} = (hLocation, toByteString $ url <> theQuer
         strictQs :: Query
         strictQs = toQuery [
                    ("ver", pure . textWLSVersion $ ucamQVer) :: (Text, Maybe ByteString)
-                 , ("desc", encodeUtf8 <$> ucamQDesc)
+                 , ("desc", encodeUtf8 . decodeASCII <$> ucamQDesc)
                  , ("iact", boolToYNS <$> ucamQIact)
                  , ("fail", boolToYNS <$> ucamQFail)
                  ]
@@ -400,7 +400,7 @@ decodeRSAPubKey = hush . f
 readRSAKeyFile :: (MonadIO m, Alternative m) => KeyID
                                              -> m PublicKey
 readRSAKeyFile key = liftMaybe <=< liftIO . withFile ("static/pubkey" <> (B.unpack . unKeyID) key <> ".crt") ReadMode $ 
-        pure . decodeRSAPubKey <=< B.hGetContents
+        pure . decodeRSAPubKey <=< hGetContents
 
 validateSigKey :: MonadPlus m
                => (KeyID -> m PublicKey) -- ^ Get an RSA 'PublicKey' from somewhere, with the possibility of failing.
@@ -461,59 +461,13 @@ validateAuthTypes mkConfig AuthResponse{..} = maybe validateAnyAuth validateSpec
         validateSpecificAuth _ = any isAcceptableAuth <$> liftMaybe ucamASso
 
 ------------------------------------------------------------------------------
--- * Text encoding
-
-{-|
-  Convert to the protocol’s version of base64
--}
-convertB64Ucam :: Base64BS -> UcamBase64BS
-convertB64Ucam = UcamB64 . B.map camFilter . unB64
-    where
-        camFilter :: Char -> Char
-        camFilter '+' = '-'
-        camFilter '/' = '.'
-        camFilter '=' = '_'
-        camFilter x = x
-
-{-|
-  Convert from the protocol’s version of base64
--}
-convertUcamB64 :: UcamBase64BS -> Base64BS
-convertUcamB64 = B64 . B.map camFilter . unUcamB64
-    where
-        camFilter :: Char -> Char
-        camFilter '-' = '+'
-        camFilter '.' = '/'
-        camFilter '_' = '='
-        camFilter x = x
-
-{-|
-  This uses 'B.decodeLenient' internally.
-
-  TODO It should not be a problem, if operating on validated input, but might be worth testing (low priority).
--}
-decodeUcamB64 :: UcamBase64BS -> StringType
-decodeUcamB64 = B.decodeLenient . unB64 . convertUcamB64
-
-{-|
-  Unlike decoding, this is fully pure.
--}
-encodeUcamB64 :: StringType -> UcamBase64BS
-encodeUcamB64 = convertB64Ucam . B64 . B.encode
+-- ** Text encoding
 
 {-|
   A parser to represent a Ucam-Webauth variant base64–encoded 'StringType' as a 'UcamBase64BS'
 -}
 ucamB64parser :: Parser UcamBase64BS
 ucamB64parser = UcamB64 <$> takeWhile1 (ors [isAlphaNum, inClass "-._"])
-
-{-|
-  Extract ascii text.
-
-  TODO Use Haskell’s utf7 functions
--}
-decodeASCII :: ASCII -> Text
-decodeASCII = decodeUtf8 . B.filter isAlpha_ascii . unASCII
 
 ------------------------------------------------------------------------------
 -- * Helper functions

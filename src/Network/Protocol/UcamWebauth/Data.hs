@@ -23,9 +23,11 @@ import GHC.Generics
 import Data.Lens.Internal
 
 -- Character encoding
+import qualified Data.ByteString.Base64 as B
+
 import qualified Data.ByteString.Char8 as B
 import qualified Data.Text as T
-import Data.Char (isAlphaNum)
+import Data.Char (isAlphaNum, isAscii)
 
 -- Time
 import Data.Time.RFC3339
@@ -34,9 +36,6 @@ import Data.Time (DiffTime, NominalDiffTime)
 
 -- HTTP protocol
 import Network.HTTP.Types
-
--- Map structures
-import qualified Data.IntMap.Strict as I
 
 ------------------------------------------------------------------------------
 -- * Core data types and associated functions
@@ -83,7 +82,7 @@ type StringType = ByteString
 data AuthRequest a = AuthRequest {
                   ucamQVer :: WLSVersion -- ^ The version of @WLS.@ 1, 2 or 3.
                 , ucamQUrl :: Text -- ^ Full http(s) url of resource request for display, and redirection after authentication at the @WLS@
-                , ucamQDesc :: Maybe Text -- ^ Description, transmitted as ASCII
+                , ucamQDesc :: Maybe ASCII -- ^ Description, transmitted as ASCII
                 , ucamQAauth :: Maybe [AuthType] -- ^ Comma delimited sequence of text tokens representing satisfactory authentication methods
                 , ucamQIact :: Maybe Bool -- ^ A token (Yes/No). Yes requires re-authentication. No requires no interaction.
                 , ucamQMsg :: Maybe Text -- ^ Why is authentication being requested?
@@ -264,7 +263,7 @@ instance Enum StatusCode where
   An 'IntMap' of 'Status' code numbers in the protocol to their typed representations.
 -}
 responseCodes :: IntMap StatusCode
-responseCodes = I.fromList . fmap (statusCode . getStatus &&& id) $ [Ok200, Gone410, NoAuth510, ProtoErr520, ParamErr530, NoInteract540, UnAuthAgent560, Declined570]
+responseCodes = mapFromList . fmap (statusCode . getStatus &&& id) $ [Ok200, Gone410, NoAuth510, ProtoErr520, ParamErr530, NoInteract540, UnAuthAgent560, Declined570]
 
 {-|
   Convert to the 'Status' type, defaulting to 'badRequest400' for a bad request
@@ -411,6 +410,51 @@ newtype UcamBase64BS = UcamB64 { unUcamB64 :: ByteString }
 {-|
   Ensure ASCII text is not confused with other 'ByteString's
 -}
-newtype ASCII = ASCII { unASCII :: ByteString }
+newtype ASCII = ASCII { unASCII :: Text }
     deriving (Show, Read, Eq, Ord, Semigroup, Monoid, IsString, Generic, Typeable, Data)
 
+{-|
+  Convert to the protocol’s version of base64
+-}
+convertB64Ucam :: Base64BS -> UcamBase64BS
+convertB64Ucam = UcamB64 . B.map camFilter . unB64
+    where
+        camFilter :: Char -> Char
+        camFilter '+' = '-'
+        camFilter '/' = '.'
+        camFilter '=' = '_'
+        camFilter x = x
+
+{-|
+  Convert from the protocol’s version of base64
+-}
+convertUcamB64 :: UcamBase64BS -> Base64BS
+convertUcamB64 = B64 . B.map camFilter . unUcamB64
+    where
+        camFilter :: Char -> Char
+        camFilter '-' = '+'
+        camFilter '.' = '/'
+        camFilter '_' = '='
+        camFilter x = x
+
+{-|
+  This uses 'B.decodeLenient' internally.
+
+  TODO It should not be a problem, if operating on validated input, but might be worth testing (low priority).
+-}
+decodeUcamB64 :: UcamBase64BS -> StringType
+decodeUcamB64 = B.decodeLenient . unB64 . convertUcamB64
+
+{-|
+  Unlike decoding, this is fully pure.
+-}
+encodeUcamB64 :: StringType -> UcamBase64BS
+encodeUcamB64 = convertB64Ucam . B64 . B.encode
+
+{-|
+  Extract ascii text.
+
+  TODO Use Haskell’s utf7 functions
+-}
+decodeASCII :: ASCII -> Text
+decodeASCII = filter isAscii . unASCII
