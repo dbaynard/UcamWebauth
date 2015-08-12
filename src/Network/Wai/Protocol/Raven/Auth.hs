@@ -32,7 +32,7 @@ import Network.Wai.Protocol.Raven.Internal as X
 
   > ravenAuth = "https://raven.cam.ac.uk/auth/authenticate.html"
 -}
-ravenAuth :: BBuilder
+ravenAuth :: BlazeBuilder
 ravenAuth = "https://raven.cam.ac.uk/auth/authenticate.html"
 
 ravenSettings :: Mod WAASettings

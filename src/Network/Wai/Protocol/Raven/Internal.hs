@@ -15,11 +15,6 @@ import ClassyPrelude
 -- The protocol
 import Network.Wai.Protocol.UcamWebauth
 
--- String handling
-import qualified Blaze.ByteString.Builder as Z (Builder)
-
-type BBuilder = Z.Builder
-
 {-|
   'WAASettings' for Raven
 -}

@@ -27,7 +27,6 @@ import Data.Aeson (ToJSON, FromJSON)
 
 -- ByteString building
 import Blaze.ByteString.Builder hiding (Builder)
-import qualified Blaze.ByteString.Builder as Z (Builder)
 import qualified Blaze.ByteString.Builder.Char.Utf8 as Z
 
 -- Warp server
@@ -71,22 +70,22 @@ application time req response = case pathInfo req of
         [("Content-Type", "text/plain")]
         (fromByteString "You requested something else")
 
-displayWLSQuery :: Request -> Z.Builder
+displayWLSQuery :: Request -> BlazeBuilder
 displayWLSQuery = maybe mempty Z.fromShow . lookUpWLSResponse
 
-displayAuthInfo :: Request -> IO Z.Builder
+displayAuthInfo :: Request -> IO BlazeBuilder
 displayAuthInfo = displayAuthResponse <=< liftMaybe . lookUpWLSResponse
 
-displayWLSResponse :: Request -> IO Z.Builder
+displayWLSResponse :: Request -> IO BlazeBuilder
 displayWLSResponse = displayAuthResponseFull <=< liftMaybe . lookUpWLSResponse
 
-displayAuthResponseFull :: ByteString -> IO Z.Builder
+displayAuthResponseFull :: ByteString -> IO BlazeBuilder
 displayAuthResponseFull = displaySomethingAuthy ancientUTCTime . maybeAuthCode ravenSettings
 
-displayAuthResponse :: ByteString -> IO Z.Builder
+displayAuthResponse :: ByteString -> IO BlazeBuilder
 displayAuthResponse = displaySomethingAuthy ancientUTCTime . maybeAuthInfo ravenSettings
 
-displaySomethingAuthy :: (m ~ ReaderT (AuthRequest a) (MaybeT IO), Show b, a ~ Text) => UTCTime -> m b -> IO Z.Builder
+displaySomethingAuthy :: (m ~ ReaderT (AuthRequest a) (MaybeT IO), Show b, a ~ Text) => UTCTime -> m b -> IO BlazeBuilder
 displaySomethingAuthy = flip . curry $ maybeT empty (pure . Z.fromShow) . uncurry runReaderT . second (ucamWebauthHello ravenSettings)
 
 ucamWebauthHello :: (ToJSON a, IsString a, a ~ Text) => Mod WAASettings -> UTCTime -> AuthRequest a

@@ -58,7 +58,6 @@ import qualified Data.ByteString.Char8 as B
 
 -- ByteString building
 import Blaze.ByteString.Builder hiding (Builder)
-import qualified Blaze.ByteString.Builder as Z (Builder)
 
 -- Parsing
 import Data.Attoparsec.Combinator (lookAhead)
@@ -66,15 +65,12 @@ import Data.Attoparsec.ByteString.Char8 hiding (count)
 import qualified Data.Attoparsec.ByteString.Char8 as A
 
 -- Map structures
-import Data.IntMap.Strict ()
 import qualified Data.IntMap.Strict as I
-import Data.Map.Strict ()
 import qualified Data.Map.Strict as M
 
 -- JSON (Aeson)
 import Data.Aeson (ToJSON, FromJSON)
 import qualified Data.Aeson as A
-import qualified Data.ByteString.Lazy as LB (ByteString)
 
 -- Crypto
 import Crypto.PubKey.RSA.Types
@@ -137,10 +133,6 @@ lookUpWLSResponse = join . M.lookup "WLS-Response" . M.fromList . queryString
 ------------------------------------------------------------------------------
 -- ** Type Synonyms
 
-{-|
-  Shorter type synonym for lazy 'LB.ByteString'
--}
-type LBS = LB.ByteString
 {-|
   A synonym to abstract much behaviour over a generic string type.
 -}
@@ -639,12 +631,12 @@ ancientUTCTime = UTCTime (ModifiedJulianDay 0) 0
 {-|
   Build a request header to send to the @WLS@, using an 'AuthRequest'
 -}
-ucamWebauthQuery :: ToJSON a => Z.Builder -- ^ The url of the @WLS@ api /e.g./ <https://raven.cam.ac.uk/auth/authenticate.html>
+ucamWebauthQuery :: ToJSON a => BlazeBuilder -- ^ The url of the @WLS@ api /e.g./ <https://raven.cam.ac.uk/auth/authenticate.html>
                              -> AuthRequest a
                              -> Header
 ucamWebauthQuery url AuthRequest{..} = (hLocation, toByteString $ url <> theQuery)
     where
-        theQuery :: Z.Builder
+        theQuery :: BlazeBuilder
         theQuery = renderQueryBuilder True $ strictQs <> textQs <> lazyQs
         strictQs :: Query
         strictQs = toQuery [
@@ -662,7 +654,7 @@ ucamWebauthQuery url AuthRequest{..} = (hLocation, toByteString $ url <> theQuer
                  ]
         lazyQs :: Query
         lazyQs = toQuery [
-                   ("params", L.encode . A.encode <$> ucamQParams) :: (Text, Maybe LBS)
+                   ("params", L.encode . A.encode <$> ucamQParams) :: (Text, Maybe LByteString)
                  ]
 
 ------------------------------------------------------------------------------
