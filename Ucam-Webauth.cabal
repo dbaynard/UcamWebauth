@@ -20,6 +20,7 @@ library
                      Network.Wai.Protocol.Raven.Example
 
     other-modules:   Network.Protocol.UcamWebauth.Internal
+                     Network.Protocol.UcamWebauth.Data
                      Network.Wai.Protocol.Raven.Internal
                      Data.Lens.Internal
                      Data.Settings.Internal
