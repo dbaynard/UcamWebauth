@@ -490,9 +490,13 @@ ucamTime = UcamTime . T.filter isAlphaNum . formatTimeRFC3339 . utcToZonedTime u
 
 {-|
   Using 'ucamTimeParser', work out the actual 'UTCTime' for further processing.
+
+  If 'ucamTimeParser' succeeds it should always produce a valid result for 'parseTimeRFC3339'.
+  As a result, 'parseTimeRFC3339' is extracted from the Maybe enviroment using 'fromMaybe' with
+  'error'.
 -}
-utcTimeParser :: Parser (Maybe UTCTime)
-utcTimeParser = fmap zonedTimeToUTC . parseTimeRFC3339 . unUcamTime <$> ucamTimeParser
+utcTimeParser :: Parser UTCTime
+utcTimeParser = zonedTimeToUTC . fromMaybe (error "Cannot parse time as RFC3339. There’s a bug in the parser.") . parseTimeRFC3339 . unUcamTime <$> ucamTimeParser
 
 {-|
   This parses a 'StringType' into a 'UcamTime'
@@ -511,7 +515,7 @@ ucamTimeParser = do
   Run 'utcTimeParser'
 -}
 parseUcamTime :: UcamTime -> Maybe UTCTime
-parseUcamTime = join . maybeResult . parse utcTimeParser . encodeUtf8 . unUcamTime
+parseUcamTime = maybeResult . parse utcTimeParser . encodeUtf8 . unUcamTime
 
 ------------------------------------------------------------------------------
 -- * 'WAASettings' and lenses
@@ -653,7 +657,7 @@ ucamResponseParser = do
                     ucamAVer <- noBang wlsVersionParser
                     ucamAStatus <- noBang responseCodeParser
                     ucamAMsg <- maybeBang . urlWrapText $ betweenBangs
-                    ucamAIssue <- noBang $ fromMaybe ancientUTCTime <$> utcTimeParser
+                    ucamAIssue <- noBang utcTimeParser
                     ucamAId <- noBang . urlWrapText $ betweenBangs
                     ucamAUrl <- noBang . urlWrapText $ betweenBangs
                     ucamAPrincipal <- parsePrincipal ucamAStatus
