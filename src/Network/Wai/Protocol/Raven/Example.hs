@@ -63,7 +63,7 @@ application time req response = case pathInfo req of
         (Z.fromShow . requestHeaders $ req)
     ["foo", "authenticate"] -> response $ responseBuilder
         seeOther303
-        [("Content-Type", "text/plain"), ucamWebauthQuery ravenAuth . ucamWebauthHello $ ravenSettings >> recentTime .= time]
+        [("Content-Type", "text/plain"), ucamWebauthQuery ravenAuth . ucamWebauthHello $ mySettings >> recentTime .= time]
         mempty
     _ -> response $ responseBuilder
         status200
@@ -80,10 +80,10 @@ displayWLSResponse :: Request -> IO BlazeBuilder
 displayWLSResponse = displayAuthResponseFull <=< liftMaybe . lookUpWLSResponse
 
 displayAuthResponseFull :: ByteString -> IO BlazeBuilder
-displayAuthResponseFull = displaySomethingAuthy ravenSettings . maybeAuthCode ravenSettings
+displayAuthResponseFull = displaySomethingAuthy mySettings . maybeAuthCode mySettings
 
 displayAuthResponse :: ByteString -> IO BlazeBuilder
-displayAuthResponse = displaySomethingAuthy ravenSettings . maybeAuthInfo ravenSettings
+displayAuthResponse = displaySomethingAuthy mySettings . maybeAuthInfo mySettings
 
 displaySomethingAuthy :: (m ~ ReaderT (AuthRequest a) (MaybeT IO), Show b, a ~ Text) => Mod WAASettings -> m b -> IO BlazeBuilder
 displaySomethingAuthy = flip . curry $ maybeT empty (pure . Z.fromShow) . uncurry runReaderT . second ucamWebauthHello
@@ -91,7 +91,7 @@ displaySomethingAuthy = flip . curry $ maybeT empty (pure . Z.fromShow) . uncurr
 ucamWebauthHello :: (ToJSON a, IsString a, a ~ Text) => Mod WAASettings -> AuthRequest a
 ucamWebauthHello mkConfig = AuthRequest {
                   ucamQVer = WLS3
-                , ucamQUrl = urlToTransmit
+                , ucamQUrl = viewConfigWAA applicationUrl mkConfig
                 , ucamQDesc = Just "This is a sample; it’s rather excellent!"
                 , ucamQAauth = pure . viewConfigWAA authAccepted $ mkConfig
                 , ucamQIact = viewConfigWAA needReauthentication mkConfig
@@ -104,6 +104,8 @@ ucamWebauthHello mkConfig = AuthRequest {
 {-|
   Produce the request to the authentication server as a response
 -}
-urlToTransmit :: Text
-urlToTransmit = "http://localhost:3000/foo/query"
+mySettings :: Mod WAASettings
+mySettings = do
+        ravenSettings
+        applicationUrl .= "http://localhost:3000/foo/query"
 

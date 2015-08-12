@@ -157,7 +157,7 @@ type StringType = ByteString
 -}
 data AuthRequest a = AuthRequest {
                   ucamQVer :: WLSVersion -- ^ The version of @WLS.@ 1, 2 or 3.
-                , ucamQUrl :: Text -- ^ Full http(s) url of resource request for display
+                , ucamQUrl :: Text -- ^ Full http(s) url of resource request for display, and redirection after authentication at the @WLS@
                 , ucamQDesc :: Maybe Text -- ^ Description, transmitted as ASCII
                 , ucamQAauth :: Maybe [AuthType] -- ^ Comma delimited sequence of text tokens representing satisfactory authentication methods
                 , ucamQIact :: Maybe Bool -- ^ A token (Yes/No). Yes requires re-authentication. No requires no interaction.
@@ -531,6 +531,7 @@ data WAASettings = WAASettings {
                  , _syncTimeOut :: NominalDiffTime
                  , _validKids :: [KeyID]
                  , _recentTime :: UTCTime
+                 , _applicationUrl :: Text
                  }
                  deriving (Show, Eq, Ord, Generic, Typeable, Data)
 
@@ -576,6 +577,16 @@ validKids f WAASettings{..} = (\_validKids -> WAASettings{_validKids, ..}) <$> f
 recentTime :: Lens' WAASettings UTCTime
 recentTime f WAASettings{..} = (\_recentTime -> WAASettings{_recentTime, ..}) <$> f _recentTime
 
+{-|
+  The url to be transmitted to the @WLS@ is the url to which it redirects the 
+  user’s browser after the submission, and the url which it displays to the user
+  (in the case of Raven).
+
+  Default is empty. The implementation __must__ override it.
+-}
+applicationUrl :: Lens' WAASettings Text
+applicationUrl f WAASettings{..} = (\_applicationUrl -> WAASettings{_applicationUrl, ..}) <$> f _applicationUrl
+
 ------------------------------------------------------------------------------
 -- ** Defaults
 
@@ -597,6 +608,7 @@ configWAA = config WAASettings {
                  , _syncTimeOut = 40
                  , _validKids = empty
                  , _recentTime = UTCTime (ModifiedJulianDay 0) 0
+                 , _applicationUrl = mempty
                  }
 
 {-|
