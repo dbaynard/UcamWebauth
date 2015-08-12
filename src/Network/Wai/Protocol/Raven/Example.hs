@@ -63,7 +63,7 @@ application time req response = case pathInfo req of
         (Z.fromShow . requestHeaders $ req)
     ["foo", "authenticate"] -> response $ responseBuilder
         seeOther303
-        [("Content-Type", "text/plain"), ucamWebauthQuery ravenAuth . ucamWebauthHello ravenSettings $ time]
+        [("Content-Type", "text/plain"), ucamWebauthQuery ravenAuth . ucamWebauthHello $ ravenSettings >> recentTime .= time]
         mempty
     _ -> response $ responseBuilder
         status200
@@ -80,16 +80,16 @@ displayWLSResponse :: Request -> IO BlazeBuilder
 displayWLSResponse = displayAuthResponseFull <=< liftMaybe . lookUpWLSResponse
 
 displayAuthResponseFull :: ByteString -> IO BlazeBuilder
-displayAuthResponseFull = displaySomethingAuthy ancientUTCTime . maybeAuthCode ravenSettings
+displayAuthResponseFull = displaySomethingAuthy ravenSettings . maybeAuthCode ravenSettings
 
 displayAuthResponse :: ByteString -> IO BlazeBuilder
-displayAuthResponse = displaySomethingAuthy ancientUTCTime . maybeAuthInfo ravenSettings
+displayAuthResponse = displaySomethingAuthy ravenSettings . maybeAuthInfo ravenSettings
 
-displaySomethingAuthy :: (m ~ ReaderT (AuthRequest a) (MaybeT IO), Show b, a ~ Text) => UTCTime -> m b -> IO BlazeBuilder
-displaySomethingAuthy = flip . curry $ maybeT empty (pure . Z.fromShow) . uncurry runReaderT . second (ucamWebauthHello ravenSettings)
+displaySomethingAuthy :: (m ~ ReaderT (AuthRequest a) (MaybeT IO), Show b, a ~ Text) => Mod WAASettings -> m b -> IO BlazeBuilder
+displaySomethingAuthy = flip . curry $ maybeT empty (pure . Z.fromShow) . uncurry runReaderT . second ucamWebauthHello
 
-ucamWebauthHello :: (ToJSON a, IsString a, a ~ Text) => Mod WAASettings -> UTCTime -> AuthRequest a
-ucamWebauthHello mkConfig time = AuthRequest {
+ucamWebauthHello :: (ToJSON a, IsString a, a ~ Text) => Mod WAASettings -> AuthRequest a
+ucamWebauthHello mkConfig = AuthRequest {
                   ucamQVer = WLS3
                 , ucamQUrl = urlToTransmit
                 , ucamQDesc = Just "This is a sample; it’s rather excellent!"
@@ -97,7 +97,7 @@ ucamWebauthHello mkConfig time = AuthRequest {
                 , ucamQIact = viewConfigWAA needReauthentication mkConfig
                 , ucamQMsg = Just "This is a private resource, or something."
                 , ucamQParams = Just "This is 100% of the data! And it’s really quite cool"
-                , ucamQDate = pure time
+                , ucamQDate = pure . viewConfigWAA recentTime $ mkConfig
                 , ucamQFail = pure False
                 }
 

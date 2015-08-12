@@ -530,6 +530,7 @@ data WAASettings = WAASettings {
                  , _needReauthentication :: Maybe Bool
                  , _syncTimeOut :: NominalDiffTime
                  , _validKids :: [KeyID]
+                 , _recentTime :: UTCTime
                  }
                  deriving (Show, Eq, Ord, Generic, Typeable, Data)
 
@@ -565,6 +566,16 @@ syncTimeOut f WAASettings{..} = (\_syncTimeOut -> WAASettings{_syncTimeOut, ..})
 validKids :: Lens' WAASettings [KeyID]
 validKids f WAASettings{..} = (\_validKids -> WAASettings{_validKids, ..}) <$> f _validKids
 
+{-|
+  The last time something interesting happened. With an interesting definition of interesting.
+
+  Default is the start of 'UTCTime'.
+
+  TODO Document when this is updated, here.
+-}
+recentTime :: Lens' WAASettings UTCTime
+recentTime f WAASettings{..} = (\_recentTime -> WAASettings{_recentTime, ..}) <$> f _recentTime
+
 ------------------------------------------------------------------------------
 -- ** Defaults
 
@@ -585,6 +596,7 @@ configWAA = config WAASettings {
                  , _needReauthentication = Nothing
                  , _syncTimeOut = 40
                  , _validKids = empty
+                 , _recentTime = UTCTime (ModifiedJulianDay 0) 0
                  }
 
 {-|
@@ -595,12 +607,6 @@ configWAA = config WAASettings {
 viewConfigWAA :: Lens' WAASettings a -> Mod WAASettings -> a
 {-# INLINE viewConfigWAA #-}
 viewConfigWAA lens = view lens . configWAA
-
-{-|
-  TODO This is a default time. It doesn’t make much sense. Needs replacing.
--}
-ancientUTCTime :: UTCTime
-ancientUTCTime = UTCTime (ModifiedJulianDay 0) 0
 
 ------------------------------------------------------------------------------
 -- * Marshalling to and from string representations
