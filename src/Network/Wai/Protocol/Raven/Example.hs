@@ -11,7 +11,7 @@ module Network.Wai.Protocol.Raven.Example (
 
 -- Prelude
 import ClassyPrelude
-import Control.Applicative (empty)
+
 import Control.Error
 
 -- The protocol

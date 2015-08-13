@@ -13,7 +13,7 @@ module Network.Protocol.UcamWebauth.Data (
 
 -- Prelude
 import ClassyPrelude
-import Control.Applicative (empty, Alternative)
+
 import Network.Protocol.UcamWebauth.Internal
 
 import Data.Data

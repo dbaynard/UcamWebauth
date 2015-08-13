@@ -9,6 +9,7 @@ Maintainer  : David Baynard <davidbaynard@gmail.com>
 
 module Network.Protocol.UcamWebauth.Internal (
     module Network.Protocol.UcamWebauth.Internal
+  , module Control.Applicative
 )   where
 
 import ClassyPrelude

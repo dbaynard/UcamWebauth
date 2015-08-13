@@ -21,6 +21,7 @@ library
 
     other-modules:   Network.Protocol.UcamWebauth.Internal
                      Network.Protocol.UcamWebauth.Data
+                     Network.Protocol.UcamWebauth.Parser
                      Network.Wai.Protocol.Raven.Internal
                      Data.Lens.Internal
                      Data.Settings.Internal
