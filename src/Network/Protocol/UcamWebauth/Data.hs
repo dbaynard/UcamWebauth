@@ -49,13 +49,43 @@ import Network.HTTP.Types
   exported from the module, to present an abstract API.
 -}
 data UcamWebauthInfo a = AuthInfo {
-                  approveUniq :: (UTCTime, Text) -- ^ Unique representation of response, composed of issue and id
-                , approveUser :: Text -- ^ Identity of authenticated user
-                , approveAttribs :: [Ptag] -- ^ Comma separated attributes of user
-                , approveLife :: Maybe DiffTime -- ^ Remaining lifetime in seconds of application
-                , approveParams :: Maybe a -- ^ A copy of the params from the request
+                  _approveUniq :: (UTCTime, Text)
+                , _approveUser :: Text
+                , _approveAttribs :: [Ptag]
+                , _approveLife :: Maybe DiffTime
+                , _approveParams :: Maybe a
                 }
     deriving (Show, Eq, Ord, Generic1, Typeable, Data)
+
+{-
+  Unique representation of response, composed of issue and id
+-}
+approveUniq :: Lens' (UcamWebauthInfo a) (UTCTime, Text)
+approveUniq f AuthInfo{..} = (\_approveUniq -> AuthInfo{_approveUniq, ..}) <$> f _approveUniq
+
+{-
+  Identity of authenticated user
+-}
+approveUser :: Lens' (UcamWebauthInfo a) Text
+approveUser f AuthInfo{..} = (\_approveUser -> AuthInfo{_approveUser, ..}) <$> f _approveUser
+
+{-
+  Comma separated attributes of user
+-}
+approveAttribs :: Lens' (UcamWebauthInfo a) [Ptag]
+approveAttribs f AuthInfo{..} = (\_approveAttribs -> AuthInfo{_approveAttribs, ..}) <$> f _approveAttribs
+
+{-
+  Remaining lifetime in seconds of application
+-}
+approveLife :: Lens' (UcamWebauthInfo a) (Maybe DiffTime)
+approveLife f AuthInfo{..} = (\_approveLife -> AuthInfo{_approveLife, ..}) <$> f _approveLife
+
+{-
+  A copy of the params from the request
+-}
+approveParams :: Lens' (UcamWebauthInfo a) (Maybe a)
+approveParams f AuthInfo{..} = (\_approveParams -> AuthInfo{_approveParams, ..}) <$> f _approveParams
 
 ------------------------------------------------------------------------------
 -- ** Type Synonyms
@@ -151,13 +181,13 @@ getAuthInfo = extractAuthInfo . ucamAResponse
 -}
 extractAuthInfo :: Alternative f => AuthResponse a -> f (UcamWebauthInfo a)
 extractAuthInfo AuthResponse{..} = liftMaybe $ do
-        approveUser <- ucamAPrincipal
+        _approveUser <- ucamAPrincipal
         return AuthInfo{..}
         where
-            approveUniq = (ucamAIssue, ucamAId)
-            approveAttribs = fromMaybe empty ucamAPtags
-            approveLife = ucamALife
-            approveParams = ucamAParams
+            _approveUniq = (ucamAIssue, ucamAId)
+            _approveAttribs = fromMaybe empty ucamAPtags
+            _approveLife = ucamALife
+            _approveParams = ucamAParams
 
 ------------------------------------------------------------------------------
 -- * Typed representations of protocol data
