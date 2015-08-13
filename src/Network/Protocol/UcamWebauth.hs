@@ -5,6 +5,8 @@ Maintainer  : David Baynard <davidbaynard@gmail.com>
 
 Key parts of the implementation of the protocol itself.
 
+<https://raven.cam.ac.uk/project/waa2wls-protocol.txt>
+
 -}
 
 module Network.Protocol.UcamWebauth (
@@ -102,8 +104,8 @@ ucamWebauthQuery url AuthRequest{..} = (hLocation, toByteString $ url <> theQuer
         strictQs = toQuery [
                    ("ver", pure . textWLSVersion $ ucamQVer) :: (Text, Maybe ByteString)
                  , ("desc", encodeUtf8 . decodeASCII <$> ucamQDesc)
-                 , ("iact", boolToYNS <$> ucamQIact)
-                 , ("fail", boolToYNS <$> ucamQFail)
+                 , ("iact", displayYesNoS <$> ucamQIact)
+                 , ("fail", displayYesOnlyS <$> ucamQFail)
                  ]
         textQs :: Query
         textQs = toQuery [
@@ -276,6 +278,6 @@ validateAuthTypes mkConfig AuthResponse{..} = maybe validateAnyAuth validateSpec
         anyAuth _ _ = False
         validateAnyAuth :: f Bool
         validateAnyAuth = pure $ anyAuth ucamAAuth ucamASso
-        validateSpecificAuth :: Bool -> f Bool
-        validateSpecificAuth True = isAcceptableAuth <$> liftMaybe ucamAAuth
+        validateSpecificAuth :: YesNo -> f Bool
+        validateSpecificAuth Yes = isAcceptableAuth <$> liftMaybe ucamAAuth
         validateSpecificAuth _ = any isAcceptableAuth <$> liftMaybe ucamASso

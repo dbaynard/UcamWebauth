@@ -84,11 +84,11 @@ data AuthRequest a = AuthRequest {
                 , ucamQUrl :: Text -- ^ Full http(s) url of resource request for display, and redirection after authentication at the @WLS@
                 , ucamQDesc :: Maybe ASCII -- ^ Description, transmitted as ASCII
                 , ucamQAauth :: Maybe [AuthType] -- ^ Comma delimited sequence of text tokens representing satisfactory authentication methods
-                , ucamQIact :: Maybe Bool -- ^ A token (Yes/No). Yes requires re-authentication. No requires no interaction.
+                , ucamQIact :: Maybe YesNo -- ^ A token (Yes/No). Yes requires re-authentication. No requires no interaction.
                 , ucamQMsg :: Maybe Text -- ^ Why is authentication being requested?
                 , ucamQParams :: Maybe a -- ^ Data to be returned to the application
                 , ucamQDate :: Maybe UTCTime -- ^ RFC 3339 representation of application’s time
-                , ucamQFail :: Maybe Bool -- ^ Error token. If 'yes', the @WLS@ implements error handling
+                , ucamQFail :: Maybe YesOnly -- ^ Error token. If 'yes', the @WLS@ implements error handling
                 }
     deriving (Show, Eq, Ord, Generic1, Typeable, Data)
 
@@ -280,6 +280,51 @@ getStatus Declined570 = declined570
 getStatus _ = badRequest400
 
 ------------------------------------------------------------------------------
+-- *** iact yes or no
+
+{-|
+  This is like a Boolean, but specifically for the ‘iact’ parameter
+-}
+data YesNo = No
+           | Yes
+           deriving (Read, Eq, Ord, Enum, Bounded, Generic, Typeable, Data)
+
+instance Show YesNo where
+    show = displayYesNo
+
+displayYesNo :: IsString a => YesNo -> a
+displayYesNo Yes = "yes"
+displayYesNo _ = "no"
+
+{-|
+  Monomorphic variant of 'displayYesNo'
+-}
+displayYesNoS :: YesNo -> StringType
+displayYesNoS = displayYesNo
+
+------------------------------------------------------------------------------
+-- *** fail yes
+
+{-|
+  Like '()' but specifically for the ‘iact’ parameter
+-}
+data YesOnly = YesOnly
+    deriving (Read, Eq, Ord, Enum, Bounded, Generic, Typeable, Data)
+
+instance Show YesOnly where
+    show = displayYesOnly
+
+displayYesOnly :: IsString a => YesOnly -> a
+displayYesOnly YesOnly = "yes"
+
+{-|
+  Monomorphic variant of 'displayYesOnly'
+-}
+displayYesOnlyS :: YesOnly -> StringType
+displayYesOnlyS = displayYesOnly
+
+
+------------------------------------------------------------------------------
 -- *** 'Status' values
 
 noAuth510, protoErr520, paramErr530, noInteract540, unAuthAgent560, declined570 :: Status
@@ -332,7 +377,7 @@ ucamTime = UcamTime . T.filter isAlphaNum . formatTimeRFC3339 . utcToZonedTime u
 -}
 data WAASettings = WAASettings {
                    _authAccepted :: [AuthType]
-                 , _needReauthentication :: Maybe Bool
+                 , _needReauthentication :: Maybe YesNo
                  , _syncTimeOut :: NominalDiffTime
                  , _validKids :: [KeyID]
                  , _recentTime :: UTCTime
@@ -353,7 +398,7 @@ authAccepted f WAASettings{..} = (\_authAccepted -> WAASettings{_authAccepted, .
 
   Default 'Nothing'
 -}
-needReauthentication :: Lens' WAASettings (Maybe Bool)
+needReauthentication :: Lens' WAASettings (Maybe YesNo)
 needReauthentication f WAASettings{..} = (\_needReauthentication -> WAASettings{_needReauthentication, ..}) <$> f _needReauthentication
 
 {-|

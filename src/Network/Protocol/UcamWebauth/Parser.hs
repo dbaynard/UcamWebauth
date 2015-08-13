@@ -173,6 +173,12 @@ ucamTimeParser = do
 ucamB64parser :: Parser UcamBase64BS
 ucamB64parser = UcamB64 <$> takeWhile1 (ors [isAlphaNum, inClass "-._"])
 
+{-|
+  Parse 'Yes' or 'No' from ‘yes’ or ‘no’
+-}
+yesNoParser :: Parser YesNo
+yesNoParser = ("Y" <|> "y") *> "es" *> pure Yes
+     <|> ("N" <|> "n") *> "o" *> pure No
 
 ------------------------------------------------------------------------------
 -- * Helper functions
@@ -236,28 +242,3 @@ oneOf :: (Eq a, Traversable t, MonoFoldable (t Bool), Element (t Bool) ~ Bool)
     => t a -> a -> Bool
 oneOf = ors . fmap (==)
 
-------------------------------------------------------------------------------
--- ** Representing booleans
-
-{-|
-  Representing 'Bool' as yes or no
--}
-boolToYN :: IsString a => Bool -> a
-boolToYN True = "yes"
-boolToYN _ = "no"
-
-{-|
-  Monomorphic variant of 'boolToYN'
--}
-boolToYNS :: Bool -> StringType
-boolToYNS = boolToYN
-
-{-|
-  Representing yes or no
--}
-trueOrFalse :: StringType -> Maybe Bool
-trueOrFalse = maybeResult . parse ynToBool
-    where
-        ynToBool :: Parser Bool
-        ynToBool = ("Y" <|> "y") *> "es" *> pure True
-             <|> ("N" <|> "n") *> "o" *> pure False

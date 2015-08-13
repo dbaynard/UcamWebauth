@@ -98,7 +98,7 @@ ucamWebauthHello mkConfig = AuthRequest {
                 , ucamQMsg = Just "This is a private resource, or something."
                 , ucamQParams = Just "This is 100% of the data! And it’s really quite cool"
                 , ucamQDate = pure . viewConfigWAA recentTime $ mkConfig
-                , ucamQFail = pure False
+                , ucamQFail = empty
                 }
 
 {-|
