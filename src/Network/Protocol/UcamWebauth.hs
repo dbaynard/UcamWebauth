@@ -148,7 +148,7 @@ configWAA = config WAASettings {
 
   @viewConfigWAA /lens/ def@
 -}
-viewConfigWAA :: Lens' WAASettings a -> Mod WAASettings -> a
+viewConfigWAA :: WAASettings :~> a -> Mod WAASettings -> a
 {-# INLINE viewConfigWAA #-}
 viewConfigWAA lens = view lens . configWAA
 

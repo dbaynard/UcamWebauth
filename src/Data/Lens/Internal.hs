@@ -34,20 +34,20 @@ import Control.Monad.State.Strict
 type Lens s t a b = forall f . (Functor f) => (a -> f b) -> s -> f t
 
 {-|
-  A 'Lens'' takes a function to modify a value of type 'a' in a record of type 's'
+  A ':~>' takes a function to modify a value of type 'a' in a record of type 's'
   to give a value of type 'a' under the context 'f', in a record of type 's' under
   the context 'f', for any valid 'Functor' context 'f'.
 -}
-type Lens' s a = Lens s s a a
+type s :~> a = Lens s s a a
 
 {-|
   Also known as 'over', '%~' uses the supplied function to replace values within data types
 
   > l %~ f = runIdentity . l (Identity . f)
 
-  For 'Lens'' the type simplifies to
+  For ':~>' the type simplifies to
 
-  > (%~) :: Lens' s a -> (a -> a) -> s -> s
+  > (%~) :: s :~> a -> (a -> a) -> s -> s
 
   'over' has not been implemented.
 -}
@@ -61,9 +61,9 @@ infixr 4 %~
   > l .= v = modify $ l %~ const v
   nad-ST
 
-  For 'Lens'' the type simplifies to
+  For ':~>' the type simplifies to
 
-  > (.=) :: MonadState s m => Lens' s a -> a -> m ()
+  > (.=) :: MonadState s m => s :~> a -> a -> m ()
 
   '.=' conflicts with 'Data.Aeson..=' from "Data.Aeson"
 

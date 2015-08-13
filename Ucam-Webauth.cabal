@@ -50,6 +50,7 @@ library
                 ScopedTypeVariables
                 RankNTypes
                 NamedFieldPuns
+                TypeOperators
 
     build-depends: base                          >= 4          && < 5
                  , aeson                         >= 0.6
