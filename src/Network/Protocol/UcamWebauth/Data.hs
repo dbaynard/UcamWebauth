@@ -57,31 +57,31 @@ data UcamWebauthInfo a = AuthInfo {
                 }
     deriving (Show, Eq, Ord, Generic1, Typeable, Data)
 
-{-
+{-|
   Unique representation of response, composed of issue and id
 -}
 approveUniq :: Lens' (UcamWebauthInfo a) (UTCTime, Text)
 approveUniq f AuthInfo{..} = (\_approveUniq -> AuthInfo{_approveUniq, ..}) <$> f _approveUniq
 
-{-
+{-|
   Identity of authenticated user
 -}
 approveUser :: Lens' (UcamWebauthInfo a) Text
 approveUser f AuthInfo{..} = (\_approveUser -> AuthInfo{_approveUser, ..}) <$> f _approveUser
 
-{-
+{-|
   Comma separated attributes of user
 -}
 approveAttribs :: Lens' (UcamWebauthInfo a) [Ptag]
 approveAttribs f AuthInfo{..} = (\_approveAttribs -> AuthInfo{_approveAttribs, ..}) <$> f _approveAttribs
 
-{-
+{-|
   Remaining lifetime in seconds of application
 -}
 approveLife :: Lens' (UcamWebauthInfo a) (Maybe DiffTime)
 approveLife f AuthInfo{..} = (\_approveLife -> AuthInfo{_approveLife, ..}) <$> f _approveLife
 
-{-
+{-|
   A copy of the params from the request
 -}
 approveParams :: Lens' (UcamWebauthInfo a) (Maybe a)
@@ -110,17 +110,71 @@ type StringType = ByteString
   after authentication.
 -}
 data AuthRequest a = AuthRequest {
-                  ucamQVer :: WLSVersion -- ^ The version of @WLS.@ 1, 2 or 3.
-                , ucamQUrl :: Text -- ^ Full http(s) url of resource request for display, and redirection after authentication at the @WLS@
-                , ucamQDesc :: Maybe ASCII -- ^ Description, transmitted as ASCII
-                , ucamQAauth :: Maybe [AuthType] -- ^ Comma delimited sequence of text tokens representing satisfactory authentication methods
-                , ucamQIact :: Maybe YesNo -- ^ A token (Yes/No). Yes requires re-authentication. No requires no interaction.
-                , ucamQMsg :: Maybe Text -- ^ Why is authentication being requested?
-                , ucamQParams :: Maybe a -- ^ Data to be returned to the application
-                , ucamQDate :: Maybe UTCTime -- ^ RFC 3339 representation of application’s time
-                , ucamQFail :: Maybe YesOnly -- ^ Error token. If 'yes', the @WLS@ implements error handling
+                  _ucamQVer :: WLSVersion
+                , _ucamQUrl :: Text
+                , _ucamQDesc :: Maybe ASCII
+                , _ucamQAauth :: Maybe [AuthType]
+                , _ucamQIact :: Maybe YesNo
+                , _ucamQMsg :: Maybe Text
+                , _ucamQParams :: Maybe a
+                , _ucamQDate :: Maybe UTCTime
+                , _ucamQFail :: Maybe YesOnly
                 }
     deriving (Show, Eq, Ord, Generic1, Typeable, Data)
+
+{-|
+  The version of @WLS.@ 1, 2 or 3.
+-}
+ucamQVer :: Lens' (AuthRequest a) WLSVersion
+ucamQVer f AuthRequest{..} = (\_ucamQVer -> AuthRequest{_ucamQVer, ..}) <$> f _ucamQVer
+
+{-|
+  Full http(s) url of resource request for display, and redirection after authentication at the @WLS@
+-}
+ucamQUrl :: Lens' (AuthRequest a) Text
+ucamQUrl f AuthRequest{..} = (\_ucamQUrl -> AuthRequest{_ucamQUrl, ..}) <$> f _ucamQUrl
+
+{-|
+  Description, transmitted as ASCII
+-}
+ucamQDesc :: Lens' (AuthRequest a) (Maybe ASCII)
+ucamQDesc f AuthRequest{..} = (\_ucamQDesc -> AuthRequest{_ucamQDesc, ..}) <$> f _ucamQDesc
+
+{-|
+  Comma delimited sequence of text tokens representing satisfactory authentication methods
+-}
+ucamQAauth :: Lens' (AuthRequest a) (Maybe [AuthType])
+ucamQAauth f AuthRequest{..} = (\_ucamQAauth -> AuthRequest{_ucamQAauth, ..}) <$> f _ucamQAauth
+
+{-|
+  A token (Yes/No). Yes requires re-authentication. No requires no interaction.
+-}
+ucamQIact :: Lens' (AuthRequest a) (Maybe YesNo)
+ucamQIact f AuthRequest{..} = (\_ucamQIact -> AuthRequest{_ucamQIact, ..}) <$> f _ucamQIact
+
+{-|
+  Why is authentication being requested?
+-}
+ucamQMsg :: Lens' (AuthRequest a) (Maybe Text)
+ucamQMsg f AuthRequest{..} = (\_ucamQMsg -> AuthRequest{_ucamQMsg, ..}) <$> f _ucamQMsg
+
+{-|
+  Data to be returned to the application
+-}
+ucamQParams :: Lens' (AuthRequest a) (Maybe a)
+ucamQParams f AuthRequest{..} = (\_ucamQParams -> AuthRequest{_ucamQParams, ..}) <$> f _ucamQParams
+
+{-|
+  RFC 3339 representation of application’s time
+-}
+ucamQDate :: Lens' (AuthRequest a) (Maybe UTCTime)
+ucamQDate f AuthRequest{..} = (\_ucamQDate -> AuthRequest{_ucamQDate, ..}) <$> f _ucamQDate
+
+{-|
+  Error token. If 'yes', the @WLS@ implements error handling
+-}
+ucamQFail :: Lens' (AuthRequest a) (Maybe YesOnly)
+ucamQFail f AuthRequest{..} = (\_ucamQFail -> AuthRequest{_ucamQFail, ..}) <$> f _ucamQFail
 
 {-|
   A 'SignedAuthResponse' represents the data returned by the @WLS@, including a
@@ -130,12 +184,36 @@ data AuthRequest a = AuthRequest {
   The phantom parameter 'valid' corr
 -}
 data SignedAuthResponse (valid :: IsValid) a = SignedAuthResponse {
-                  ucamAResponse :: AuthResponse a -- ^ The bit of the response that is signed
-                , ucamAToSign :: ByteString -- ^ The raw text of the response, used to verify the signature
-                , ucamAKid :: Maybe KeyID -- ^ RSA key identifier. Must be a string of 1–8 characters, chosen from digits 0–9, with no leading 0, i.e. [1-9][0-9]{0,7}
-                , ucamASig :: Maybe UcamBase64BS -- ^ Required if status is 200, otherwise Nothing. Public key signature of everything up to kid, using the private key identified by kid, the SHA-1 algorithm and RSASSA-PKCS1-v1_5 (PKCS #1 v2.1 RFC 3447), encoded using the base64 scheme (RFC 1521) but with "-._" replacing "+/="
+                  _ucamAResponse :: AuthResponse a
+                , _ucamAToSign :: ByteString
+                , _ucamAKid :: Maybe KeyID
+                , _ucamASig :: Maybe UcamBase64BS
                 }
     deriving (Show, Eq, Ord, Generic1, Typeable, Data)
+
+{-|
+  The bit of the response that is signed
+-}
+ucamAResponse :: Lens' (SignedAuthResponse (b :: IsValid) a) (AuthResponse a)
+ucamAResponse f SignedAuthResponse{..} = (\_ucamAResponse -> SignedAuthResponse{_ucamAResponse, ..}) <$> f _ucamAResponse
+
+{-|
+  The raw text of the response, used to verify the signature
+-}
+ucamAToSign :: Lens' (SignedAuthResponse (b :: IsValid) a) ByteString
+ucamAToSign f SignedAuthResponse{..} = (\_ucamAToSign -> SignedAuthResponse{_ucamAToSign, ..}) <$> f _ucamAToSign
+
+{-|
+  RSA key identifier. Must be a string of 1–8 characters, chosen from digits 0–9, with no leading 0, i.e. [1-9][0-9]{0,7}
+-}
+ucamAKid :: Lens' (SignedAuthResponse (b :: IsValid) a) (Maybe KeyID)
+ucamAKid f SignedAuthResponse{..} = (\_ucamAKid -> SignedAuthResponse{_ucamAKid, ..}) <$> f _ucamAKid
+
+{-|
+  Required if status is 200, otherwise Nothing. Public key signature of everything up to kid, using the private key identified by kid, the SHA-1 algorithm and RSASSA-PKCS1-v1_5 (PKCS #1 v2.1 RFC 3447), encoded using the base64 scheme (RFC 1521) but with "-._" replacing "+/="
+-}
+ucamASig :: Lens' (SignedAuthResponse (b :: IsValid) a) (Maybe UcamBase64BS)
+ucamASig f SignedAuthResponse{..} = (\_ucamASig -> SignedAuthResponse{_ucamASig, ..}) <$> f _ucamASig
 
 {-|
   The intended use of this is with 'IsValid' as a kind (requires the 'DataKinds' extension).
@@ -153,26 +231,98 @@ data IsValid = MaybeValid
   machinery in this module returns the required data as a 'UcamWebauthInfo' value.
 -}
 data AuthResponse a = AuthResponse {
-                  ucamAVer :: WLSVersion -- ^ The version of @WLS@: 1, 2 or 3
-                , ucamAStatus :: StatusCode -- ^ 3 digit status code (200 is success)
-                , ucamAMsg :: Maybe Text -- ^ The status, for users
-                , ucamAIssue :: UTCTime -- ^ RFC 3339 representation of response’s time
-                , ucamAId :: Text -- ^ Not unguessable identifier, id + issue are unique
-                , ucamAUrl :: Text -- ^ Same as request
-                , ucamAPrincipal :: Maybe Text -- ^ Identity of authenticated user. Must be present if ucamAStatus is 200, otherwise must be Nothing
-                , ucamAPtags :: Maybe [Ptag] -- ^ Comma separated attributes of principal. Optional in version 3, must be Nothing otherwise.
-                , ucamAAuth :: Maybe AuthType -- ^ Authentication type if successful, else Nothing
-                , ucamASso :: Maybe [AuthType] -- ^ Comma separated list of previous authentications. Required if ucamAAuth is Nothing.
-                , ucamALife :: Maybe DiffTime -- ^ Remaining lifetime in seconds of application
-                , ucamAParams :: Maybe a -- ^ A copy of the params from the request
+                  _ucamAVer :: WLSVersion
+                , _ucamAStatus :: StatusCode
+                , _ucamAMsg :: Maybe Text
+                , _ucamAIssue :: UTCTime
+                , _ucamAId :: Text
+                , _ucamAUrl :: Text
+                , _ucamAPrincipal :: Maybe Text
+                , _ucamAPtags :: Maybe [Ptag]
+                , _ucamAAuth :: Maybe AuthType
+                , _ucamASso :: Maybe [AuthType]
+                , _ucamALife :: Maybe DiffTime
+                , _ucamAParams :: Maybe a
                 }
     deriving (Show, Eq, Ord, Generic1, Typeable, Data)
+
+{-|
+  The version of @WLS@: 1, 2 or 3
+-}
+ucamAVer :: Lens' (AuthResponse a) WLSVersion
+ucamAVer f AuthResponse{..} = (\_ucamAVer -> AuthResponse{_ucamAVer, ..}) <$> f _ucamAVer
+
+{-|
+  3 digit status code (200 is success)
+-}
+ucamAStatus :: Lens' (AuthResponse a) StatusCode
+ucamAStatus f AuthResponse{..} = (\_ucamAStatus -> AuthResponse{_ucamAStatus, ..}) <$> f _ucamAStatus
+
+{-|
+  The status, for users
+-}
+ucamAMsg :: Lens' (AuthResponse a) (Maybe Text)
+ucamAMsg f AuthResponse{..} = (\_ucamAMsg -> AuthResponse{_ucamAMsg, ..}) <$> f _ucamAMsg
+
+{-|
+  RFC 3339 representation of response’s time
+-}
+ucamAIssue :: Lens' (AuthResponse a) UTCTime
+ucamAIssue f AuthResponse{..} = (\_ucamAIssue -> AuthResponse{_ucamAIssue, ..}) <$> f _ucamAIssue
+
+{-|
+  Not unguessable identifier, id + issue are unique
+-}
+ucamAId :: Lens' (AuthResponse a) Text
+ucamAId f AuthResponse{..} = (\_ucamAId -> AuthResponse{_ucamAId, ..}) <$> f _ucamAId
+
+{-|
+  Same as request
+-}
+ucamAUrl :: Lens' (AuthResponse a) Text
+ucamAUrl f AuthResponse{..} = (\_ucamAUrl -> AuthResponse{_ucamAUrl, ..}) <$> f _ucamAUrl
+
+{-|
+  Identity of authenticated user. Must be present if ucamAStatus is 200, otherwise must be Nothing
+-}
+ucamAPrincipal :: Lens' (AuthResponse a) (Maybe Text)
+ucamAPrincipal f AuthResponse{..} = (\_ucamAPrincipal -> AuthResponse{_ucamAPrincipal, ..}) <$> f _ucamAPrincipal
+
+{-|
+  Comma separated attributes of principal. Optional in version 3, must be Nothing otherwise.
+-}
+ucamAPtags :: Lens' (AuthResponse a) (Maybe [Ptag])
+ucamAPtags f AuthResponse{..} = (\_ucamAPtags -> AuthResponse{_ucamAPtags, ..}) <$> f _ucamAPtags
+
+{-|
+  Authentication type if successful, else Nothing
+-}
+ucamAAuth :: Lens' (AuthResponse a) (Maybe AuthType)
+ucamAAuth f AuthResponse{..} = (\_ucamAAuth -> AuthResponse{_ucamAAuth, ..}) <$> f _ucamAAuth
+
+{-|
+  Comma separated list of previous authentications. Required if ucamAAuth is Nothing.
+-}
+ucamASso :: Lens' (AuthResponse a) (Maybe [AuthType])
+ucamASso f AuthResponse{..} = (\_ucamASso -> AuthResponse{_ucamASso, ..}) <$> f _ucamASso
+
+{-|
+  Remaining lifetime in seconds of application
+-}
+ucamALife :: Lens' (AuthResponse a) (Maybe DiffTime)
+ucamALife f AuthResponse{..} = (\_ucamALife -> AuthResponse{_ucamALife, ..}) <$> f _ucamALife
+
+{-|
+  A copy of the params from the request
+-}
+ucamAParams :: Lens' (AuthResponse a) (Maybe a)
+ucamAParams f AuthResponse{..} = (\_ucamAParams -> AuthResponse{_ucamAParams, ..}) <$> f _ucamAParams
 
 {-|
   Takes a validated 'SignedAuthResponse', and returns the corresponding 'UcamWebauthInfo'.
 -}
 getAuthInfo :: Alternative f => SignedAuthResponse 'Valid a -> f (UcamWebauthInfo a)
-getAuthInfo = extractAuthInfo . ucamAResponse
+getAuthInfo = extractAuthInfo . _ucamAResponse
 
 {-|
   Convert an 'AuthResponse' into a 'UcamWebauthInfo' for export.
@@ -181,13 +331,13 @@ getAuthInfo = extractAuthInfo . ucamAResponse
 -}
 extractAuthInfo :: Alternative f => AuthResponse a -> f (UcamWebauthInfo a)
 extractAuthInfo AuthResponse{..} = liftMaybe $ do
-        _approveUser <- ucamAPrincipal
+        _approveUser <- _ucamAPrincipal
         return AuthInfo{..}
         where
-            _approveUniq = (ucamAIssue, ucamAId)
-            _approveAttribs = fromMaybe empty ucamAPtags
-            _approveLife = ucamALife
-            _approveParams = ucamAParams
+            _approveUniq = (_ucamAIssue, _ucamAId)
+            _approveAttribs = fromMaybe empty _ucamAPtags
+            _approveLife = _ucamALife
+            _approveParams = _ucamAParams
 
 ------------------------------------------------------------------------------
 -- * Typed representations of protocol data

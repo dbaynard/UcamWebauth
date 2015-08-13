@@ -50,25 +50,25 @@ import qualified Data.Aeson as A
 -}
 ucamResponseParser :: forall a . FromJSON a => Parser (SignedAuthResponse 'MaybeValid a)
 ucamResponseParser = do
-        (ucamAToSign, ucamAResponse@AuthResponse{..}) <- noBang . match $ ucamAuthResponseParser
-        (ucamAKid, ucamASig) <- parseKidSig ucamAStatus
+        (_ucamAToSign, _ucamAResponse@AuthResponse{..}) <- noBang . match $ ucamAuthResponseParser
+        (_ucamAKid, _ucamASig) <- parseKidSig _ucamAStatus
         endOfInput
         return SignedAuthResponse{..}
         where
             ucamAuthResponseParser :: Parser (AuthResponse a)
             ucamAuthResponseParser = do
-                    ucamAVer <- noBang wlsVersionParser
-                    ucamAStatus <- noBang responseCodeParser
-                    ucamAMsg <- maybeBang . urlWrapText $ betweenBangs
-                    ucamAIssue <- noBang utcTimeParser
-                    ucamAId <- noBang . urlWrapText $ betweenBangs
-                    ucamAUrl <- noBang . urlWrapText $ betweenBangs
-                    ucamAPrincipal <- parsePrincipal ucamAStatus
-                    ucamAPtags <- parsePtags ucamAVer
-                    ucamAAuth <- noBang . optionMaybe $ authTypeParser
-                    ucamASso <- parseSso ucamAStatus ucamAAuth
-                    ucamALife <- noBang . optionMaybe . fmap secondsToDiffTime $ decimal
-                    ucamAParams <- A.decodeStrict . B.decodeLenient <$> betweenBangs
+                    _ucamAVer <- noBang wlsVersionParser
+                    _ucamAStatus <- noBang responseCodeParser
+                    _ucamAMsg <- maybeBang . urlWrapText $ betweenBangs
+                    _ucamAIssue <- noBang utcTimeParser
+                    _ucamAId <- noBang . urlWrapText $ betweenBangs
+                    _ucamAUrl <- noBang . urlWrapText $ betweenBangs
+                    _ucamAPrincipal <- parsePrincipal _ucamAStatus
+                    _ucamAPtags <- parsePtags _ucamAVer
+                    _ucamAAuth <- noBang . optionMaybe $ authTypeParser
+                    _ucamASso <- parseSso _ucamAStatus _ucamAAuth
+                    _ucamALife <- noBang . optionMaybe . fmap secondsToDiffTime $ decimal
+                    _ucamAParams <- A.decodeStrict . B.decodeLenient <$> betweenBangs
                     return AuthResponse{..}
             noBang :: Parser b -> Parser b
             noBang = (<* "!")

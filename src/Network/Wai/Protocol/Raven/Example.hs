@@ -90,15 +90,15 @@ displaySomethingAuthy = flip . curry $ maybeT empty (pure . Z.fromShow) . uncurr
 
 ucamWebauthHello :: (ToJSON a, IsString a, a ~ Text) => Mod WAASettings -> AuthRequest a
 ucamWebauthHello mkConfig = AuthRequest {
-                  ucamQVer = WLS3
-                , ucamQUrl = viewConfigWAA applicationUrl mkConfig
-                , ucamQDesc = Just "This is a sample; it’s rather excellent!"
-                , ucamQAauth = pure . viewConfigWAA authAccepted $ mkConfig
-                , ucamQIact = viewConfigWAA needReauthentication mkConfig
-                , ucamQMsg = Just "This is a private resource, or something."
-                , ucamQParams = Just "This is 100% of the data! And it’s really quite cool"
-                , ucamQDate = pure . viewConfigWAA recentTime $ mkConfig
-                , ucamQFail = empty
+                  _ucamQVer = WLS3
+                , _ucamQUrl = viewConfigWAA applicationUrl mkConfig
+                , _ucamQDesc = Just "This is a sample; it’s rather excellent!"
+                , _ucamQAauth = pure . viewConfigWAA authAccepted $ mkConfig
+                , _ucamQIact = viewConfigWAA needReauthentication mkConfig
+                , _ucamQMsg = Just "This is a private resource, or something."
+                , _ucamQParams = Just "This is 100% of the data! And it’s really quite cool"
+                , _ucamQDate = pure . viewConfigWAA recentTime $ mkConfig
+                , _ucamQFail = empty
                 }
 
 {-|

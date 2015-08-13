@@ -102,21 +102,21 @@ ucamWebauthQuery url AuthRequest{..} = (hLocation, toByteString $ url <> theQuer
         theQuery = renderQueryBuilder True $ strictQs <> textQs <> lazyQs
         strictQs :: Query
         strictQs = toQuery [
-                   ("ver", pure . textWLSVersion $ ucamQVer) :: (Text, Maybe ByteString)
-                 , ("desc", encodeUtf8 . decodeASCII <$> ucamQDesc)
-                 , ("iact", displayYesNoS <$> ucamQIact)
-                 , ("fail", displayYesOnlyS <$> ucamQFail)
+                   ("ver", pure . textWLSVersion $ _ucamQVer) :: (Text, Maybe ByteString)
+                 , ("desc", encodeUtf8 . decodeASCII <$> _ucamQDesc)
+                 , ("iact", displayYesNoS <$> _ucamQIact)
+                 , ("fail", displayYesOnlyS <$> _ucamQFail)
                  ]
         textQs :: Query
         textQs = toQuery [
-                   ("url" , pure ucamQUrl) :: (Text, Maybe Text)
-                 , ("date", unUcamTime . ucamTime <$> ucamQDate)
-                 , ("aauth", T.intercalate "," . fmap displayAuthType <$> ucamQAauth)
-                 , ("msg", ucamQMsg)
+                   ("url" , pure _ucamQUrl) :: (Text, Maybe Text)
+                 , ("date", unUcamTime . ucamTime <$> _ucamQDate)
+                 , ("aauth", T.intercalate "," . fmap displayAuthType <$> _ucamQAauth)
+                 , ("msg", _ucamQMsg)
                  ]
         lazyQs :: Query
         lazyQs = toQuery [
-                   ("params", L.encode . A.encode <$> ucamQParams) :: (Text, Maybe LByteString)
+                   ("params", L.encode . A.encode <$> _ucamQParams) :: (Text, Maybe LByteString)
                  ]
 
 ------------------------------------------------------------------------------
@@ -174,11 +174,11 @@ validateAuthResponse :: forall a m . (MonadReader (AuthRequest a) m, MonadIO m, 
                      -> SignedAuthResponse 'MaybeValid a
                      -> m (SignedAuthResponse 'Valid a)
 validateAuthResponse mkConfig x@SignedAuthResponse{..} = do
-        guard . validateKid mkConfig =<< liftMaybe ucamAKid
+        guard . validateKid mkConfig =<< liftMaybe _ucamAKid
         guard <=< validateSig $ x
-        guard <=< validateIssueTime mkConfig $ ucamAResponse
-        guard <=< validateUrl $ ucamAResponse
-        guard <=< validateAuthTypes mkConfig $ ucamAResponse
+        guard <=< validateIssueTime mkConfig $ _ucamAResponse
+        guard <=< validateUrl $ _ucamAResponse
+        guard <=< validateAuthTypes mkConfig $ _ucamAResponse
         return . makeValid $ x
         where
             makeValid :: SignedAuthResponse 'MaybeValid a -> SignedAuthResponse 'Valid a
@@ -228,14 +228,14 @@ validateSigKey :: MonadPlus m
                => (KeyID -> m PublicKey) -- ^ Get an RSA 'PublicKey' from somewhere, with the possibility of failing.
                -> SignedAuthResponse 'MaybeValid a
                -> m Bool -- ^ 'True' for a verified signature, 'False' for a verified invalid signature, and 'mzero' for an inability to validate
-validateSigKey importKey SignedAuthResponse{..} = pure . rsaValidate =<< importKey =<< liftMaybe ucamAKid
+validateSigKey importKey SignedAuthResponse{..} = pure . rsaValidate =<< importKey =<< liftMaybe _ucamAKid
     where
         rsaValidate :: PublicKey -> Bool
         rsaValidate key = verify (Just SHA1) key message signature
         message :: ByteString
-        message = ucamAToSign
+        message = _ucamAToSign
         signature :: ByteString
-        signature = maybe mempty decodeUcamB64 ucamASig
+        signature = maybe mempty decodeUcamB64 _ucamASig
 
 ------------------------------------------------------------------------------
 -- ** Issue time
@@ -246,7 +246,7 @@ validateSigKey importKey SignedAuthResponse{..} = pure . rsaValidate =<< importK
   TODO Uses 'getCurrentTime'. There may be a better implementation.
 -}
 validateIssueTime :: (MonadIO m) => Mod WAASettings -> AuthResponse a -> m Bool
-validateIssueTime mkConfig AuthResponse{..} = (viewConfigWAA syncTimeOut mkConfig >) . flip diffUTCTime ucamAIssue <$> liftIO getCurrentTime
+validateIssueTime mkConfig AuthResponse{..} = (viewConfigWAA syncTimeOut mkConfig >) . flip diffUTCTime _ucamAIssue <$> liftIO getCurrentTime
 
 ------------------------------------------------------------------------------
 -- ** Url
@@ -255,7 +255,7 @@ validateIssueTime mkConfig AuthResponse{..} = (viewConfigWAA syncTimeOut mkConfi
   Check the url parameter matches that sent in the 'AuthRequest'
 -}
 validateUrl :: (MonadReader (AuthRequest a) m) => AuthResponse a -> m Bool
-validateUrl AuthResponse{..} = (==) ucamAUrl . ucamQUrl <$> ask
+validateUrl AuthResponse{..} = (==) _ucamAUrl . _ucamQUrl <$> ask
 
 ------------------------------------------------------------------------------
 -- ** Authentication type
@@ -277,7 +277,7 @@ validateAuthTypes mkConfig AuthResponse{..} = maybe validateAnyAuth validateSpec
         anyAuth (Just x) Nothing = isAcceptableAuth x
         anyAuth _ _ = False
         validateAnyAuth :: f Bool
-        validateAnyAuth = pure $ anyAuth ucamAAuth ucamASso
+        validateAnyAuth = pure $ anyAuth _ucamAAuth _ucamASso
         validateSpecificAuth :: YesNo -> f Bool
-        validateSpecificAuth Yes = isAcceptableAuth <$> liftMaybe ucamAAuth
-        validateSpecificAuth _ = any isAcceptableAuth <$> liftMaybe ucamASso
+        validateSpecificAuth Yes = isAcceptableAuth <$> liftMaybe _ucamAAuth
+        validateSpecificAuth _ = any isAcceptableAuth <$> liftMaybe _ucamASso
