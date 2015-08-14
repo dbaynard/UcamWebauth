@@ -555,7 +555,7 @@ ucamTime = UcamTime . T.filter isAlphaNum . formatTimeRFC3339 . utcToZonedTime u
 
   TODO Do not export constructors or accessors, only lenses.
 -}
-data WAASettings = WAASettings {
+data WAASettings = MakeWAASettings {
                    _authAccepted :: [AuthType]
                  , _needReauthentication :: Maybe YesNo
                  , _syncTimeOut :: NominalDiffTime
@@ -571,7 +571,7 @@ data WAASettings = WAASettings {
   Default @['Pwd']@
 -}
 authAccepted :: WAASettings :~> [AuthType]
-authAccepted f WAASettings{..} = (\_authAccepted -> WAASettings{_authAccepted, ..}) <$> f _authAccepted
+authAccepted f MakeWAASettings{..} = (\_authAccepted -> MakeWAASettings{_authAccepted, ..}) <$> f _authAccepted
 
 {-|
   'Just' 'True' means ‘must reauthenticate’, 'Just' 'False' means ‘non-interactive’, 'Nothing' means anything goes.
@@ -579,7 +579,7 @@ authAccepted f WAASettings{..} = (\_authAccepted -> WAASettings{_authAccepted, .
   Default 'Nothing'
 -}
 needReauthentication :: WAASettings :~> Maybe YesNo
-needReauthentication f WAASettings{..} = (\_needReauthentication -> WAASettings{_needReauthentication, ..}) <$> f _needReauthentication
+needReauthentication f MakeWAASettings{..} = (\_needReauthentication -> MakeWAASettings{_needReauthentication, ..}) <$> f _needReauthentication
 
 {-|
   A timeout for the response validation.
@@ -587,7 +587,7 @@ needReauthentication f WAASettings{..} = (\_needReauthentication -> WAASettings{
   Default @40@ (seconds)
 -}
 syncTimeOut :: WAASettings :~> NominalDiffTime
-syncTimeOut f WAASettings{..} = (\_syncTimeOut -> WAASettings{_syncTimeOut, ..}) <$> f _syncTimeOut
+syncTimeOut f MakeWAASettings{..} = (\_syncTimeOut -> MakeWAASettings{_syncTimeOut, ..}) <$> f _syncTimeOut
 
 {-|
   Valid 'KeyID' values for the protocol.
@@ -595,7 +595,7 @@ syncTimeOut f WAASettings{..} = (\_syncTimeOut -> WAASettings{_syncTimeOut, ..})
   Default @[]@ (/i.e./ no valid keys)
 -}
 validKids :: WAASettings :~> [KeyID]
-validKids f WAASettings{..} = (\_validKids -> WAASettings{_validKids, ..}) <$> f _validKids
+validKids f MakeWAASettings{..} = (\_validKids -> MakeWAASettings{_validKids, ..}) <$> f _validKids
 
 {-|
   The last time something interesting happened. With an interesting definition of interesting.
@@ -605,7 +605,7 @@ validKids f WAASettings{..} = (\_validKids -> WAASettings{_validKids, ..}) <$> f
   TODO Document when this is updated, here.
 -}
 recentTime :: WAASettings :~> UTCTime
-recentTime f WAASettings{..} = (\_recentTime -> WAASettings{_recentTime, ..}) <$> f _recentTime
+recentTime f MakeWAASettings{..} = (\_recentTime -> MakeWAASettings{_recentTime, ..}) <$> f _recentTime
 
 {-|
   The url to be transmitted to the @WLS@ is the url to which it redirects the 
@@ -615,7 +615,7 @@ recentTime f WAASettings{..} = (\_recentTime -> WAASettings{_recentTime, ..}) <$
   Default is empty. The implementation __must__ override it.
 -}
 applicationUrl :: WAASettings :~> Text
-applicationUrl f WAASettings{..} = (\_applicationUrl -> WAASettings{_applicationUrl, ..}) <$> f _applicationUrl
+applicationUrl f MakeWAASettings{..} = (\_applicationUrl -> MakeWAASettings{_applicationUrl, ..}) <$> f _applicationUrl
 
 ------------------------------------------------------------------------------
 -- * Text encoding

@@ -18,6 +18,6 @@ import Network.Wai.Protocol.UcamWebauth
 {-|
   'WAASettings' for Raven
 -}
-ravenDefSettings :: Mod WAASettings
+ravenDefSettings :: SetWAA
 ravenDefSettings = def
 

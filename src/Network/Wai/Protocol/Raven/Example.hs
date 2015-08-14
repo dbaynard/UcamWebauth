@@ -85,10 +85,10 @@ displayAuthResponseFull = displaySomethingAuthy mySettings . maybeAuthCode mySet
 displayAuthResponse :: ByteString -> IO BlazeBuilder
 displayAuthResponse = displaySomethingAuthy mySettings . maybeAuthInfo mySettings
 
-displaySomethingAuthy :: (m ~ ReaderT (AuthRequest a) (MaybeT IO), Show b, a ~ Text) => Mod WAASettings -> m b -> IO BlazeBuilder
+displaySomethingAuthy :: (m ~ ReaderT (AuthRequest a) (MaybeT IO), Show b, a ~ Text) => SetWAA -> m b -> IO BlazeBuilder
 displaySomethingAuthy = flip . curry $ maybeT empty (pure . Z.fromShow) . uncurry runReaderT . second ucamWebauthHello
 
-ucamWebauthHello :: (ToJSON a, IsString a, a ~ Text) => Mod WAASettings -> AuthRequest a
+ucamWebauthHello :: (ToJSON a, IsString a, a ~ Text) => SetWAA -> AuthRequest a
 ucamWebauthHello mkConfig = AuthRequest {
                   _ucamQVer = WLS3
                 , _ucamQUrl = viewConfigWAA applicationUrl mkConfig
@@ -104,7 +104,7 @@ ucamWebauthHello mkConfig = AuthRequest {
 {-|
   Produce the request to the authentication server as a response
 -}
-mySettings :: Mod WAASettings
+mySettings :: SetWAA
 mySettings = do
         ravenSettings
         applicationUrl .= "http://localhost:3000/foo/query"

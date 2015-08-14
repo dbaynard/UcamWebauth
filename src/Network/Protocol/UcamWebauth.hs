@@ -72,13 +72,13 @@ import Data.PEM
   TODO When the errors returned can be usefully used, ensure this correctly returns a lifted
   'Either b (UcamWebauthInfo a)' response.
 -}
-maybeAuthInfo :: (FromJSON a, MonadReader (AuthRequest a) m, MonadIO m, MonadPlus m) => Mod WAASettings -> ByteString -> m (UcamWebauthInfo a)
+maybeAuthInfo :: (FromJSON a, MonadReader (AuthRequest a) m, MonadIO m, MonadPlus m) => SetWAA -> ByteString -> m (UcamWebauthInfo a)
 maybeAuthInfo mkConfig = getAuthInfo <=< maybeAuthCode mkConfig
 
 {-|
   A helper function to parse and validate a response from a @WLS@.
 -}
-maybeAuthCode :: (FromJSON a, MonadReader (AuthRequest a) m, MonadIO m, MonadPlus m) => Mod WAASettings -> ByteString -> m (SignedAuthResponse 'Valid a)
+maybeAuthCode :: (FromJSON a, MonadReader (AuthRequest a) m, MonadIO m, MonadPlus m) => SetWAA -> ByteString -> m (SignedAuthResponse 'Valid a)
 maybeAuthCode mkConfig = validateAuthResponse mkConfig <=< authCode
 
 {-|
@@ -123,6 +123,11 @@ ucamWebauthQuery url AuthRequest{..} = (hLocation, toByteString $ url <> theQuer
 -- * 'WAASettings'
 
 {-|
+  Type synonym for WAASettings settings type.
+-}
+type SetWAA = Mod WAASettings
+
+{-|
   The default @WAA@ settings. To accept the defaults, use
 
   > configWAA def
@@ -133,8 +138,8 @@ ucamWebauthQuery url AuthRequest{..} = (hLocation, toByteString $ url <> theQuer
 
   To modify settings, use the provided lenses.
 -}
-configWAA :: Mod WAASettings -> WAASettings
-configWAA = config WAASettings {
+configWAA :: SetWAA -> WAASettings
+configWAA = config MakeWAASettings {
                    _authAccepted = [Pwd]
                  , _needReauthentication = Nothing
                  , _syncTimeOut = 40
@@ -148,7 +153,7 @@ configWAA = config WAASettings {
 
   @viewConfigWAA /lens/ def@
 -}
-viewConfigWAA :: WAASettings :~> a -> Mod WAASettings -> a
+viewConfigWAA :: WAASettings :~> a -> SetWAA -> a
 {-# INLINE viewConfigWAA #-}
 viewConfigWAA lens = view lens . configWAA
 
@@ -170,7 +175,7 @@ viewConfigWAA lens = view lens . configWAA
   This is the only way to produce a 'Valid' 'SignedAuthResponse', and therefore an 'AuthInfo'.
 -}
 validateAuthResponse :: forall a m . (MonadReader (AuthRequest a) m, MonadIO m, MonadPlus m)
-                     => Mod WAASettings
+                     => SetWAA
                      -> SignedAuthResponse 'MaybeValid a
                      -> m (SignedAuthResponse 'Valid a)
 validateAuthResponse mkConfig x@SignedAuthResponse{..} = do
@@ -190,7 +195,7 @@ validateAuthResponse mkConfig x@SignedAuthResponse{..} = do
 {-|
   Check the kid is valid
 -}
-validateKid :: Mod WAASettings -> KeyID -> Bool
+validateKid :: SetWAA -> KeyID -> Bool
 validateKid = flip elem . viewConfigWAA validKids
 
 ------------------------------------------------------------------------------
@@ -245,7 +250,7 @@ validateSigKey importKey SignedAuthResponse{..} = pure . rsaValidate =<< importK
 
   TODO Uses 'getCurrentTime'. There may be a better implementation.
 -}
-validateIssueTime :: (MonadIO m) => Mod WAASettings -> AuthResponse a -> m Bool
+validateIssueTime :: (MonadIO m) => SetWAA -> AuthResponse a -> m Bool
 validateIssueTime mkConfig AuthResponse{..} = (viewConfigWAA syncTimeOut mkConfig >) . flip diffUTCTime _ucamAIssue <$> liftIO getCurrentTime
 
 ------------------------------------------------------------------------------
@@ -267,7 +272,7 @@ validateUrl AuthResponse{..} = (==) _ucamAUrl . _ucamQUrl <$> ask
   * If the iact variable is No, only return 'True' if sso contains a value that is acceptable.
   * If the iact variable is unset, return 'True' if there is an acceptable value in either field.
 -}
-validateAuthTypes :: forall a f . (Alternative f) => Mod WAASettings -> AuthResponse a -> f Bool
+validateAuthTypes :: forall a f . (Alternative f) => SetWAA -> AuthResponse a -> f Bool
 validateAuthTypes mkConfig AuthResponse{..} = maybe validateAnyAuth validateSpecificAuth . viewConfigWAA needReauthentication $ mkConfig
     where
         isAcceptableAuth :: AuthType -> Bool

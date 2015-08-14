@@ -35,7 +35,7 @@ import Network.Wai.Protocol.Raven.Internal as X
 ravenAuth :: BlazeBuilder
 ravenAuth = "https://raven.cam.ac.uk/auth/authenticate.html"
 
-ravenSettings :: Mod WAASettings
+ravenSettings :: SetWAA
 ravenSettings = do
         ravenDefSettings
         validKids .= ["2"]
