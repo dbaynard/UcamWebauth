@@ -73,13 +73,13 @@ import Data.PEM
   'Either b (UcamWebauthInfo a)' response.
 -}
 maybeAuthInfo :: (FromJSON a, MonadReader (AuthRequest a) m, MonadIO m, MonadPlus m) => SetWAA -> ByteString -> m (UcamWebauthInfo a)
-maybeAuthInfo mkConfig = getAuthInfo <=< maybeAuthCode mkConfig
+maybeAuthInfo waa = getAuthInfo <=< maybeAuthCode waa
 
 {-|
   A helper function to parse and validate a response from a @WLS@.
 -}
 maybeAuthCode :: (FromJSON a, MonadReader (AuthRequest a) m, MonadIO m, MonadPlus m) => SetWAA -> ByteString -> m (SignedAuthResponse 'Valid a)
-maybeAuthCode mkConfig = validateAuthResponse mkConfig <=< authCode
+maybeAuthCode waa = validateAuthResponse waa <=< authCode
 
 {-|
   Parse the response from a @WLS@.
@@ -96,7 +96,7 @@ authCode = liftMaybe . maybeResult . flip feed "" . parse ucamResponseParser
 ucamWebauthQuery :: ToJSON a => SetWAA
                              -> AuthRequest a
                              -> Header
-ucamWebauthQuery mkConfig AuthRequest{..} = (hLocation, toByteString $ baseUrl mkConfig <> theQuery)
+ucamWebauthQuery waa AuthRequest{..} = (hLocation, toByteString $ baseUrl waa <> theQuery)
     where
         baseUrl :: SetWAA -> BlazeBuilder
         baseUrl = toBuilder . viewConfigWAA wlsUrl
@@ -181,12 +181,12 @@ validateAuthResponse :: forall a m . (MonadReader (AuthRequest a) m, MonadIO m, 
                      => SetWAA
                      -> SignedAuthResponse 'MaybeValid a
                      -> m (SignedAuthResponse 'Valid a)
-validateAuthResponse mkConfig x@SignedAuthResponse{..} = do
-        guard . validateKid mkConfig =<< liftMaybe _ucamAKid
+validateAuthResponse waa x@SignedAuthResponse{..} = do
+        guard . validateKid waa =<< liftMaybe _ucamAKid
         guard <=< validateSig $ x
-        guard <=< validateIssueTime mkConfig $ _ucamAResponse
+        guard <=< validateIssueTime waa $ _ucamAResponse
         guard <=< validateUrl $ _ucamAResponse
-        guard <=< validateAuthTypes mkConfig $ _ucamAResponse
+        guard <=< validateAuthTypes waa $ _ucamAResponse
         return . makeValid $ x
         where
             makeValid :: SignedAuthResponse 'MaybeValid a -> SignedAuthResponse 'Valid a
@@ -254,7 +254,7 @@ validateSigKey importKey SignedAuthResponse{..} = pure . rsaValidate =<< importK
   TODO Uses 'getCurrentTime'. There may be a better implementation.
 -}
 validateIssueTime :: (MonadIO m) => SetWAA -> AuthResponse a -> m Bool
-validateIssueTime mkConfig AuthResponse{..} = (viewConfigWAA syncTimeOut mkConfig >) . flip diffUTCTime _ucamAIssue <$> liftIO getCurrentTime
+validateIssueTime waa AuthResponse{..} = (viewConfigWAA syncTimeOut waa >) . flip diffUTCTime _ucamAIssue <$> liftIO getCurrentTime
 
 ------------------------------------------------------------------------------
 -- ** Url
@@ -276,10 +276,10 @@ validateUrl AuthResponse{..} = (==) _ucamAUrl . _ucamQUrl <$> ask
   * If the iact variable is unset, return 'True' if there is an acceptable value in either field.
 -}
 validateAuthTypes :: forall a f . (Alternative f) => SetWAA -> AuthResponse a -> f Bool
-validateAuthTypes mkConfig AuthResponse{..} = maybe validateAnyAuth validateSpecificAuth . viewConfigWAA needReauthentication $ mkConfig
+validateAuthTypes waa AuthResponse{..} = maybe validateAnyAuth validateSpecificAuth . viewConfigWAA needReauthentication $ waa
     where
         isAcceptableAuth :: AuthType -> Bool
-        isAcceptableAuth = flip elem . viewConfigWAA authAccepted $ mkConfig
+        isAcceptableAuth = flip elem . viewConfigWAA authAccepted $ waa
         anyAuth :: Maybe AuthType -> Maybe [AuthType] -> Bool
         anyAuth Nothing (Just x) = any isAcceptableAuth x
         anyAuth (Just x) Nothing = isAcceptableAuth x

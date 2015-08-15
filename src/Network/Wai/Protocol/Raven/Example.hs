@@ -89,15 +89,15 @@ displaySomethingAuthy :: (m ~ ReaderT (AuthRequest a) (MaybeT IO), Show b, a ~ T
 displaySomethingAuthy = flip . curry $ maybeT empty (pure . Z.fromShow) . uncurry runReaderT . second ucamWebauthHello
 
 ucamWebauthHello :: (ToJSON a, IsString a, a ~ Text) => SetWAA -> AuthRequest a
-ucamWebauthHello mkConfig = AuthRequest {
+ucamWebauthHello waa = AuthRequest {
                   _ucamQVer = WLS3
-                , _ucamQUrl = viewConfigWAA applicationUrl mkConfig
+                , _ucamQUrl = viewConfigWAA applicationUrl waa
                 , _ucamQDesc = Just "This is a sample; it’s rather excellent!"
-                , _ucamQAauth = pure . viewConfigWAA authAccepted $ mkConfig
-                , _ucamQIact = viewConfigWAA needReauthentication mkConfig
+                , _ucamQAauth = pure . viewConfigWAA authAccepted $ waa
+                , _ucamQIact = viewConfigWAA needReauthentication waa
                 , _ucamQMsg = Just "This is a private resource, or something."
                 , _ucamQParams = Just "This is 100% of the data! And it’s really quite cool"
-                , _ucamQDate = pure . viewConfigWAA recentTime $ mkConfig
+                , _ucamQDate = pure . viewConfigWAA recentTime $ waa
                 , _ucamQFail = empty
                 }
 
