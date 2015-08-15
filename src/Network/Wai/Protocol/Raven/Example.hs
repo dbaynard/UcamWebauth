@@ -63,7 +63,7 @@ application time req response = case pathInfo req of
         (Z.fromShow . requestHeaders $ req)
     ["foo", "authenticate"] -> response $ responseBuilder
         seeOther303
-        [("Content-Type", "text/plain"), ucamWebauthQuery ravenAuth . ucamWebauthHello $ mySettings >> recentTime .= time]
+        [("Content-Type", "text/plain"), uncurry ucamWebauthQuery . (id &&& ucamWebauthHello) $ mySettings >> recentTime .= time]
         mempty
     _ -> response $ responseBuilder
         status200

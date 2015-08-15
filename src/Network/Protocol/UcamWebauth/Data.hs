@@ -554,6 +554,7 @@ ucamTime = UcamTime . T.filter isAlphaNum . formatTimeRFC3339 . utcToZonedTime u
   The settings for the application.
 
   TODO Do not export constructors or accessors, only lenses.
+  TODO Make urls type safe
 -}
 data WAASettings = MakeWAASettings {
                    _authAccepted :: [AuthType]
@@ -562,6 +563,7 @@ data WAASettings = MakeWAASettings {
                  , _validKids :: [KeyID]
                  , _recentTime :: UTCTime
                  , _applicationUrl :: Text
+                 , _wlsUrl :: Text
                  }
                  deriving (Show, Eq, Ord, Generic, Typeable, Data)
 
@@ -616,6 +618,16 @@ recentTime f MakeWAASettings{..} = (\_recentTime -> MakeWAASettings{_recentTime,
 -}
 applicationUrl :: WAASettings :~> Text
 applicationUrl f MakeWAASettings{..} = (\_applicationUrl -> MakeWAASettings{_applicationUrl, ..}) <$> f _applicationUrl
+
+{-|
+  The url to be transmitted to the @WLS@ is the url to which it redirects the 
+  user’s browser after the submission, and the url which it displays to the user
+  (in the case of Raven).
+
+  Default is empty. The implementation __must__ override it.
+-}
+wlsUrl :: WAASettings :~> Text
+wlsUrl f MakeWAASettings{..} = (\_wlsUrl -> MakeWAASettings{_wlsUrl, ..}) <$> f _wlsUrl
 
 ------------------------------------------------------------------------------
 -- * Text encoding

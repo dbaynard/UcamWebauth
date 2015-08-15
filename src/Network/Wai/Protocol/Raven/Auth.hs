@@ -28,14 +28,12 @@ import Network.Wai.Protocol.Raven.Internal as X
 -- * Raven servers
 
 {-|
-  The Raven webserver for authentication
+  The Raven settings
 
-  > ravenAuth = "https://raven.cam.ac.uk/auth/authenticate.html"
+  > wlsUrl .= "https://raven.cam.ac.uk/auth/authenticate.html"
 -}
-ravenAuth :: BlazeBuilder
-ravenAuth = "https://raven.cam.ac.uk/auth/authenticate.html"
-
 ravenSettings :: SetWAA
 ravenSettings = do
         ravenDefSettings
         validKids .= ["2"]
+        wlsUrl .= "https://raven.cam.ac.uk/auth/authenticate.html"

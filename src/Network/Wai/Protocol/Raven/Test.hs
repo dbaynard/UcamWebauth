@@ -29,15 +29,13 @@ import Network.Wai.Protocol.Raven.Internal as X
 -- * Raven servers
 
 {-|
-  The Raven webserver to test authentication
+  The Raven Demo settings
 
-  > ravenAuth = "https://demo.raven.cam.ac.uk/auth/authenticate.html"
+  > wlsUrl .= "https://demo.raven.cam.ac.uk/auth/authenticate.html"
 -}
-ravenAuth :: BlazeBuilder
-ravenAuth = "https://demo.raven.cam.ac.uk/auth/authenticate.html"
-
 ravenSettings :: SetWAA
 ravenSettings = do
         ravenDefSettings
         validKids .= ["901"]
         syncTimeOut .= 600
+        wlsUrl .= "https://demo.raven.cam.ac.uk/auth/authenticate.html"

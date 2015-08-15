@@ -93,11 +93,13 @@ authCode = liftMaybe . maybeResult . flip feed "" . parse ucamResponseParser
 {-|
   Build a request header to send to the @WLS@, using an 'AuthRequest'
 -}
-ucamWebauthQuery :: ToJSON a => BlazeBuilder -- ^ The url of the @WLS@ api /e.g./ <https://raven.cam.ac.uk/auth/authenticate.html>
+ucamWebauthQuery :: ToJSON a => SetWAA
                              -> AuthRequest a
                              -> Header
-ucamWebauthQuery url AuthRequest{..} = (hLocation, toByteString $ url <> theQuery)
+ucamWebauthQuery mkConfig AuthRequest{..} = (hLocation, toByteString $ baseUrl mkConfig <> theQuery)
     where
+        baseUrl :: SetWAA -> BlazeBuilder
+        baseUrl = toBuilder . viewConfigWAA wlsUrl
         theQuery :: BlazeBuilder
         theQuery = renderQueryBuilder True $ strictQs <> textQs <> lazyQs
         strictQs :: Query
@@ -146,6 +148,7 @@ configWAA = config MakeWAASettings {
                  , _validKids = empty
                  , _recentTime = UTCTime (ModifiedJulianDay 0) 0
                  , _applicationUrl = mempty
+                 , _wlsUrl = mempty
                  }
 
 {-|
