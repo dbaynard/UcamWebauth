@@ -96,10 +96,10 @@ authCode = liftMaybe . maybeResult . flip feed "" . parse ucamResponseParser
 ucamWebauthQuery :: ToJSON a => SetWAA
                              -> AuthRequest a
                              -> Header
-ucamWebauthQuery waa AuthRequest{..} = (hLocation, toByteString $ baseUrl waa <> theQuery)
+ucamWebauthQuery (configWAA -> waa) AuthRequest{..} = (hLocation, toByteString $ baseUrl waa <> theQuery)
     where
-        baseUrl :: SetWAA -> BlazeBuilder
-        baseUrl = toBuilder . viewConfigWAA wlsUrl
+        baseUrl :: WAASettings -> BlazeBuilder
+        baseUrl = toBuilder . view wlsUrl
         theQuery :: BlazeBuilder
         theQuery = renderQueryBuilder True $ strictQs <> textQs <> lazyQs
         strictQs :: Query
@@ -151,15 +151,6 @@ configWAA = config MakeWAASettings {
                  , _wlsUrl = mempty
                  }
 
-{-|
-  To access settings, use the lenses. In the default case,
-
-  @viewConfigWAA /lens/ def@
--}
-viewConfigWAA :: WAASettings :~> a -> SetWAA -> a
-{-# INLINE viewConfigWAA #-}
-viewConfigWAA lens = view lens . configWAA
-
 ------------------------------------------------------------------------------
 -- * Validation
 
@@ -199,7 +190,7 @@ validateAuthResponse waa x@SignedAuthResponse{..} = do
   Check the kid is valid
 -}
 validateKid :: SetWAA -> KeyID -> Bool
-validateKid = flip elem . viewConfigWAA validKids
+validateKid = flip elem . view validKids . configWAA
 
 ------------------------------------------------------------------------------
 -- ** Signature
@@ -254,7 +245,7 @@ validateSigKey importKey SignedAuthResponse{..} = pure . rsaValidate =<< importK
   TODO Uses 'getCurrentTime'. There may be a better implementation.
 -}
 validateIssueTime :: (MonadIO m) => SetWAA -> AuthResponse a -> m Bool
-validateIssueTime waa AuthResponse{..} = (viewConfigWAA syncTimeOut waa >) . flip diffUTCTime _ucamAIssue <$> liftIO getCurrentTime
+validateIssueTime (configWAA -> waa) AuthResponse{..} = (waa ^. syncTimeOut >) . flip diffUTCTime _ucamAIssue <$> liftIO getCurrentTime
 
 ------------------------------------------------------------------------------
 -- ** Url
@@ -276,10 +267,10 @@ validateUrl AuthResponse{..} = (==) _ucamAUrl . _ucamQUrl <$> ask
   * If the iact variable is unset, return 'True' if there is an acceptable value in either field.
 -}
 validateAuthTypes :: forall a f . (Alternative f) => SetWAA -> AuthResponse a -> f Bool
-validateAuthTypes waa AuthResponse{..} = maybe validateAnyAuth validateSpecificAuth . viewConfigWAA needReauthentication $ waa
+validateAuthTypes (configWAA -> waa) AuthResponse{..} = maybe validateAnyAuth validateSpecificAuth $ waa ^. needReauthentication
     where
         isAcceptableAuth :: AuthType -> Bool
-        isAcceptableAuth = flip elem . viewConfigWAA authAccepted $ waa
+        isAcceptableAuth = flip elem $ waa ^. authAccepted
         anyAuth :: Maybe AuthType -> Maybe [AuthType] -> Bool
         anyAuth Nothing (Just x) = any isAcceptableAuth x
         anyAuth (Just x) Nothing = isAcceptableAuth x
