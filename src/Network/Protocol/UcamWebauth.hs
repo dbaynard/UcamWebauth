@@ -72,13 +72,13 @@ import Data.PEM
   TODO When the errors returned can be usefully used, ensure this correctly returns a lifted
   'Either b (UcamWebauthInfo a)' response.
 -}
-maybeAuthInfo :: (FromJSON a, MonadReader (AuthRequest a) m, MonadIO m, MonadPlus m) => SetWAA -> ByteString -> m (UcamWebauthInfo a)
+maybeAuthInfo :: (FromJSON a, MonadIO m, MonadPlus m) => SetWAA a -> ByteString -> m (UcamWebauthInfo a)
 maybeAuthInfo waa = getAuthInfo <=< maybeAuthCode waa
 
 {-|
   A helper function to parse and validate a response from a @WLS@.
 -}
-maybeAuthCode :: (FromJSON a, MonadReader (AuthRequest a) m, MonadIO m, MonadPlus m) => SetWAA -> ByteString -> m (SignedAuthResponse 'Valid a)
+maybeAuthCode :: (FromJSON a, MonadIO m, MonadPlus m) => SetWAA a -> ByteString -> m (SignedAuthResponse 'Valid a)
 maybeAuthCode waa = validateAuthResponse waa <=< authCode
 
 {-|
@@ -93,32 +93,31 @@ authCode = liftMaybe . maybeResult . flip feed "" . parse ucamResponseParser
 {-|
   Build a request header to send to the @WLS@, using an 'AuthRequest'
 -}
-ucamWebauthQuery :: ToJSON a => SetWAA
-                             -> AuthRequest a
+ucamWebauthQuery :: ToJSON a => SetWAA a
                              -> Header
-ucamWebauthQuery (configWAA -> waa) AuthRequest{..} = (hLocation, toByteString $ baseUrl waa <> theQuery)
+ucamWebauthQuery (configWAA -> waa) = (hLocation,) . toByteString $ baseUrl waa <> theQuery
     where
-        baseUrl :: WAASettings -> BlazeBuilder
-        baseUrl = toBuilder . view wlsUrl
+        baseUrl :: WAAState a -> BlazeBuilder
+        baseUrl = toBuilder . view (wSet . wlsUrl)
         theQuery :: BlazeBuilder
         theQuery = renderQueryBuilder True $ strictQs <> textQs <> lazyQs
         strictQs :: Query
         strictQs = toQuery [
-                   ("ver", pure . textWLSVersion $ _ucamQVer) :: (Text, Maybe ByteString)
-                 , ("desc", encodeUtf8 . decodeASCII <$> _ucamQDesc)
-                 , ("iact", displayYesNoS <$> _ucamQIact)
-                 , ("fail", displayYesOnlyS <$> _ucamQFail)
+                   ("ver", pure . textWLSVersion $ waa ^. aReq . ucamQVer) :: (Text, Maybe ByteString)
+                 , ("desc", encodeUtf8 . decodeASCII <$> waa ^. aReq . ucamQDesc)
+                 , ("iact", displayYesNoS <$> waa ^. aReq . ucamQIact)
+                 , ("fail", displayYesOnlyS <$> waa ^. aReq . ucamQFail)
                  ]
         textQs :: Query
         textQs = toQuery [
-                   ("url" , pure _ucamQUrl) :: (Text, Maybe Text)
-                 , ("date", unUcamTime . ucamTime <$> _ucamQDate)
-                 , ("aauth", T.intercalate "," . fmap displayAuthType <$> _ucamQAauth)
-                 , ("msg", _ucamQMsg)
+                   ("url" , pure $ waa ^. aReq . ucamQUrl) :: (Text, Maybe Text)
+                 , ("date", unUcamTime . ucamTime <$> waa ^. aReq . ucamQDate)
+                 , ("aauth", T.intercalate "," . fmap displayAuthType <$> waa ^. aReq . ucamQAauth)
+                 , ("msg", waa ^. aReq . ucamQMsg)
                  ]
         lazyQs :: Query
         lazyQs = toQuery [
-                   ("params", L.encode . A.encode <$> _ucamQParams) :: (Text, Maybe LByteString)
+                   ("params", L.encode . A.encode <$> waa ^. aReq . ucamQParams) :: (Text, Maybe LByteString)
                  ]
 
 ------------------------------------------------------------------------------
@@ -127,7 +126,7 @@ ucamWebauthQuery (configWAA -> waa) AuthRequest{..} = (hLocation, toByteString $
 {-|
   Type synonym for WAASettings settings type.
 -}
-type SetWAA = Mod WAASettings
+type SetWAA a = Mod (WAAState a)
 
 {-|
   The default @WAA@ settings. To accept the defaults, use
@@ -139,17 +138,38 @@ type SetWAA = Mod WAASettings
   > configWAA . return $ ()
 
   To modify settings, use the provided lenses.
+
+  TODO 'configWAA' should not be exported. Instead, all functions requiring settings
+  should use this function in a view pattern.
 -}
-configWAA :: SetWAA -> WAASettings
-configWAA = config MakeWAASettings {
-                   _authAccepted = [Pwd]
-                 , _needReauthentication = Nothing
-                 , _syncTimeOut = 40
-                 , _validKids = empty
-                 , _recentTime = UTCTime (ModifiedJulianDay 0) 0
-                 , _applicationUrl = mempty
-                 , _wlsUrl = mempty
+configWAA :: SetWAA a -> WAAState a
+configWAA = config MakeWAAState {
+                   _wSet = settings
+                 , _aReq = request
                  }
+    where
+        settings :: WAASettings
+        settings = MakeWAASettings {
+                           _authAccepted = [Pwd]
+                         , _needReauthentication = Nothing
+                         , _syncTimeOut = 40
+                         , _validKids = empty
+                         , _recentTime = error "You must assign a time to check the issue time of a response is valid."
+                         , _applicationUrl = mempty
+                         , _wlsUrl = error "You must enter a URL for the authentication server."
+                         }
+        request :: AuthRequest a
+        request = MakeAuthRequest {
+                           _ucamQVer = WLS3
+                         , _ucamQUrl = error "You must enter a URL for the application wishing to authenticate the user."
+                         , _ucamQDesc = pure "This should be the ASCII description of the application requesting authentication"
+                         , _ucamQAauth = empty
+                         , _ucamQIact = empty
+                         , _ucamQMsg = pure "This should be the reason authentication is requested."
+                         , _ucamQParams = empty
+                         , _ucamQDate = empty
+                         , _ucamQFail = pure YesOnly
+                         }
 
 ------------------------------------------------------------------------------
 -- * Validation
@@ -168,15 +188,15 @@ configWAA = config MakeWAASettings {
 
   This is the only way to produce a 'Valid' 'SignedAuthResponse', and therefore an 'AuthInfo'.
 -}
-validateAuthResponse :: forall a m . (MonadReader (AuthRequest a) m, MonadIO m, MonadPlus m)
-                     => SetWAA
+validateAuthResponse :: forall a m . (MonadIO m, MonadPlus m)
+                     => SetWAA a
                      -> SignedAuthResponse 'MaybeValid a
                      -> m (SignedAuthResponse 'Valid a)
 validateAuthResponse waa x@SignedAuthResponse{..} = do
         guard . validateKid waa =<< liftMaybe _ucamAKid
         guard <=< validateSig $ x
         guard <=< validateIssueTime waa $ _ucamAResponse
-        guard <=< validateUrl $ _ucamAResponse
+        guard . validateUrl waa $ _ucamAResponse
         guard <=< validateAuthTypes waa $ _ucamAResponse
         return . makeValid $ x
         where
@@ -189,8 +209,8 @@ validateAuthResponse waa x@SignedAuthResponse{..} = do
 {-|
   Check the kid is valid
 -}
-validateKid :: SetWAA -> KeyID -> Bool
-validateKid = flip elem . view validKids . configWAA
+validateKid :: SetWAA a -> KeyID -> Bool
+validateKid = flip elem . view (wSet . validKids) . configWAA
 
 ------------------------------------------------------------------------------
 -- ** Signature
@@ -244,8 +264,8 @@ validateSigKey importKey SignedAuthResponse{..} = pure . rsaValidate =<< importK
 
   TODO Uses 'getCurrentTime'. There may be a better implementation.
 -}
-validateIssueTime :: (MonadIO m) => SetWAA -> AuthResponse a -> m Bool
-validateIssueTime (configWAA -> waa) AuthResponse{..} = (waa ^. syncTimeOut >) . flip diffUTCTime _ucamAIssue <$> liftIO getCurrentTime
+validateIssueTime :: (MonadIO m) => SetWAA a -> AuthResponse a -> m Bool
+validateIssueTime (configWAA -> waa) AuthResponse{..} = (waa ^. wSet . syncTimeOut >) . flip diffUTCTime _ucamAIssue <$> liftIO getCurrentTime
 
 ------------------------------------------------------------------------------
 -- ** Url
@@ -253,8 +273,8 @@ validateIssueTime (configWAA -> waa) AuthResponse{..} = (waa ^. syncTimeOut >) .
 {-|
   Check the url parameter matches that sent in the 'AuthRequest'
 -}
-validateUrl :: (MonadReader (AuthRequest a) m) => AuthResponse a -> m Bool
-validateUrl AuthResponse{..} = (==) _ucamAUrl . _ucamQUrl <$> ask
+validateUrl :: SetWAA a -> AuthResponse a -> Bool
+validateUrl (configWAA -> waa) = (== waa ^. aReq . ucamQUrl) . _ucamAUrl
 
 ------------------------------------------------------------------------------
 -- ** Authentication type
@@ -266,11 +286,11 @@ validateUrl AuthResponse{..} = (==) _ucamAUrl . _ucamQUrl <$> ask
   * If the iact variable is No, only return 'True' if sso contains a value that is acceptable.
   * If the iact variable is unset, return 'True' if there is an acceptable value in either field.
 -}
-validateAuthTypes :: forall a f . (Alternative f) => SetWAA -> AuthResponse a -> f Bool
-validateAuthTypes (configWAA -> waa) AuthResponse{..} = maybe validateAnyAuth validateSpecificAuth $ waa ^. needReauthentication
+validateAuthTypes :: forall a f . (Alternative f) => SetWAA a -> AuthResponse a -> f Bool
+validateAuthTypes (configWAA -> waa) AuthResponse{..} = maybe validateAnyAuth validateSpecificAuth $ waa ^. wSet . needReauthentication
     where
         isAcceptableAuth :: AuthType -> Bool
-        isAcceptableAuth = flip elem $ waa ^. authAccepted
+        isAcceptableAuth = flip elem $ waa ^. wSet . authAccepted
         anyAuth :: Maybe AuthType -> Maybe [AuthType] -> Bool
         anyAuth Nothing (Just x) = any isAcceptableAuth x
         anyAuth (Just x) Nothing = isAcceptableAuth x

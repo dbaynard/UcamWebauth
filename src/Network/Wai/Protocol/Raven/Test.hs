@@ -33,9 +33,9 @@ import Network.Wai.Protocol.Raven.Internal as X
 
   > wlsUrl .= "https://demo.raven.cam.ac.uk/auth/authenticate.html"
 -}
-ravenSettings :: SetWAA
+ravenSettings :: SetWAA a
 ravenSettings = do
         ravenDefSettings
-        validKids .= ["901"]
-        syncTimeOut .= 600
-        wlsUrl .= "https://demo.raven.cam.ac.uk/auth/authenticate.html"
+        wSet . validKids .= ["901"]
+        wSet . syncTimeOut .= 600
+        wSet . wlsUrl .= "https://demo.raven.cam.ac.uk/auth/authenticate.html"

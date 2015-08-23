@@ -12,6 +12,7 @@ for an explanation of this approach.
 
 module Data.Settings.Internal (
     module Data.Settings.Internal
+  , get
 )   where
 
 import ClassyPrelude

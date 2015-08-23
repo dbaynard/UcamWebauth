@@ -32,8 +32,8 @@ import Network.Wai.Protocol.Raven.Internal as X
 
   > wlsUrl .= "https://raven.cam.ac.uk/auth/authenticate.html"
 -}
-ravenSettings :: SetWAA
+ravenSettings :: SetWAA a
 ravenSettings = do
         ravenDefSettings
-        validKids .= ["2"]
-        wlsUrl .= "https://raven.cam.ac.uk/auth/authenticate.html"
+        wSet . validKids .= ["2"]
+        wSet . wlsUrl .= "https://raven.cam.ac.uk/auth/authenticate.html"

@@ -109,7 +109,7 @@ type StringType = ByteString
   of this module. The parameter represents data to be returned to the application
   after authentication.
 -}
-data AuthRequest a = AuthRequest {
+data AuthRequest a = MakeAuthRequest {
                   _ucamQVer :: WLSVersion
                 , _ucamQUrl :: Text
                 , _ucamQDesc :: Maybe ASCII
@@ -126,55 +126,57 @@ data AuthRequest a = AuthRequest {
   The version of @WLS.@ 1, 2 or 3.
 -}
 ucamQVer :: AuthRequest a :~> WLSVersion
-ucamQVer f AuthRequest{..} = (\_ucamQVer -> AuthRequest{_ucamQVer, ..}) <$> f _ucamQVer
+ucamQVer f MakeAuthRequest{..} = (\_ucamQVer -> MakeAuthRequest{_ucamQVer, ..}) <$> f _ucamQVer
 
 {-|
   Full http(s) url of resource request for display, and redirection after authentication at the @WLS@
+
+  TODO __This is required__
 -}
 ucamQUrl :: AuthRequest a :~> Text
-ucamQUrl f AuthRequest{..} = (\_ucamQUrl -> AuthRequest{_ucamQUrl, ..}) <$> f _ucamQUrl
+ucamQUrl f MakeAuthRequest{..} = (\_ucamQUrl -> MakeAuthRequest{_ucamQUrl, ..}) <$> f _ucamQUrl
 
 {-|
   Description, transmitted as ASCII
 -}
 ucamQDesc :: AuthRequest a :~> Maybe ASCII
-ucamQDesc f AuthRequest{..} = (\_ucamQDesc -> AuthRequest{_ucamQDesc, ..}) <$> f _ucamQDesc
+ucamQDesc f MakeAuthRequest{..} = (\_ucamQDesc -> MakeAuthRequest{_ucamQDesc, ..}) <$> f _ucamQDesc
 
 {-|
   Comma delimited sequence of text tokens representing satisfactory authentication methods
 -}
 ucamQAauth :: AuthRequest a :~> Maybe [AuthType]
-ucamQAauth f AuthRequest{..} = (\_ucamQAauth -> AuthRequest{_ucamQAauth, ..}) <$> f _ucamQAauth
+ucamQAauth f MakeAuthRequest{..} = (\_ucamQAauth -> MakeAuthRequest{_ucamQAauth, ..}) <$> f _ucamQAauth
 
 {-|
   A token (Yes/No). Yes requires re-authentication. No requires no interaction.
 -}
 ucamQIact :: AuthRequest a :~> Maybe YesNo
-ucamQIact f AuthRequest{..} = (\_ucamQIact -> AuthRequest{_ucamQIact, ..}) <$> f _ucamQIact
+ucamQIact f MakeAuthRequest{..} = (\_ucamQIact -> MakeAuthRequest{_ucamQIact, ..}) <$> f _ucamQIact
 
 {-|
   Why is authentication being requested?
 -}
 ucamQMsg :: AuthRequest a :~> Maybe Text
-ucamQMsg f AuthRequest{..} = (\_ucamQMsg -> AuthRequest{_ucamQMsg, ..}) <$> f _ucamQMsg
+ucamQMsg f MakeAuthRequest{..} = (\_ucamQMsg -> MakeAuthRequest{_ucamQMsg, ..}) <$> f _ucamQMsg
 
 {-|
   Data to be returned to the application
 -}
 ucamQParams :: AuthRequest a :~> Maybe a
-ucamQParams f AuthRequest{..} = (\_ucamQParams -> AuthRequest{_ucamQParams, ..}) <$> f _ucamQParams
+ucamQParams f MakeAuthRequest{..} = (\_ucamQParams -> MakeAuthRequest{_ucamQParams, ..}) <$> f _ucamQParams
 
 {-|
   RFC 3339 representation of application’s time
 -}
 ucamQDate :: AuthRequest a :~> Maybe UTCTime
-ucamQDate f AuthRequest{..} = (\_ucamQDate -> AuthRequest{_ucamQDate, ..}) <$> f _ucamQDate
+ucamQDate f MakeAuthRequest{..} = (\_ucamQDate -> MakeAuthRequest{_ucamQDate, ..}) <$> f _ucamQDate
 
 {-|
   Error token. If 'yes', the @WLS@ implements error handling
 -}
 ucamQFail :: AuthRequest a :~> Maybe YesOnly
-ucamQFail f AuthRequest{..} = (\_ucamQFail -> AuthRequest{_ucamQFail, ..}) <$> f _ucamQFail
+ucamQFail f MakeAuthRequest{..} = (\_ucamQFail -> MakeAuthRequest{_ucamQFail, ..}) <$> f _ucamQFail
 
 {-|
   A 'SignedAuthResponse' represents the data returned by the @WLS@, including a
@@ -549,6 +551,28 @@ ucamTime = UcamTime . T.filter isAlphaNum . formatTimeRFC3339 . utcToZonedTime u
 
 ------------------------------------------------------------------------------
 -- * 'WAASettings' and lenses
+
+{-|
+  The state involved in authentication. This includes the settings as 'WAASettings' and 
+  the request as 'AuthRequest'.
+
+  TODO Do not export constructors or accessors, only lenses.
+-}
+data WAAState a = MakeWAAState {
+                  _wSet :: WAASettings
+                , _aReq :: AuthRequest a
+                --, _aSrs :: SignedAuthResponse valid a
+                }
+                deriving (Show, Eq, Ord, Generic, Typeable, Data)
+
+wSet :: WAAState a :~> WAASettings
+wSet f MakeWAAState{..} = (\_wSet -> MakeWAAState{_wSet, ..}) <$> f _wSet
+
+aReq :: WAAState a :~> AuthRequest a
+aReq f MakeWAAState{..} = (\_aReq -> MakeWAAState{_aReq, ..}) <$> f _aReq
+
+--aSrs :: WAAState a :~> SignedAuthResponse valid a
+--aSrs f MakeWAAState{..} = (\_aSrs -> MakeWAAState{_aSrs, ..}) <$> f _aSrs
 
 {-|
   The settings for the application.
