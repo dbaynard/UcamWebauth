@@ -70,7 +70,7 @@ library
                  , timerep
                  , unordered-containers
                  , wai
-                 , warp                          >= 3.0        && < 3.1
+                 , warp                          >= 3.1
                  , x509
 
 test-suite test
