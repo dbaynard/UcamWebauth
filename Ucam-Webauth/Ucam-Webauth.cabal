@@ -29,7 +29,6 @@ library
           Network.Wai.Protocol.Raven.Test
           Network.Wai.Protocol.Raven.Example
     other-modules:
-          Data.Settings.Internal
           Network.Protocol.UcamWebauth.Data
           Network.Protocol.UcamWebauth.Internal
           Network.Protocol.UcamWebauth.Parser

@@ -34,6 +34,8 @@ import "base" Control.Applicative
 import "base" Control.Monad
 import "base" Data.Semigroup
 
+import "mtl" Control.Monad.State
+
 import "microlens" Lens.Micro
 import "microlens-mtl" Lens.Micro.Mtl
 
@@ -46,9 +48,6 @@ import "attoparsec" Data.Attoparsec.ByteString.Char8 hiding (count, take)
 
 -- HTTP protocol
 import "http-types" Network.HTTP.Types
-
--- Settings
-import Data.Settings.Internal
 
 -- Character encoding
 import qualified "base64-bytestring" Data.ByteString.Base64.Lazy as L
@@ -78,6 +77,11 @@ import "x509" Data.X509
 import "pem" Data.PEM
 
 type LByteString = BSL.ByteString
+
+(&~) :: s -> State s a -> s
+(&~) = flip execState
+infixl 1 &~
+{-# INLINE (&~) #-}
 
 ------------------------------------------------------------------------------
 -- * Top level functions
@@ -144,7 +148,7 @@ ucamWebauthQuery (configWAA -> waa) = (hLocation,) . toByteString $ baseUrl waa 
 {-|
   Type synonym for WAASettings settings type.
 -}
-type SetWAA a = Mod (WAAState a)
+type SetWAA a = State (WAAState a) ()
 
 {-|
   The default @WAA@ settings. To accept the defaults, use
@@ -161,7 +165,7 @@ type SetWAA a = Mod (WAAState a)
   should use this function in a view pattern.
 -}
 configWAA :: SetWAA a -> WAAState a
-configWAA = config MakeWAAState {
+configWAA = (&~) MakeWAAState {
                    _wSet = settings
                  , _aReq = request
                  }

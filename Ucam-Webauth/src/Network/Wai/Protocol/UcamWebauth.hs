@@ -29,7 +29,6 @@ module Network.Wai.Protocol.UcamWebauth (
 
 -- Prelude
 import Network.Protocol.UcamWebauth as X
-import Data.Settings.Internal as X
 
 import "base" Control.Monad
 
