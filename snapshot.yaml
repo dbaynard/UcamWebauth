@@ -1,0 +1,17 @@
+resolver: lts-8.13
+
+compiler: ghc-8.0.1
+
+packages:
+# Newer than stackage
+- aeson-1.2.0.0
+- persistent-2.7.0
+- servant-0.10
+- servant-server-0.10
+# Not on stackage
+- dhall-1.2.0
+- digestive-functors-0.8.2.0
+- digestive-functors-lucid-0.0.0.4
+- io-capture-1.0.0
+- timezone-olson-th-0.1.0.2
+- happy-1.19.5

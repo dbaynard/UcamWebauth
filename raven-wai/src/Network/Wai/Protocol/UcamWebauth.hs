@@ -19,25 +19,26 @@ for 'readRSAKeyFile'.
 
 -}
 
+{-# LANGUAGE PackageImports #-}
+{-# LANGUAGE OverloadedStrings #-}
+
 module Network.Wai.Protocol.UcamWebauth (
     module Network.Wai.Protocol.UcamWebauth
-  , module Network.Protocol.UcamWebauth
-  , module Data.Lens.Internal
-  , module Data.Settings.Internal
+  , module X
 )   where
 
 -- Prelude
-import ClassyPrelude
+import "Ucam-Webauth" Network.Protocol.UcamWebauth as X
 
-import Network.Protocol.UcamWebauth
-import Data.Settings.Internal
-import Data.Lens.Internal
+import "base" Control.Monad
+
+import "bytestring" Data.ByteString (ByteString)
 
 -- Map structures
-import qualified Data.Map.Strict as M
+import qualified "containers" Data.Map.Strict as M
 
 -- Wai
-import Network.Wai
+import "wai" Network.Wai
 
 ------------------------------------------------------------------------------
 -- * Top level functions

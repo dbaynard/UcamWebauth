@@ -9,58 +9,79 @@ Key parts of the implementation of the protocol itself.
 
 -}
 
+{-# LANGUAGE PackageImports #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE TupleSections #-}
+{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE OverloadedStrings #-}
+
 module Network.Protocol.UcamWebauth (
     module Network.Protocol.UcamWebauth
-  , module Network.Protocol.UcamWebauth.Data
-  , module Network.Protocol.UcamWebauth.Internal
-  , module Network.Protocol.UcamWebauth.Parser
+  , module X
 )   where
 
 -- Prelude
-import ClassyPrelude
 
-import Network.Protocol.UcamWebauth.Internal
-import Network.Protocol.UcamWebauth.Data
-import Network.Protocol.UcamWebauth.Parser
+import Network.Protocol.UcamWebauth.Internal as X
+import Network.Protocol.UcamWebauth.Data as X
+import Network.Protocol.UcamWebauth.Parser as X
 
-import Data.Coerce
+import "base" Data.Coerce
+import "base" Control.Monad.IO.Class
+import "base" Control.Applicative
+import "base" Control.Monad
+import "base" Data.Semigroup
 
-import Control.Error hiding (catMaybes)
+import "mtl" Control.Monad.State
 
-import System.IO (withFile, IOMode(..))
+import "microlens" Lens.Micro
+import "microlens-mtl" Lens.Micro.Mtl
+
+import "errors" Control.Error hiding (catMaybes)
+
+import "base" System.IO (withFile, IOMode(..))
 
 -- Parsing
-import Data.Attoparsec.ByteString.Char8 hiding (count, take)
+import "attoparsec" Data.Attoparsec.ByteString.Char8 hiding (count, take)
 
 -- HTTP protocol
-import Network.HTTP.Types
-
--- Settings
-import Data.Settings.Internal
-import Data.Lens.Internal
+import "http-types" Network.HTTP.Types
 
 -- Character encoding
-import qualified Data.ByteString.Base64.Lazy as L
+import qualified "base64-bytestring" Data.ByteString.Base64.Lazy as L
 
-import qualified Data.Text as T
-import qualified Data.ByteString.Char8 as B
+import "bytestring" Data.ByteString (ByteString)
+import qualified "bytestring" Data.ByteString.Lazy as BSL
+import "text" Data.Text (Text)
+import "text" Data.Text.Encoding hiding (decodeASCII)
+import qualified "text" Data.Text as T
+import qualified "bytestring" Data.ByteString.Char8 as B
 
 -- ByteString building
-import Blaze.ByteString.Builder hiding (Builder)
+import "bytestring" Data.ByteString.Builder
 
 -- Time
-import Data.Time (diffUTCTime)
+import "time" Data.Time (diffUTCTime, getCurrentTime)
 
 -- JSON (Aeson)
-import Data.Aeson (ToJSON, FromJSON)
-import qualified Data.Aeson as A
+import "aeson" Data.Aeson (ToJSON, FromJSON)
+import qualified "aeson" Data.Aeson as A
 
 -- Crypto
-import Crypto.PubKey.RSA.Types
-import Crypto.PubKey.RSA.PKCS15
-import Crypto.Hash.Algorithms
-import Data.X509
-import Data.PEM
+import "cryptonite" Crypto.PubKey.RSA.Types
+import "cryptonite" Crypto.PubKey.RSA.PKCS15
+import "cryptonite" Crypto.Hash.Algorithms
+import "x509" Data.X509
+import "pem" Data.PEM
+
+type LByteString = BSL.ByteString
+
+(&~) :: s -> State s a -> s
+(&~) = flip execState
+infixl 1 &~
+{-# INLINE (&~) #-}
 
 ------------------------------------------------------------------------------
 -- * Top level functions
@@ -84,7 +105,7 @@ maybeAuthCode waa = validateAuthResponse waa <=< authCode
 {-|
   Parse the response from a @WLS@.
 -}
-authCode :: (FromJSON a, MonadIO m, MonadPlus m) => ByteString -> m (SignedAuthResponse 'MaybeValid a)
+authCode :: (FromJSON a, MonadPlus m) => ByteString -> m (SignedAuthResponse 'MaybeValid a)
 authCode = liftMaybe . maybeResult . flip feed "" . parse ucamResponseParser
 
 ------------------------------------------------------------------------------
@@ -97,9 +118,9 @@ ucamWebauthQuery :: ToJSON a => SetWAA a
                              -> Header
 ucamWebauthQuery (configWAA -> waa) = (hLocation,) . toByteString $ baseUrl waa <> theQuery
     where
-        baseUrl :: WAAState a -> BlazeBuilder
-        baseUrl = toBuilder . view (wSet . wlsUrl)
-        theQuery :: BlazeBuilder
+        baseUrl :: WAAState a -> Builder
+        baseUrl = encodeUtf8Builder . view (wSet . wlsUrl)
+        theQuery :: Builder
         theQuery = renderQueryBuilder True $ strictQs <> textQs <> lazyQs
         strictQs :: Query
         strictQs = toQuery [
@@ -119,6 +140,7 @@ ucamWebauthQuery (configWAA -> waa) = (hLocation,) . toByteString $ baseUrl waa 
         lazyQs = toQuery [
                    ("params", L.encode . A.encode <$> waa ^. aReq . ucamQParams) :: (Text, Maybe LByteString)
                  ]
+        toByteString = BSL.toStrict . toLazyByteString
 
 ------------------------------------------------------------------------------
 -- * 'WAASettings'
@@ -126,7 +148,7 @@ ucamWebauthQuery (configWAA -> waa) = (hLocation,) . toByteString $ baseUrl waa 
 {-|
   Type synonym for WAASettings settings type.
 -}
-type SetWAA a = Mod (WAAState a)
+type SetWAA a = State (WAAState a) ()
 
 {-|
   The default @WAA@ settings. To accept the defaults, use
@@ -143,7 +165,7 @@ type SetWAA a = Mod (WAAState a)
   should use this function in a view pattern.
 -}
 configWAA :: SetWAA a -> WAAState a
-configWAA = config MakeWAAState {
+configWAA = (&~) MakeWAAState {
                    _wSet = settings
                  , _aReq = request
                  }
@@ -241,7 +263,7 @@ decodeRSAPubKey = hush . f
 readRSAKeyFile :: (MonadIO m, Alternative m) => KeyID
                                              -> m PublicKey
 readRSAKeyFile key = liftMaybe <=< liftIO . withFile ("static/pubkey" <> (B.unpack . unKeyID) key <> ".crt") ReadMode $ 
-        pure . decodeRSAPubKey <=< hGetContents
+        pure . decodeRSAPubKey <=< B.hGetContents
 
 validateSigKey :: MonadPlus m
                => (KeyID -> m PublicKey) -- ^ Get an RSA 'PublicKey' from somewhere, with the possibility of failing.

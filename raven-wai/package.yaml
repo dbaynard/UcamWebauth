@@ -1,0 +1,66 @@
+name: raven-wai
+version: '0.0.1'
+synopsis: The raven protocol as Wai middleware
+description: Please see README.md
+category: Web
+author: David Baynard
+maintainer: davidbaynard@gmail.com
+copyright: 2017 David Baynard
+license: Apache
+dependencies:
+- base >=4 && <5
+- Ucam-Webauth
+- bytestring >=0.9 && <0.11
+- microlens-mtl
+- wai
+library:
+  source-dirs: src
+  exposed-modules:
+  - Network.Wai.Protocol.UcamWebauth
+  - Network.Wai.Protocol.Raven.Auth
+  - Network.Wai.Protocol.Raven.Test
+  dependencies:
+  - containers
+  when:
+  - condition: flag(dev)
+    then:
+      ghc-options:
+      - -Wall
+      - -fwarn-tabs
+      - -O0
+    else:
+      ghc-options:
+      - -Wall
+      - -fwarn-tabs
+      - -O2
+executables:
+  raven-wai-example:
+    source-dirs: app
+    main: Main.lhs
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - raven-wai
+    - errors
+    - http-types
+    - microlens
+    - mtl
+    - text >=0.11 && <2.0
+    - time
+    - wai
+    - warp >=3.2.0
+tests:
+  test:
+    main: Spec.hs
+    source-dirs: test
+    ghc-options: -Wall
+    dependencies:
+    - raven-wai
+    - hspec >=2.0.0
+flags:
+  dev:
+    description: Build for development
+    manual: false
+    default: false

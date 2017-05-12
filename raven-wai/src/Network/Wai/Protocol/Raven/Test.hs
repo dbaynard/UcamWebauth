@@ -12,13 +12,16 @@ https://raven.cam.ac.uk/project/test-demo/
 The functions in this file shadow the names in the "Network.Wai.Protocol.Raven.Auth" module. This is deliberate.
 
 -}
+{-# LANGUAGE PackageImports #-}
+{-# LANGUAGE OverloadedStrings #-}
+
 module Network.Wai.Protocol.Raven.Test {-# WARNING "Do not use this module for production code. It is only for testing." #-} (
     module Network.Wai.Protocol.Raven.Test
   , module X
 )   where
 
 -- Prelude
-import ClassyPrelude
+import "microlens-mtl" Lens.Micro.Mtl
 
 -- The protocol
 import Network.Wai.Protocol.UcamWebauth
