@@ -1,17 +1,31 @@
+---
+title:  Example use of raven-wai  
+author: David Baynard  
+date:   12 May 2017  
+fontfamily:   libertine
+csl:    chemical-engineering-science.csl
+link-citations: true
+abstract: |  
+    
+...
+
+```haskell
 {-|
 Module      : Network.Wai.Protocol.Raven.Example
 Description : Example use of Wai Raven authentication (test)
 Maintainer  : David Baynard <davidbaynard@gmail.com>
 
 -}
+```
 
+```haskell
 {-# LANGUAGE PackageImports #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Network.Wai.Protocol.Raven.Example (
-    module Network.Wai.Protocol.Raven.Example
+module Main (
+    main
 )   where
 
 -- Prelude
@@ -40,6 +54,9 @@ import "bytestring" Data.ByteString.Builder
 -- Warp server
 import "warp" Network.Wai.Handler.Warp
 
+main :: IO ()
+main = warpit
+
 warpit :: IO ()
 warpit = run 3000 . application =<< getCurrentTime
 
@@ -65,12 +82,16 @@ application time req response = case pathInfo req of
         status200
         [("Content-Type", "text/plain")]
         (displayWLSQuery req)
-    {-
-     -["foo", "requestHeaders"] -> response $ responseBuilder
-     -    status200
-     -    [("Content-Type", "text/plain")]
-     -    (_ . requestHeaders $ req)
-     -}
+```
+
+``` { .haskell .ignore }
+    ["foo", "requestHeaders"] -> response $ responseBuilder
+        status200
+        [("Content-Type", "text/plain")]
+        (_ . requestHeaders $ req)
+```
+
+```haskell
     ["foo", "authenticate"] -> response $ responseBuilder
         seeOther303
         [("Content-Type", "text/plain"), ucamWebauthQuery settings]
@@ -128,4 +149,6 @@ displaySomethingAuthy :: forall b m
                        -> IO Builder
 displaySomethingAuthy = maybeT empty (pure . stringUtf8 . show)
                         -- . uncurry runReaderT
+
+```
 
