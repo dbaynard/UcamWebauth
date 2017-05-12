@@ -1,4 +1,5 @@
 {-# OPTIONS_HADDOCK hide, not_here #-}
+{-# LANGUAGE PackageImports #-}
 
 {-|
 Module      : Network.Protocol.UcamWebauth.Internal
@@ -9,11 +10,9 @@ Maintainer  : David Baynard <davidbaynard@gmail.com>
 
 module Network.Protocol.UcamWebauth.Internal (
     module Network.Protocol.UcamWebauth.Internal
-  , module Control.Applicative
 )   where
 
-import ClassyPrelude
-import Control.Applicative (empty, Alternative)
+import "base" Control.Applicative (empty, Alternative)
 
 {-|
   Lift a 'Maybe' value.

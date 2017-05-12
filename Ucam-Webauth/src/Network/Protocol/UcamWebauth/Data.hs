@@ -1,4 +1,15 @@
 {-# OPTIONS_HADDOCK hide, not_here #-}
+{-# LANGUAGE PackageImports #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE TypeInType #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedLists #-}
 
 {-|
 Module      : Network.Protocol.UcamWebauth.Data
@@ -12,30 +23,37 @@ module Network.Protocol.UcamWebauth.Data (
 )   where
 
 -- Prelude
-import ClassyPrelude
-
 import Network.Protocol.UcamWebauth.Internal
 
-import Data.Data
-import GHC.Generics
+import "base" Data.Data
+import "base" GHC.Generics
+import "base" Control.Applicative
+import "base" Data.String
+import "base" Data.Semigroup
+import "containers" Data.IntMap (IntMap)
+import qualified "containers" Data.IntMap as IntMap
+import "errors" Control.Error
+import "base" Control.Arrow ((&&&))
 
 -- Settings
-import Data.Lens.Internal
+import "microlens" Lens.Micro
 
 -- Character encoding
-import qualified Data.ByteString.Base64 as B
+import qualified "base64-bytestring" Data.ByteString.Base64 as B
 
-import qualified Data.ByteString.Char8 as B
-import qualified Data.Text as T
-import Data.Char (isAlphaNum, isAscii)
+import "bytestring" Data.ByteString (ByteString)
+import qualified "bytestring" Data.ByteString.Char8 as B
+import "text" Data.Text (Text)
+import qualified "text" Data.Text as T
+import "base" Data.Char (isAlphaNum, isAscii)
 
 -- Time
-import Data.Time.RFC3339
-import Data.Time.LocalTime
-import Data.Time (DiffTime, NominalDiffTime)
+import "timerep" Data.Time.RFC3339
+import "time" Data.Time.LocalTime
+import "time" Data.Time (DiffTime, NominalDiffTime, UTCTime)
 
 -- HTTP protocol
-import Network.HTTP.Types
+import "http-types" Network.HTTP.Types
 
 ------------------------------------------------------------------------------
 -- * Core data types and associated functions
@@ -60,31 +78,31 @@ data UcamWebauthInfo a = AuthInfo {
 {-|
   Unique representation of response, composed of issue and id
 -}
-approveUniq :: UcamWebauthInfo a :~> (UTCTime, Text)
+approveUniq :: UcamWebauthInfo a `Lens'` (UTCTime, Text)
 approveUniq f AuthInfo{..} = (\_approveUniq -> AuthInfo{_approveUniq, ..}) <$> f _approveUniq
 
 {-|
   Identity of authenticated user
 -}
-approveUser :: UcamWebauthInfo a :~> Text
+approveUser :: UcamWebauthInfo a `Lens'` Text
 approveUser f AuthInfo{..} = (\_approveUser -> AuthInfo{_approveUser, ..}) <$> f _approveUser
 
 {-|
   Comma separated attributes of user
 -}
-approveAttribs :: UcamWebauthInfo a :~> [Ptag]
+approveAttribs :: UcamWebauthInfo a `Lens'` [Ptag]
 approveAttribs f AuthInfo{..} = (\_approveAttribs -> AuthInfo{_approveAttribs, ..}) <$> f _approveAttribs
 
 {-|
   Remaining lifetime in seconds of application
 -}
-approveLife :: UcamWebauthInfo a :~> Maybe DiffTime
+approveLife :: UcamWebauthInfo a `Lens'` Maybe DiffTime
 approveLife f AuthInfo{..} = (\_approveLife -> AuthInfo{_approveLife, ..}) <$> f _approveLife
 
 {-|
   A copy of the params from the request
 -}
-approveParams :: UcamWebauthInfo a :~> Maybe a
+approveParams :: UcamWebauthInfo a `Lens'` Maybe a
 approveParams f AuthInfo{..} = (\_approveParams -> AuthInfo{_approveParams, ..}) <$> f _approveParams
 
 ------------------------------------------------------------------------------
@@ -125,7 +143,7 @@ data AuthRequest a = MakeAuthRequest {
 {-|
   The version of @WLS.@ 1, 2 or 3.
 -}
-ucamQVer :: AuthRequest a :~> WLSVersion
+ucamQVer :: AuthRequest a `Lens'` WLSVersion
 ucamQVer f MakeAuthRequest{..} = (\_ucamQVer -> MakeAuthRequest{_ucamQVer, ..}) <$> f _ucamQVer
 
 {-|
@@ -133,49 +151,49 @@ ucamQVer f MakeAuthRequest{..} = (\_ucamQVer -> MakeAuthRequest{_ucamQVer, ..}) 
 
   TODO __This is required__
 -}
-ucamQUrl :: AuthRequest a :~> Text
+ucamQUrl :: AuthRequest a `Lens'` Text
 ucamQUrl f MakeAuthRequest{..} = (\_ucamQUrl -> MakeAuthRequest{_ucamQUrl, ..}) <$> f _ucamQUrl
 
 {-|
   Description, transmitted as ASCII
 -}
-ucamQDesc :: AuthRequest a :~> Maybe ASCII
+ucamQDesc :: AuthRequest a `Lens'` Maybe ASCII
 ucamQDesc f MakeAuthRequest{..} = (\_ucamQDesc -> MakeAuthRequest{_ucamQDesc, ..}) <$> f _ucamQDesc
 
 {-|
   Comma delimited sequence of text tokens representing satisfactory authentication methods
 -}
-ucamQAauth :: AuthRequest a :~> Maybe [AuthType]
+ucamQAauth :: AuthRequest a `Lens'` Maybe [AuthType]
 ucamQAauth f MakeAuthRequest{..} = (\_ucamQAauth -> MakeAuthRequest{_ucamQAauth, ..}) <$> f _ucamQAauth
 
 {-|
   A token (Yes/No). Yes requires re-authentication. No requires no interaction.
 -}
-ucamQIact :: AuthRequest a :~> Maybe YesNo
+ucamQIact :: AuthRequest a `Lens'` Maybe YesNo
 ucamQIact f MakeAuthRequest{..} = (\_ucamQIact -> MakeAuthRequest{_ucamQIact, ..}) <$> f _ucamQIact
 
 {-|
   Why is authentication being requested?
 -}
-ucamQMsg :: AuthRequest a :~> Maybe Text
+ucamQMsg :: AuthRequest a `Lens'` Maybe Text
 ucamQMsg f MakeAuthRequest{..} = (\_ucamQMsg -> MakeAuthRequest{_ucamQMsg, ..}) <$> f _ucamQMsg
 
 {-|
   Data to be returned to the application
 -}
-ucamQParams :: AuthRequest a :~> Maybe a
+ucamQParams :: AuthRequest a `Lens'` Maybe a
 ucamQParams f MakeAuthRequest{..} = (\_ucamQParams -> MakeAuthRequest{_ucamQParams, ..}) <$> f _ucamQParams
 
 {-|
   RFC 3339 representation of application’s time
 -}
-ucamQDate :: AuthRequest a :~> Maybe UTCTime
+ucamQDate :: AuthRequest a `Lens'` Maybe UTCTime
 ucamQDate f MakeAuthRequest{..} = (\_ucamQDate -> MakeAuthRequest{_ucamQDate, ..}) <$> f _ucamQDate
 
 {-|
   Error token. If 'yes', the @WLS@ implements error handling
 -}
-ucamQFail :: AuthRequest a :~> Maybe YesOnly
+ucamQFail :: AuthRequest a `Lens'` Maybe YesOnly
 ucamQFail f MakeAuthRequest{..} = (\_ucamQFail -> MakeAuthRequest{_ucamQFail, ..}) <$> f _ucamQFail
 
 {-|
@@ -196,25 +214,25 @@ data SignedAuthResponse (valid :: IsValid) a = SignedAuthResponse {
 {-|
   The bit of the response that is signed
 -}
-ucamAResponse :: SignedAuthResponse valid a :~> AuthResponse a
+ucamAResponse :: SignedAuthResponse valid a `Lens'` AuthResponse a
 ucamAResponse f SignedAuthResponse{..} = (\_ucamAResponse -> SignedAuthResponse{_ucamAResponse, ..}) <$> f _ucamAResponse
 
 {-|
   The raw text of the response, used to verify the signature
 -}
-ucamAToSign :: SignedAuthResponse valid a :~> ByteString
+ucamAToSign :: SignedAuthResponse valid a `Lens'` ByteString
 ucamAToSign f SignedAuthResponse{..} = (\_ucamAToSign -> SignedAuthResponse{_ucamAToSign, ..}) <$> f _ucamAToSign
 
 {-|
   RSA key identifier. Must be a string of 1–8 characters, chosen from digits 0–9, with no leading 0, i.e. [1-9][0-9]{0,7}
 -}
-ucamAKid :: SignedAuthResponse valid a :~> Maybe KeyID
+ucamAKid :: SignedAuthResponse valid a `Lens'` Maybe KeyID
 ucamAKid f SignedAuthResponse{..} = (\_ucamAKid -> SignedAuthResponse{_ucamAKid, ..}) <$> f _ucamAKid
 
 {-|
   Required if status is 200, otherwise Nothing. Public key signature of everything up to kid, using the private key identified by kid, the SHA-1 algorithm and RSASSA-PKCS1-v1_5 (PKCS #1 v2.1 RFC 3447), encoded using the base64 scheme (RFC 1521) but with "-._" replacing "+/="
 -}
-ucamASig :: SignedAuthResponse valid a :~> Maybe UcamBase64BS
+ucamASig :: SignedAuthResponse valid a `Lens'` Maybe UcamBase64BS
 ucamASig f SignedAuthResponse{..} = (\_ucamASig -> SignedAuthResponse{_ucamASig, ..}) <$> f _ucamASig
 
 {-|
@@ -251,73 +269,73 @@ data AuthResponse a = AuthResponse {
 {-|
   The version of @WLS@: 1, 2 or 3
 -}
-ucamAVer :: AuthResponse a :~> WLSVersion
+ucamAVer :: AuthResponse a `Lens'` WLSVersion
 ucamAVer f AuthResponse{..} = (\_ucamAVer -> AuthResponse{_ucamAVer, ..}) <$> f _ucamAVer
 
 {-|
   3 digit status code (200 is success)
 -}
-ucamAStatus :: AuthResponse a :~> StatusCode
+ucamAStatus :: AuthResponse a `Lens'` StatusCode
 ucamAStatus f AuthResponse{..} = (\_ucamAStatus -> AuthResponse{_ucamAStatus, ..}) <$> f _ucamAStatus
 
 {-|
   The status, for users
 -}
-ucamAMsg :: AuthResponse a :~> Maybe Text
+ucamAMsg :: AuthResponse a `Lens'` Maybe Text
 ucamAMsg f AuthResponse{..} = (\_ucamAMsg -> AuthResponse{_ucamAMsg, ..}) <$> f _ucamAMsg
 
 {-|
   RFC 3339 representation of response’s time
 -}
-ucamAIssue :: AuthResponse a :~> UTCTime
+ucamAIssue :: AuthResponse a `Lens'` UTCTime
 ucamAIssue f AuthResponse{..} = (\_ucamAIssue -> AuthResponse{_ucamAIssue, ..}) <$> f _ucamAIssue
 
 {-|
   Not unguessable identifier, id + issue are unique
 -}
-ucamAId :: AuthResponse a :~> Text
+ucamAId :: AuthResponse a `Lens'` Text
 ucamAId f AuthResponse{..} = (\_ucamAId -> AuthResponse{_ucamAId, ..}) <$> f _ucamAId
 
 {-|
   Same as request
 -}
-ucamAUrl :: AuthResponse a :~> Text
+ucamAUrl :: AuthResponse a `Lens'` Text
 ucamAUrl f AuthResponse{..} = (\_ucamAUrl -> AuthResponse{_ucamAUrl, ..}) <$> f _ucamAUrl
 
 {-|
   Identity of authenticated user. Must be present if ucamAStatus is 200, otherwise must be Nothing
 -}
-ucamAPrincipal :: AuthResponse a :~> Maybe Text
+ucamAPrincipal :: AuthResponse a `Lens'` Maybe Text
 ucamAPrincipal f AuthResponse{..} = (\_ucamAPrincipal -> AuthResponse{_ucamAPrincipal, ..}) <$> f _ucamAPrincipal
 
 {-|
   Comma separated attributes of principal. Optional in version 3, must be Nothing otherwise.
 -}
-ucamAPtags :: AuthResponse a :~> Maybe [Ptag]
+ucamAPtags :: AuthResponse a `Lens'` Maybe [Ptag]
 ucamAPtags f AuthResponse{..} = (\_ucamAPtags -> AuthResponse{_ucamAPtags, ..}) <$> f _ucamAPtags
 
 {-|
   Authentication type if successful, else Nothing
 -}
-ucamAAuth :: AuthResponse a :~> Maybe AuthType
+ucamAAuth :: AuthResponse a `Lens'` Maybe AuthType
 ucamAAuth f AuthResponse{..} = (\_ucamAAuth -> AuthResponse{_ucamAAuth, ..}) <$> f _ucamAAuth
 
 {-|
   Comma separated list of previous authentications. Required if ucamAAuth is Nothing.
 -}
-ucamASso :: AuthResponse a :~> Maybe [AuthType]
+ucamASso :: AuthResponse a `Lens'` Maybe [AuthType]
 ucamASso f AuthResponse{..} = (\_ucamASso -> AuthResponse{_ucamASso, ..}) <$> f _ucamASso
 
 {-|
   Remaining lifetime in seconds of application
 -}
-ucamALife :: AuthResponse a :~> Maybe DiffTime
+ucamALife :: AuthResponse a `Lens'` Maybe DiffTime
 ucamALife f AuthResponse{..} = (\_ucamALife -> AuthResponse{_ucamALife, ..}) <$> f _ucamALife
 
 {-|
   A copy of the params from the request
 -}
-ucamAParams :: AuthResponse a :~> Maybe a
+ucamAParams :: AuthResponse a `Lens'` Maybe a
 ucamAParams f AuthResponse{..} = (\_ucamAParams -> AuthResponse{_ucamAParams, ..}) <$> f _ucamAParams
 
 {-|
@@ -337,7 +355,7 @@ extractAuthInfo AuthResponse{..} = liftMaybe $ do
         return AuthInfo{..}
         where
             _approveUniq = (_ucamAIssue, _ucamAId)
-            _approveAttribs = fromMaybe empty _ucamAPtags
+            _approveAttribs = _ucamAPtags ?: empty
             _approveLife = _ucamALife
             _approveParams = _ucamAParams
 
@@ -438,14 +456,14 @@ data StatusCode = Ok200 -- ^ Authentication successful
                 deriving (Show, Read, Eq, Ord, Bounded, Generic, Typeable, Data)
 
 instance Enum StatusCode where
-    toEnum = fromMaybe BadRequest400 . flip lookup responseCodes
+    toEnum = fromMaybe BadRequest400 . flip IntMap.lookup responseCodes
     fromEnum = statusCode . getStatus
 
 {-|
   An 'IntMap' of 'Status' code numbers in the protocol to their typed representations.
 -}
 responseCodes :: IntMap StatusCode
-responseCodes = mapFromList . fmap (statusCode . getStatus &&& id) $ [Ok200, Gone410, NoAuth510, ProtoErr520, ParamErr530, NoInteract540, UnAuthAgent560, Declined570]
+responseCodes = IntMap.fromList . fmap (statusCode . getStatus &&& id) $ [Ok200, Gone410, NoAuth510, ProtoErr520, ParamErr530, NoInteract540, UnAuthAgent560, Declined570]
 
 {-|
   Convert to the 'Status' type, defaulting to 'badRequest400' for a bad request
@@ -565,13 +583,13 @@ data WAAState a = MakeWAAState {
                 }
                 deriving (Show, Eq, Ord, Generic, Typeable, Data)
 
-wSet :: WAAState a :~> WAASettings
+wSet :: WAAState a `Lens'` WAASettings
 wSet f MakeWAAState{..} = (\_wSet -> MakeWAAState{_wSet, ..}) <$> f _wSet
 
-aReq :: WAAState a :~> AuthRequest a
+aReq :: WAAState a `Lens'` AuthRequest a
 aReq f MakeWAAState{..} = (\_aReq -> MakeWAAState{_aReq, ..}) <$> f _aReq
 
---aSrs :: WAAState a :~> SignedAuthResponse valid a
+--aSrs :: WAAState a `Lens'` SignedAuthResponse valid a
 --aSrs f MakeWAAState{..} = (\_aSrs -> MakeWAAState{_aSrs, ..}) <$> f _aSrs
 
 {-|
@@ -596,7 +614,7 @@ data WAASettings = MakeWAASettings {
 
   Default @['Pwd']@
 -}
-authAccepted :: WAASettings :~> [AuthType]
+authAccepted :: WAASettings `Lens'` [AuthType]
 authAccepted f MakeWAASettings{..} = (\_authAccepted -> MakeWAASettings{_authAccepted, ..}) <$> f _authAccepted
 
 {-|
@@ -604,7 +622,7 @@ authAccepted f MakeWAASettings{..} = (\_authAccepted -> MakeWAASettings{_authAcc
 
   Default 'Nothing'
 -}
-needReauthentication :: WAASettings :~> Maybe YesNo
+needReauthentication :: WAASettings `Lens'` Maybe YesNo
 needReauthentication f MakeWAASettings{..} = (\_needReauthentication -> MakeWAASettings{_needReauthentication, ..}) <$> f _needReauthentication
 
 {-|
@@ -612,7 +630,7 @@ needReauthentication f MakeWAASettings{..} = (\_needReauthentication -> MakeWAAS
 
   Default @40@ (seconds)
 -}
-syncTimeOut :: WAASettings :~> NominalDiffTime
+syncTimeOut :: WAASettings `Lens'` NominalDiffTime
 syncTimeOut f MakeWAASettings{..} = (\_syncTimeOut -> MakeWAASettings{_syncTimeOut, ..}) <$> f _syncTimeOut
 
 {-|
@@ -620,7 +638,7 @@ syncTimeOut f MakeWAASettings{..} = (\_syncTimeOut -> MakeWAASettings{_syncTimeO
 
   Default @[]@ (/i.e./ no valid keys)
 -}
-validKids :: WAASettings :~> [KeyID]
+validKids :: WAASettings `Lens'` [KeyID]
 validKids f MakeWAASettings{..} = (\_validKids -> MakeWAASettings{_validKids, ..}) <$> f _validKids
 
 {-|
@@ -630,7 +648,7 @@ validKids f MakeWAASettings{..} = (\_validKids -> MakeWAASettings{_validKids, ..
 
   TODO Document when this is updated, here.
 -}
-recentTime :: WAASettings :~> UTCTime
+recentTime :: WAASettings `Lens'` UTCTime
 recentTime f MakeWAASettings{..} = (\_recentTime -> MakeWAASettings{_recentTime, ..}) <$> f _recentTime
 
 {-|
@@ -640,7 +658,7 @@ recentTime f MakeWAASettings{..} = (\_recentTime -> MakeWAASettings{_recentTime,
 
   Default is empty. The implementation __must__ override it.
 -}
-applicationUrl :: WAASettings :~> Text
+applicationUrl :: WAASettings `Lens'` Text
 applicationUrl f MakeWAASettings{..} = (\_applicationUrl -> MakeWAASettings{_applicationUrl, ..}) <$> f _applicationUrl
 
 {-|
@@ -650,7 +668,7 @@ applicationUrl f MakeWAASettings{..} = (\_applicationUrl -> MakeWAASettings{_app
 
   Default is empty. The implementation __must__ override it.
 -}
-wlsUrl :: WAASettings :~> Text
+wlsUrl :: WAASettings `Lens'` Text
 wlsUrl f MakeWAASettings{..} = (\_wlsUrl -> MakeWAASettings{_wlsUrl, ..}) <$> f _wlsUrl
 
 ------------------------------------------------------------------------------
@@ -718,4 +736,4 @@ encodeUcamB64 = convertB64Ucam . B64 . B.encode
   TODO Use Haskell’s utf7 functions
 -}
 decodeASCII :: ASCII -> Text
-decodeASCII = filter isAscii . unASCII
+decodeASCII = T.filter isAscii . unASCII

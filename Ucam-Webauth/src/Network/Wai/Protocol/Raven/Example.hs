@@ -5,32 +5,39 @@ Maintainer  : David Baynard <davidbaynard@gmail.com>
 
 -}
 
+{-# LANGUAGE PackageImports #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE OverloadedStrings #-}
+
 module Network.Wai.Protocol.Raven.Example (
     module Network.Wai.Protocol.Raven.Example
 )   where
 
 -- Prelude
-import ClassyPrelude
+import "errors" Control.Error
+import "time" Data.Time (UTCTime, getCurrentTime)
+import "base" Control.Monad
+import "base" Control.Applicative
 
-import Control.Error
+import "microlens" Lens.Micro
+import "microlens-mtl" Lens.Micro.Mtl
 
 -- The protocol
 import Network.Wai.Protocol.UcamWebauth
 import Network.Wai.Protocol.Raven.Test
 
 -- Wai and http protocol
-import Network.Wai
-import Network.HTTP.Types
-
--- JSON
-import Data.Aeson (ToJSON)
+import "wai" Network.Wai
+import "http-types" Network.HTTP.Types
 
 -- ByteString building
-import Blaze.ByteString.Builder hiding (Builder)
-import qualified Blaze.ByteString.Builder.Char.Utf8 as Z
+import "text" Data.Text (Text)
+import "bytestring" Data.ByteString (ByteString)
+import "bytestring" Data.ByteString.Builder
 
 -- Warp server
-import Network.Wai.Handler.Warp
+import "warp" Network.Wai.Handler.Warp
 
 warpit :: IO ()
 warpit = run 3000 . application =<< getCurrentTime
@@ -40,11 +47,11 @@ application time req response = case pathInfo req of
     ["foo", "bar"] -> response $ responseBuilder
         status200
         [("Content-Type", "text/plain")]
-        (fromByteString "You requested /foo/bar")
+        (byteString "You requested /foo/bar")
     ["foo", "rawquery"] -> response $ responseBuilder
         status200
         [("Content-Type", "text/plain")]
-        (fromByteString . rawQueryString $ req)
+        (byteString . rawQueryString $ req)
     ["foo", "query"] -> response . responseBuilder
         status200
         [("Content-Type", "text/plain")]
@@ -57,10 +64,12 @@ application time req response = case pathInfo req of
         status200
         [("Content-Type", "text/plain")]
         (displayWLSQuery req)
-    ["foo", "requestHeaders"] -> response $ responseBuilder
-        status200
-        [("Content-Type", "text/plain")]
-        (Z.fromShow . requestHeaders $ req)
+    {-
+     -["foo", "requestHeaders"] -> response $ responseBuilder
+     -    status200
+     -    [("Content-Type", "text/plain")]
+     -    (_ . requestHeaders $ req)
+     -}
     ["foo", "authenticate"] -> response $ responseBuilder
         seeOther303
         [("Content-Type", "text/plain"), ucamWebauthQuery settings]
@@ -68,32 +77,32 @@ application time req response = case pathInfo req of
     _ -> response $ responseBuilder
         status200
         [("Content-Type", "text/plain")]
-        (fromByteString "You requested something else")
+        (byteString "You requested something else")
     where
         settings = do
             mySettings
             wSet . recentTime .= time
             aReq . ucamQDate .= pure time
 
-displayWLSQuery :: Request -> BlazeBuilder
-displayWLSQuery = maybe mempty Z.fromShow . lookUpWLSResponse
+displayWLSQuery :: Request -> Builder
+displayWLSQuery = maybe mempty byteString . lookUpWLSResponse
 
-displayAuthInfo :: Request -> IO BlazeBuilder
+displayAuthInfo :: Request -> IO Builder
 displayAuthInfo = displayAuthResponse <=< liftMaybe . lookUpWLSResponse
 
-displayWLSResponse :: Request -> IO BlazeBuilder
+displayWLSResponse :: Request -> IO Builder
 displayWLSResponse = displayAuthResponseFull <=< liftMaybe . lookUpWLSResponse
 
-displayAuthResponseFull :: ByteString -> IO BlazeBuilder
+displayAuthResponseFull :: ByteString -> IO Builder
 displayAuthResponseFull = displaySomethingAuthy . maybeAuthCode mySettings
 
-displayAuthResponse :: ByteString -> IO BlazeBuilder
+displayAuthResponse :: ByteString -> IO Builder
 displayAuthResponse = displaySomethingAuthy . maybeAuthInfo mySettings
 
 {-|
   Produce the request to the authentication server as a response
 -}
-mySettings :: (ToJSON a, IsString a, a ~ Text) => SetWAA a
+mySettings :: SetWAA Text
 mySettings = do
         ravenSettings
         wSet . applicationUrl .= "http://localhost:3000/foo/query"
@@ -110,11 +119,12 @@ mySettings = do
 
 displaySomethingAuthy :: forall b m
                         . ( m ~ (MaybeT IO) -- m ~ ReaderT (SetAuthRequest a) (MaybeT IO)
-                          , Show b )
+                          , Show b
+                          )
                           -- , a ~ Text )
                        -- => SetWAA a
                        => m b
-                       -> IO BlazeBuilder
-displaySomethingAuthy = maybeT empty (pure . Z.fromShow)
+                       -> IO Builder
+displaySomethingAuthy = maybeT empty (pure . stringUtf8 . show)
                         -- . uncurry runReaderT
 

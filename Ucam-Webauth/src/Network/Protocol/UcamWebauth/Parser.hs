@@ -1,4 +1,11 @@
 {-# OPTIONS_HADDOCK hide, not_here #-}
+{-# LANGUAGE PackageImports #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ApplicativeDo #-}
 
 {-|
 Module      : Network.Protocol.UcamWebauth.Parser
@@ -12,32 +19,34 @@ module Network.Protocol.UcamWebauth.Parser (
 )   where
 
 -- Prelude
-import ClassyPrelude hiding (take)
-
-import Network.Protocol.UcamWebauth.Internal
 import Network.Protocol.UcamWebauth.Data
+import "base" Control.Applicative
+import "base" Control.Arrow ((***))
+import "base" Data.Maybe
 
 -- Parsing
-import Data.Attoparsec.Combinator (lookAhead)
-import Data.Attoparsec.ByteString.Char8 hiding (count)
-import qualified Data.Attoparsec.ByteString.Char8 as A
+import "attoparsec" Data.Attoparsec.Combinator (lookAhead)
+import "attoparsec" Data.Attoparsec.ByteString.Char8 hiding (count, take)
+import qualified "attoparsec" Data.Attoparsec.ByteString.Char8 as A
 
 -- HTTP protocol
-import Network.HTTP.Types
+import "http-types" Network.HTTP.Types
 
 -- Time
-import Data.Time.RFC3339
-import Data.Time.LocalTime
-import Data.Time (secondsToDiffTime)
+import "timerep" Data.Time.RFC3339
+import "time" Data.Time.LocalTime
+import "time" Data.Time (UTCTime, secondsToDiffTime)
 
 -- Character encoding
-import Data.Char (isAlphaNum)
-import qualified Data.ByteString.Base64 as B
-import qualified Data.ByteString.Char8 as B
+import "text" Data.Text (Text)
+import "text" Data.Text.Encoding
+import "base" Data.Char (isAlphaNum)
+import qualified "base64-bytestring" Data.ByteString.Base64 as B
+import qualified "bytestring" Data.ByteString.Char8 as B
 
 -- JSON (Aeson)
-import Data.Aeson (FromJSON)
-import qualified Data.Aeson as A
+import "aeson" Data.Aeson (FromJSON)
+import qualified "aeson" Data.Aeson as A
 
 
 ------------------------------------------------------------------------------
@@ -52,8 +61,8 @@ ucamResponseParser :: forall a . FromJSON a => Parser (SignedAuthResponse 'Maybe
 ucamResponseParser = do
         (_ucamAToSign, _ucamAResponse@AuthResponse{..}) <- noBang . match $ ucamAuthResponseParser
         (_ucamAKid, _ucamASig) <- parseKidSig _ucamAStatus
-        endOfInput
-        return SignedAuthResponse{..}
+        _ <- endOfInput
+        pure SignedAuthResponse{..}
         where
             ucamAuthResponseParser :: Parser (AuthResponse a)
             ucamAuthResponseParser = do
@@ -69,11 +78,11 @@ ucamResponseParser = do
                     _ucamASso <- parseSso _ucamAStatus _ucamAAuth
                     _ucamALife <- noBang . optionMaybe . fmap secondsToDiffTime $ decimal
                     _ucamAParams <- A.decodeStrict . B.decodeLenient <$> betweenBangs
-                    return AuthResponse{..}
+                    pure AuthResponse{..}
             noBang :: Parser b -> Parser b
             noBang = (<* "!")
-            urlWrap :: Functor f => f StringType -> f ByteString
-            urlWrap = fmap (urlDecode False)
+            -- urlWrap :: Functor f => f StringType -> f ByteString
+            -- urlWrap = fmap (urlDecode False)
             urlWrapText :: Functor f => f StringType -> f Text
             urlWrapText = fmap (decodeUtf8 . urlDecode False)
             maybeBang :: Parser b -> Parser (Maybe b)
@@ -159,13 +168,13 @@ utcTimeParser = zonedTimeToUTC . fromMaybe (error "Cannot parse time as RFC3339.
 -}
 ucamTimeParser :: Parser UcamTime
 ucamTimeParser = do
-        year <- take 4
-        month <- take 2
-        day <- take 2 <* "T"
-        hour <- take 2
-        minute <- take 2
-        sec <- take 2 <* "Z"
-        return . UcamTime . decodeUtf8 . mconcat $ [year, "-", month, "-", day, "T", hour, ":", minute, ":", sec, "Z"]
+        year <- A.take 4
+        month <- A.take 2
+        day <- A.take 2 <* "T"
+        hour <- A.take 2
+        minute <- A.take 2
+        sec <- A.take 2 <* "Z"
+        pure . UcamTime . decodeUtf8 . mconcat $ [year, "-", month, "-", day, "T", hour, ":", minute, ":", sec, "Z"]
 
 {-|
   A parser to represent a Ucam-Webauth variant base64–encoded 'StringType' as a 'UcamBase64BS'
@@ -198,8 +207,8 @@ optionMaybe = option empty . fmap pure
 
   @ands :: ['Char' -> 'Bool'] -> 'Char' -> 'Bool'@
 -}
-ands :: (Applicative f, Traversable t, MonoFoldable (t a), Element (t a) ~ Bool)
-    => t (f a) -> f Bool
+ands :: (Traversable t, Applicative f)
+    => t (f Bool) -> f Bool
 ands = fmap and . sequenceA
 
 {-|
@@ -210,8 +219,8 @@ ands = fmap and . sequenceA
 
   @ors :: ['Char' -> 'Bool'] -> 'Char' -> 'Bool'@
 -}
-ors :: (Applicative f, Traversable t, MonoFoldable (t a), Element (t a) ~ Bool)
-    => t (f a) -> f Bool
+ors :: (Traversable t, Applicative f)
+    => t (f Bool) -> f Bool
 ors = fmap or . sequenceA
 
 {-|
@@ -238,7 +247,7 @@ nots = ands . fmap (/=)
 
   Opposite of 'nots'.
 -}
-oneOf :: (Eq a, Traversable t, MonoFoldable (t Bool), Element (t Bool) ~ Bool)
+oneOf :: (Traversable t, Eq a)
     => t a -> a -> Bool
 oneOf = ors . fmap (==)
 

@@ -1,4 +1,5 @@
 {-# OPTIONS_HADDOCK hide, not_here #-}
+{-# LANGUAGE PackageImports #-}
 
 {-|
 Module      : Data.Settings.Internal
@@ -15,8 +16,7 @@ module Data.Settings.Internal (
   , get
 )   where
 
-import ClassyPrelude
-import Control.Monad.State.Strict
+import "mtl" Control.Monad.State.Strict
 
 ------------------------------------------------------------------------------
 -- * Default Settings

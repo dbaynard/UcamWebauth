@@ -11,13 +11,16 @@ in the "Network.Wai.Protocol.UcamWebauth" module.
 It is possible to test applications using the "Network.Wai.Protocol.Raven.Test" module, instead.
 
 -}
+
+{-# LANGUAGE PackageImports #-}
+{-# LANGUAGE OverloadedStrings #-}
+
 module Network.Wai.Protocol.Raven.Auth (
     module Network.Wai.Protocol.Raven.Auth
   , module X
 )   where
 
--- Prelude
-import ClassyPrelude
+import "microlens-mtl" Lens.Micro.Mtl
 
 -- The protocol
 import Network.Wai.Protocol.UcamWebauth

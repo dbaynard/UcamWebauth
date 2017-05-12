@@ -9,9 +9,6 @@ module Network.Wai.Protocol.Raven.Internal (
     module Network.Wai.Protocol.Raven.Internal
 )   where
 
--- Prelude
-import ClassyPrelude
-
 -- The protocol
 import Network.Wai.Protocol.UcamWebauth
 
