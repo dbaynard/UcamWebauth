@@ -5,6 +5,7 @@
 name:              Ucam-Webauth
 version:           0.0.1
 license:           Apache
+license-file:      LICENSE
 cabal-version:     >= 1.10
 build-type:        Simple
 
