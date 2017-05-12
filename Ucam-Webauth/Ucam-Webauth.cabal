@@ -4,18 +4,19 @@
 
 name:              Ucam-Webauth
 version:           0.0.1
+synopsis:          The Ucam-Webauth protocol, used by raven
+description:       Please see README.md
+category:          Web
+author:            David Baynard
+maintainer:        davidbaynard@gmail.com
+copyright:         2017 David Baynard
 license:           Apache
 license-file:      LICENSE
 cabal-version:     >= 1.10
 build-type:        Simple
 
 flag dev
-    description: Turn on development settings, like auto-reload templates.
-    manual: False
-    default: False
-
-flag library-only
-    description: Build for use with "yesod devel"
+    description: Build for development
     manual: False
     default: False
 
@@ -48,9 +49,8 @@ library
         , time
         , timerep
         , x509
-    if (flag(dev)) || (flag(library-only))
+    if flag(dev)
         ghc-options: -Wall -fwarn-tabs -O0
-        cpp-options: -DDEVELOPMENT
     else
         ghc-options: -Wall -fwarn-tabs -O2
 
