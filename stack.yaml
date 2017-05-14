@@ -8,6 +8,7 @@ resolver:
 # Local packages, usually specified by relative directory name
 packages:
 - 'raven-wai'
+- 'servant-raven'
 - 'Ucam-Webauth'
 - location:
     git: https://@github.com/dbaynard/time-qq

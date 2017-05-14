@@ -1,0 +1,47 @@
+name:                servant-raven
+version:             0.0.1.0
+synopsis:            Combinators for raven
+description:         See README.md
+license:             APACHE
+author:              David Baynard
+maintainer:          davidbaynard@gmail.com
+copyright:           2017 David Baynard
+category:            Web
+dependencies:
+- base >= 4.7 && < 5
+
+library:
+  source-dirs: src
+  exposed-modules: []
+  dependencies:
+  - servant-auth-server
+  when:
+  - condition: flag(dev)
+    then:
+      ghc-options:
+      - -Wall
+      - -fwarn-tabs
+      - -O0
+    else:
+      ghc-options:
+      - -Wall
+      - -fwarn-tabs
+      - -O2
+
+executables:
+  servant-raven:
+    source-dirs:      app
+    main:             Main.hs
+tests:
+  test:
+    main: Spec.hs
+    source-dirs: test
+    ghc-options: -Wall
+    dependencies:
+    - servant-raven
+    - hspec >=2.0.0
+flags:
+  dev:
+    description: Build for development
+    manual: false
+    default: false

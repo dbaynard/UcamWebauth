@@ -8,6 +8,8 @@ packages:
 - persistent-2.7.0
 - servant-0.10
 - servant-server-0.10
+- servant-auth-0.2.7.0
+- servant-auth-server-0.2.7.0
 # Not on stackage
 - dhall-1.2.0
 - digestive-functors-0.8.2.0
