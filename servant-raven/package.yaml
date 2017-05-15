@@ -9,12 +9,22 @@ copyright:           2017 David Baynard
 category:            Web
 dependencies:
 - base >= 4.7 && < 5
+- bytestring
+- errors
+- jose
+- microlens-mtl
+- servant-auth-server
+- text
 
 library:
   source-dirs: src
   exposed-modules: []
   dependencies:
-  - servant-auth-server
+  - aeson
+  - containers
+  - servant-server
+  - time
+  - Ucam-Webauth
   when:
   - condition: flag(dev)
     then:
@@ -29,9 +39,16 @@ library:
       - -O2
 
 executables:
-  servant-raven:
+  servant-raven-example:
     source-dirs:      app
-    main:             Main.hs
+    main:             Main.lhs
+    dependencies:
+    - microlens
+    - mtl
+    - optparse-generic
+    - warp
+    - yaml
+
 tests:
   test:
     main: Spec.hs
