@@ -11,6 +11,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE NumDecimals #-}
+{-# LANGUAGE StrictData #-}
 
 {-|
 Module      : Network.Protocol.UcamWebauth.Data
