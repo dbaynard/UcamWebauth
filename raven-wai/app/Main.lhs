@@ -48,6 +48,7 @@ import "http-types" Network.HTTP.Types
 
 -- ByteString building
 import "text" Data.Text (Text)
+import qualified "text" Data.Text.IO as T
 import "bytestring" Data.ByteString (ByteString)
 import "bytestring" Data.ByteString.Builder
 
@@ -121,9 +122,11 @@ displayAuthResponseFull = displaySomethingAuthy . maybeAuthCode mySettings
 displayAuthResponse :: ByteString -> IO Builder
 displayAuthResponse = displaySomethingAuthy . maybeAuthInfo mySettings
 
-{-|
-  Produce the request to the authentication server as a response
--}
+```
+
+Produce the request to the authentication server as a response
+
+```haskell
 mySettings :: SetWAA Text
 mySettings = do
         ravenSettings
@@ -140,14 +143,14 @@ mySettings = do
 
 
 displaySomethingAuthy :: forall b m
-                        . ( m ~ (MaybeT IO) -- m ~ ReaderT (SetAuthRequest a) (MaybeT IO)
+                        . ( m ~ (ExceptT Text IO) -- m ~ ReaderT (SetAuthRequest a) (MaybeT IO)
                           , Show b
                           )
                           -- , a ~ Text )
                        -- => SetWAA a
                        => m b
                        -> IO Builder
-displaySomethingAuthy = maybeT empty (pure . stringUtf8 . show)
+displaySomethingAuthy = exceptT (const empty . T.putStrLn) (pure . stringUtf8 . show)
                         -- . uncurry runReaderT
 
 ```

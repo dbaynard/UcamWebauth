@@ -16,6 +16,7 @@ Key parts of the implementation of the protocol itself.
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module Network.Protocol.UcamWebauth (
     module Network.Protocol.UcamWebauth
@@ -35,6 +36,7 @@ import "base" Control.Monad
 import "base" Data.Semigroup
 
 import "mtl" Control.Monad.State
+import "mtl" Control.Monad.Except
 
 import "microlens" Lens.Micro
 import "microlens-mtl" Lens.Micro.Mtl
@@ -93,13 +95,13 @@ infixl 1 &~
   TODO When the errors returned can be usefully used, ensure this correctly returns a lifted
   'Either b (UcamWebauthInfo a)' response.
 -}
-maybeAuthInfo :: (FromJSON a, MonadIO m, MonadPlus m) => SetWAA a -> ByteString -> m (UcamWebauthInfo a)
+maybeAuthInfo :: (FromJSON a, MonadIO m, MonadPlus m, MonadError Text m) => SetWAA a -> ByteString -> m (UcamWebauthInfo a)
 maybeAuthInfo waa = getAuthInfo <=< maybeAuthCode waa
 
 {-|
   A helper function to parse and validate a response from a @WLS@.
 -}
-maybeAuthCode :: (FromJSON a, MonadIO m, MonadPlus m) => SetWAA a -> ByteString -> m (SignedAuthResponse 'Valid a)
+maybeAuthCode :: (FromJSON a, MonadIO m, MonadPlus m, MonadError Text m) => SetWAA a -> ByteString -> m (SignedAuthResponse 'Valid a)
 maybeAuthCode waa = validateAuthResponse waa <=< authCode
 
 {-|
@@ -196,6 +198,11 @@ configWAA = (&~) MakeWAAState {
 ------------------------------------------------------------------------------
 -- * Validation
 
+guardE
+    :: forall e m . (MonadError e m, Alternative m)
+    => e -> Bool -> m ()
+guardE e boolean = guard boolean <|> throwError e
+
 {-|
   Validate the Authentication Response
 
@@ -210,16 +217,21 @@ configWAA = (&~) MakeWAAState {
 
   This is the only way to produce a 'Valid' 'SignedAuthResponse', and therefore an 'AuthInfo'.
 -}
-validateAuthResponse :: forall a m . (MonadIO m, MonadPlus m)
+validateAuthResponse :: forall a m . (MonadIO m, MonadPlus m, MonadError Text m)
                      => SetWAA a
                      -> SignedAuthResponse 'MaybeValid a
                      -> m (SignedAuthResponse 'Valid a)
 validateAuthResponse waa x@SignedAuthResponse{..} = do
-        guard . validateKid waa =<< liftMaybe _ucamAKid
-        guard <=< validateSig $ x
-        guard <=< validateIssueTime waa $ _ucamAResponse
-        guard . validateUrl waa $ _ucamAResponse
-        guard <=< validateAuthTypes waa $ _ucamAResponse
+        guardE "Key invalid" .
+            validateKid waa =<< liftMaybe _ucamAKid
+        guardE "Signature invalid" <=<
+            validateSig $ x
+        guardE "Issue time invalid" <=<
+            validateIssueTime waa $ _ucamAResponse
+        guardE "Url does not match transmittion" .
+            validateUrl waa $ _ucamAResponse
+        guardE "Authentication type invalid" <=<
+            validateAuthTypes waa $ _ucamAResponse
         return . makeValid $ x
         where
             makeValid :: SignedAuthResponse 'MaybeValid a -> SignedAuthResponse 'Valid a
