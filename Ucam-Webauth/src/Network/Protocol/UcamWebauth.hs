@@ -52,8 +52,6 @@ import "attoparsec" Data.Attoparsec.ByteString.Char8 hiding (count, take)
 import "http-types" Network.HTTP.Types
 
 -- Character encoding
-import qualified "base64-bytestring" Data.ByteString.Base64.Lazy as L
-
 import "bytestring" Data.ByteString (ByteString)
 import qualified "bytestring" Data.ByteString.Lazy as BSL
 import "text" Data.Text (Text)
@@ -140,7 +138,7 @@ ucamWebauthQuery (configWAA -> waa) = (hLocation,) . toByteString $ baseUrl waa 
                  ]
         lazyQs :: Query
         lazyQs = toQuery [
-                   ("params", L.encode . A.encode <$> waa ^. aReq . ucamQParams) :: (Text, Maybe LByteString)
+                   ("params", unUcamB64L . encodeUcamB64L . A.encode <$> waa ^. aReq . ucamQParams) :: (Text, Maybe LByteString)
                  ]
         toByteString = BSL.toStrict . toLazyByteString
 

@@ -40,9 +40,12 @@ import "microlens" Lens.Micro
 
 -- Character encoding
 import qualified "base64-bytestring" Data.ByteString.Base64 as B
+import qualified "base64-bytestring" Data.ByteString.Base64.Lazy as BL
 
 import "bytestring" Data.ByteString (ByteString)
 import qualified "bytestring" Data.ByteString.Char8 as B
+import qualified "bytestring" Data.ByteString.Lazy.Char8 as BL
+import qualified "bytestring" Data.ByteString.Lazy as BSL
 import "text" Data.Text (Text)
 import qualified "text" Data.Text as T
 import "base" Data.Char (isAlphaNum, isAscii)
@@ -680,10 +683,16 @@ wlsUrl f MakeWAASettings{..} = (\_wlsUrl -> MakeWAASettings{_wlsUrl, ..}) <$> f 
 newtype Base64BS = B64 { unB64 :: ByteString }
     deriving (Show, Read, Eq, Ord, Semigroup, Monoid, IsString, Generic, Typeable, Data)
 
+newtype Base64BSL = B64L { unB64L :: BSL.ByteString }
+    deriving (Show, Read, Eq, Ord, Semigroup, Monoid, IsString, Generic, Typeable, Data)
+
 {-|
   Ensure Base 64 text modified to fit the Ucam-Webauth protocol is not confused with other 'ByteString's
 -}
 newtype UcamBase64BS = UcamB64 { unUcamB64 :: ByteString }
+    deriving (Show, Read, Eq, Ord, Semigroup, Monoid, IsString, Generic, Typeable, Data)
+
+newtype UcamBase64BSL = UcamB64L { unUcamB64L :: BSL.ByteString }
     deriving (Show, Read, Eq, Ord, Semigroup, Monoid, IsString, Generic, Typeable, Data)
 
 {-|
@@ -696,25 +705,31 @@ newtype ASCII = ASCII { unASCII :: Text }
   Convert to the protocol’s version of base64
 -}
 convertB64Ucam :: Base64BS -> UcamBase64BS
-convertB64Ucam = UcamB64 . B.map camFilter . unB64
-    where
-        camFilter :: Char -> Char
-        camFilter '+' = '-'
-        camFilter '/' = '.'
-        camFilter '=' = '_'
-        camFilter x = x
+convertB64Ucam = UcamB64 . B.map camEncodeFilter . unB64
+
+convertB64UcamL :: Base64BSL -> UcamBase64BSL
+convertB64UcamL = UcamB64L . BL.map camEncodeFilter . unB64L
+
+camEncodeFilter :: Char -> Char
+camEncodeFilter '+' = '-'
+camEncodeFilter '/' = '.'
+camEncodeFilter '=' = '_'
+camEncodeFilter x = x
 
 {-|
   Convert from the protocol’s version of base64
 -}
 convertUcamB64 :: UcamBase64BS -> Base64BS
-convertUcamB64 = B64 . B.map camFilter . unUcamB64
-    where
-        camFilter :: Char -> Char
-        camFilter '-' = '+'
-        camFilter '.' = '/'
-        camFilter '_' = '='
-        camFilter x = x
+convertUcamB64 = B64 . B.map camDecodeFilter . unUcamB64
+
+convertUcamB64L :: UcamBase64BSL -> Base64BSL
+convertUcamB64L = B64L . BL.map camDecodeFilter . unUcamB64L
+
+camDecodeFilter :: Char -> Char
+camDecodeFilter '-' = '+'
+camDecodeFilter '.' = '/'
+camDecodeFilter '_' = '='
+camDecodeFilter x = x
 
 {-|
   This uses 'B.decodeLenient' internally.
@@ -724,11 +739,17 @@ convertUcamB64 = B64 . B.map camFilter . unUcamB64
 decodeUcamB64 :: UcamBase64BS -> StringType
 decodeUcamB64 = B.decodeLenient . unB64 . convertUcamB64
 
+decodeUcamB64L :: UcamBase64BSL -> BSL.ByteString
+decodeUcamB64L = BL.decodeLenient . unB64L . convertUcamB64L
+
 {-|
   Unlike decoding, this is fully pure.
 -}
 encodeUcamB64 :: StringType -> UcamBase64BS
 encodeUcamB64 = convertB64Ucam . B64 . B.encode
+
+encodeUcamB64L :: BSL.ByteString -> UcamBase64BSL
+encodeUcamB64L = convertB64UcamL . B64L . BL.encode
 
 {-|
   Extract ascii text.
