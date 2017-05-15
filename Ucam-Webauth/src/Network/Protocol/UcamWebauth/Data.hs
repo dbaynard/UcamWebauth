@@ -10,6 +10,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE OverloadedLists #-}
+{-# LANGUAGE NumDecimals #-}
 
 {-|
 Module      : Network.Protocol.UcamWebauth.Data
@@ -50,10 +51,11 @@ import "text" Data.Text (Text)
 import qualified "text" Data.Text as T
 import "base" Data.Char (isAlphaNum, isAscii)
 
+import "aeson" Data.Aeson.Types
+
 -- Time
 import "timerep" Data.Time.RFC3339
-import "time" Data.Time.LocalTime
-import "time" Data.Time (DiffTime, NominalDiffTime, UTCTime)
+import "time" Data.Time
 
 -- HTTP protocol
 import "http-types" Network.HTTP.Types
@@ -73,10 +75,14 @@ data UcamWebauthInfo a = AuthInfo {
                   _approveUniq :: (UTCTime, Text)
                 , _approveUser :: Text
                 , _approveAttribs :: [Ptag]
-                , _approveLife :: Maybe DiffTime
+                , _approveLife :: Maybe TimePeriod
                 , _approveParams :: Maybe a
                 }
-    deriving (Show, Eq, Ord, Generic1, Typeable, Data)
+    deriving (Show, Eq, Ord, Generic, Generic1, Typeable, Data)
+
+instance ToJSON a => ToJSON (UcamWebauthInfo a)
+instance FromJSON a => FromJSON (UcamWebauthInfo a)
+
 
 {-|
   Unique representation of response, composed of issue and id
@@ -99,7 +105,7 @@ approveAttribs f AuthInfo{..} = (\_approveAttribs -> AuthInfo{_approveAttribs, .
 {-|
   Remaining lifetime in seconds of application
 -}
-approveLife :: UcamWebauthInfo a `Lens'` Maybe DiffTime
+approveLife :: UcamWebauthInfo a `Lens'` Maybe TimePeriod
 approveLife f AuthInfo{..} = (\_approveLife -> AuthInfo{_approveLife, ..}) <$> f _approveLife
 
 {-|
@@ -212,7 +218,7 @@ data SignedAuthResponse (valid :: IsValid) a = SignedAuthResponse {
                 , _ucamAKid :: Maybe KeyID
                 , _ucamASig :: Maybe UcamBase64BS
                 }
-    deriving (Show, Eq, Ord, Generic1, Typeable, Data)
+    deriving (Show, Eq, Ord, Generic, Generic1, Typeable, Data)
 
 {-|
   The bit of the response that is signed
@@ -264,10 +270,10 @@ data AuthResponse a = AuthResponse {
                 , _ucamAPtags :: Maybe [Ptag]
                 , _ucamAAuth :: Maybe AuthType
                 , _ucamASso :: Maybe [AuthType]
-                , _ucamALife :: Maybe DiffTime
+                , _ucamALife :: Maybe TimePeriod
                 , _ucamAParams :: Maybe a
                 }
-    deriving (Show, Eq, Ord, Generic1, Typeable, Data)
+    deriving (Show, Eq, Ord, Generic, Generic1, Typeable, Data)
 
 {-|
   The version of @WLS@: 1, 2 or 3
@@ -332,7 +338,7 @@ ucamASso f AuthResponse{..} = (\_ucamASso -> AuthResponse{_ucamASso, ..}) <$> f 
 {-|
   Remaining lifetime in seconds of application
 -}
-ucamALife :: AuthResponse a `Lens'` Maybe DiffTime
+ucamALife :: AuthResponse a `Lens'` Maybe TimePeriod
 ucamALife f AuthResponse{..} = (\_ucamALife -> AuthResponse{_ucamALife, ..}) <$> f _ucamALife
 
 {-|
@@ -433,6 +439,9 @@ instance Show Ptag where
 -}
 displayPtag :: IsString a => Ptag -> a
 displayPtag Current = "current"
+
+instance ToJSON Ptag
+instance FromJSON Ptag
 
 ------------------------------------------------------------------------------
 -- *** HTTP response codes
@@ -569,6 +578,22 @@ newtype UcamTime = UcamTime { unUcamTime :: Text }
 -}
 ucamTime :: UTCTime -> UcamTime
 ucamTime = UcamTime . T.filter isAlphaNum . formatTimeRFC3339 . utcToZonedTime utc
+
+newtype TimePeriod = TimePeriod { timePeriod :: DiffTime }
+    deriving (Show, Eq, Ord, Num, Generic, Typeable, Data)
+
+secondsFromTimePeriod :: TimePeriod -> Integer
+secondsFromTimePeriod = (`div` 1e12) . diffTimeToPicoseconds . timePeriod
+
+timePeriodFromSeconds :: Integer -> TimePeriod
+timePeriodFromSeconds = TimePeriod . secondsToDiffTime
+
+instance ToJSON TimePeriod where
+    toJSON = toJSON . secondsFromTimePeriod
+    toEncoding = toEncoding . secondsFromTimePeriod
+instance FromJSON TimePeriod where
+    parseJSON = withObject "Seconds" $ \v -> timePeriodFromSeconds
+        <$> v .: "Seconds"
 
 ------------------------------------------------------------------------------
 -- * 'WAASettings' and lenses
