@@ -46,6 +46,7 @@ import "servant-auth" Servant.Auth
 import "servant-auth-server" Servant.Auth.Server
 import "jose" Crypto.JOSE
 import "warp" Network.Wai.Handler.Warp
+import "wai-extra" Network.Wai.Middleware.RequestLogger
 
 main :: IO ()
 main = do
@@ -91,11 +92,11 @@ mainWithCookies = do
 
 launchWithJWT :: JWK -> Int -> IO ()
 launchWithJWT ky port = do
-        run port $ serveWithAuth @'[JWT] ky
+        run port . logStdoutDev $ serveWithAuth @'[JWT] ky
 
 launchWithCookie :: JWK -> Int -> IO ()
 launchWithCookie ky port = do
-        run port $ serveWithAuth @'[Cookie] ky
+        run port . logStdoutDev $ serveWithAuth @'[Cookie] ky
 
 exampleResponse :: ByteString
 exampleResponse = "3!200!!20170515T172311Z!oANAuhC9fZmMlZUPIm53y5vn!http://localhost:3000/foo/query!test0244!current!!pwd!30380!IlRoaXMgaXMgMTAwJSBvZiB0aGUgZGF0YSEgQW5kIGl04oCZcyByZWFsbHkgcXVpdGUgY29vbCI_!901!RzC9KZWALCSeK0n9885X4zzemHizuj8K.NOpt.n1hfRCTE2ZBgvJ-fBvT-PaL80cSFGpyCJgt9LvM4-peJzcidoKC6zhBEvG0QnlqWTLsphbIA0JmBRiOoeqyLYRVGwDEdLdacdsQRM.u7bik.enhbuN1-aIQCOdB5MutxtYiu4_"

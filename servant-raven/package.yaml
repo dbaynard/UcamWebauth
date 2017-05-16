@@ -47,6 +47,7 @@ executables:
     - microlens
     - mtl
     - optparse-generic
+    - wai-extra
     - warp
     - yaml
 
