@@ -69,6 +69,12 @@ protected :: AuthResult User -> Server Protected
 protected (Authenticated (User user)) = return user
 protected _ = throwAll err401
 
+type Raven a
+    = "raven" :> Get '[JSON] (UcamWebauthInfo a)
+
+raven :: ToJSON a => SetWAA a -> Handler (UcamWebauthInfo a)
+raven settings = throwError err303 {errHeaders = [ucamWebauthQuery settings]}
+
 type Unprotected
     = "login" :> ReqBody '[JSON] (UcamWebauthInfo Text) :> PostNoContent '[JSON]
         ( Headers
@@ -81,20 +87,26 @@ type Unprotected
 unprotected :: CookieSettings -> JWTSettings -> Server Unprotected
 unprotected cs jwts = checkCreds cs jwts :<|> serveDirectoryFileServer "example/static"
 
-type API auths
+type API auths a
     = Auth auths User :> Protected
+    :<|> Raven a
     :<|> Unprotected
 
-server :: CookieSettings -> JWTSettings -> Server (API auths)
-server cs jwts = protected :<|> unprotected cs jwts
+server :: ToJSON a => SetWAA a -> CookieSettings -> JWTSettings -> Server (API auths a)
+server rs cs jwts =
+        protected
+    :<|> raven rs
+    :<|> unprotected cs jwts
 
 -- Auths may be '[JWT] or '[Cookie] or even both.
 serveWithAuth
-    :: forall (auths :: [Type]) .
-        AreAuths auths '[CookieSettings, JWTSettings] User
-    => JWK -> Application
-serveWithAuth ky =
-        Proxy @(API auths) `serveWithContext` cfg $ server defaultCookieSettings jwtCfg
+    :: forall (auths :: [Type]) a .
+        ( AreAuths auths '[CookieSettings, JWTSettings] User
+        , ToJSON a
+        )
+    => JWK -> SetWAA a -> Application
+serveWithAuth ky rs =
+        Proxy @(API auths a) `serveWithContext` cfg $ server rs defaultCookieSettings jwtCfg
     where
         -- Adding some configurations. All authentications require CookieSettings to
         -- be in the context.

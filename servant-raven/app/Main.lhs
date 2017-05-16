@@ -15,6 +15,9 @@ abstract: |
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE TypeInType #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
 
 module Main where
 
@@ -25,11 +28,13 @@ import Servant.Raven.Test
 import "base" Control.Applicative
 import "base" Control.Concurrent
 import "base" Control.Monad
+import "base" Data.Kind
 
 import "errors" Control.Error
 import "microlens" Lens.Micro
 import "microlens-mtl" Lens.Micro.Mtl
 import "mtl" Control.Monad.State
+import "time" Data.Time
 
 import "bytestring" Data.ByteString (ByteString)
 
@@ -70,7 +75,7 @@ mainWithJWT = do
     -- We generate the key for signing tokens. This would generally be persisted,
     -- and kept safely
     ky <- generateKey
-    _ <- forkIO $ launchWithJWT ky 7249
+    _ <- forkIO $ launch @'[JWT] ky 7249
 
     T.putStrLn "Started server on localhost:7249"
     T.putStrLn "Enter crsid for a new token"
@@ -87,16 +92,21 @@ mainWithCookies = do
     ky <- generateKey
     -- Adding some configurations. 'Cookie' requires, in addition to
     -- CookieSettings, JWTSettings (for signing), so everything is just as before
-    launchWithCookie ky 7249
+    launch @'[Cookie] ky 7249
 
-
-launchWithJWT :: JWK -> Int -> IO ()
-launchWithJWT ky port = do
-        run port . logStdoutDev $ serveWithAuth @'[JWT] ky
-
-launchWithCookie :: JWK -> Int -> IO ()
-launchWithCookie ky port = do
-        run port . logStdoutDev $ serveWithAuth @'[Cookie] ky
+launch
+    :: forall (auths :: [Type]) .
+        ( AreAuths auths '[CookieSettings, JWTSettings] User
+        )
+    => JWK -> Int -> IO ()
+launch ky port = do
+        t <- getCurrentTime
+        run port . logStdoutDev . serveWithAuth @auths ky . settings $ t
+    where
+        settings time = do
+            mySettings
+            wSet . recentTime .= time
+            aReq . ucamQDate .= pure time
 
 exampleResponse :: ByteString
 exampleResponse = "3!200!!20170515T172311Z!oANAuhC9fZmMlZUPIm53y5vn!http://localhost:3000/foo/query!test0244!current!!pwd!30380!IlRoaXMgaXMgMTAwJSBvZiB0aGUgZGF0YSEgQW5kIGl04oCZcyByZWFsbHkgcXVpdGUgY29vbCI_!901!RzC9KZWALCSeK0n9885X4zzemHizuj8K.NOpt.n1hfRCTE2ZBgvJ-fBvT-PaL80cSFGpyCJgt9LvM4-peJzcidoKC6zhBEvG0QnlqWTLsphbIA0JmBRiOoeqyLYRVGwDEdLdacdsQRM.u7bik.enhbuN1-aIQCOdB5MutxtYiu4_"

@@ -16,6 +16,7 @@ dependencies:
 - servant-auth
 - servant-auth-server
 - text
+- time
 
 library:
   source-dirs: src
@@ -24,7 +25,6 @@ library:
   - aeson
   - containers
   - servant-server
-  - time
   - Ucam-Webauth
   when:
   - condition: flag(dev)
