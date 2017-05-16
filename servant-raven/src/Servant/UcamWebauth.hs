@@ -43,8 +43,13 @@ import "Ucam-Webauth" Network.Protocol.UcamWebauth as X
 import "base" GHC.Generics
 import "base" Control.Monad.IO.Class
 import "base" Data.Kind
+import "base" Control.Monad
 
+import "mtl" Control.Monad.Except
+
+import "bytestring" Data.ByteString (ByteString)
 import "text" Data.Text (Text)
+import "text" Data.Text.Encoding
 
 import "servant-server" Servant
 import "servant-auth-server" Servant.Auth.Server
@@ -71,9 +76,13 @@ protected _ = throwAll err401
 
 type Raven a
     = "raven" :> Get '[JSON] (UcamWebauthInfo a)
+    :<|> "authenticate" :> QueryParam "WLS-Response" Text :> Get '[JSON] (UcamWebauthInfo a)
 
-raven :: ToJSON a => SetWAA a -> Handler (UcamWebauthInfo a)
+raven :: (ToJSON a, FromJSON a) => SetWAA a -> Server (Raven a)
 raven settings = throwError err303 {errHeaders = [ucamWebauthQuery settings]}
+    :<|> Handler . ravenError . (maybeAuthInfo settings . encodeUtf8 <=< liftMaybe)
+        where
+            ravenError = withExceptT . const $ err401 { errBody = "Raven error" }
 
 type Unprotected
     = "login" :> ReqBody '[JSON] (UcamWebauthInfo Text) :> PostNoContent '[JSON]
@@ -92,7 +101,7 @@ type API auths a
     :<|> Raven a
     :<|> Unprotected
 
-server :: ToJSON a => SetWAA a -> CookieSettings -> JWTSettings -> Server (API auths a)
+server :: (ToJSON a, FromJSON a) => SetWAA a -> CookieSettings -> JWTSettings -> Server (API auths a)
 server rs cs jwts =
         protected
     :<|> raven rs
@@ -103,6 +112,7 @@ serveWithAuth
     :: forall (auths :: [Type]) a .
         ( AreAuths auths '[CookieSettings, JWTSettings] User
         , ToJSON a
+        , FromJSON a
         )
     => JWK -> SetWAA a -> Application
 serveWithAuth ky rs =

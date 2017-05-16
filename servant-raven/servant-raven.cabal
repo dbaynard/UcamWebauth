@@ -29,6 +29,7 @@ library
     , errors
     , jose
     , microlens-mtl
+    , mtl
     , servant-auth
     , servant-auth-server
     , text
@@ -59,12 +60,12 @@ executable servant-raven-example
     , errors
     , jose
     , microlens-mtl
+    , mtl
     , servant-auth
     , servant-auth-server
     , text
     , time
     , microlens
-    , mtl
     , optparse-generic
     , wai-extra
     , warp
@@ -83,6 +84,7 @@ test-suite test
     , errors
     , jose
     , microlens-mtl
+    , mtl
     , servant-auth
     , servant-auth-server
     , text

@@ -34,6 +34,7 @@ import "errors" Control.Error
 import "microlens" Lens.Micro
 import "microlens-mtl" Lens.Micro.Mtl
 import "mtl" Control.Monad.State
+import "mtl" Control.Monad.Except
 import "time" Data.Time
 
 import "bytestring" Data.ByteString (ByteString)
@@ -114,7 +115,7 @@ exampleResponse = "3!200!!20170515T172311Z!oANAuhC9fZmMlZUPIm53y5vn!http://local
 mySettings :: SetWAA Text
 mySettings = do
         ravenSettings
-        wSet . applicationUrl .= "http://localhost:3000/foo/query"
+        wSet . applicationUrl .= "http://localhost:7249/authenticate"
         waa <- get
         aReq . ucamQUrl .= waa ^. wSet . applicationUrl
         aReq . ucamQDesc .= pure "This is a sample; it’s rather excellent!"

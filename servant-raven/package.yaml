@@ -7,12 +7,14 @@ author:              David Baynard
 maintainer:          davidbaynard@gmail.com
 copyright:           2017 David Baynard
 category:            Web
+
 dependencies:
 - base >= 4.7 && < 5
 - bytestring
 - errors
 - jose
 - microlens-mtl
+- mtl
 - servant-auth
 - servant-auth-server
 - text
@@ -45,7 +47,6 @@ executables:
     main:             Main.lhs
     dependencies:
     - microlens
-    - mtl
     - optparse-generic
     - wai-extra
     - warp
