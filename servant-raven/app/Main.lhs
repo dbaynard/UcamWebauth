@@ -13,6 +13,8 @@ abstract: |
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE PackageImports #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE DataKinds #-}
 
 module Main where
 
@@ -40,13 +42,14 @@ import "yaml" Data.Yaml hiding ((.=))
 
 import "optparse-generic" Options.Generic
 
+import "servant-auth" Servant.Auth
 import "servant-auth-server" Servant.Auth.Server
 import "jose" Crypto.JOSE
 import "warp" Network.Wai.Handler.Warp
 
 main :: IO ()
 main = do
-        mainWithJWT
+        mainWithCookies
 ```
 
 Display authentication information from the WLS response.
@@ -77,9 +80,22 @@ mainWithJWT = do
             [crsid] -> tokenise ky crsid
             _ -> T.putStrLn "Just enter a crsid"
 
+mainWithCookies :: IO ()
+mainWithCookies = do
+    -- We *also* need a key to sign the cookies
+    ky <- generateKey
+    -- Adding some configurations. 'Cookie' requires, in addition to
+    -- CookieSettings, JWTSettings (for signing), so everything is just as before
+    launchWithCookie ky 7249
+
+
 launchWithJWT :: JWK -> Int -> IO ()
 launchWithJWT ky port = do
-        run port $ serveWithJWT ky
+        run port $ serveWithAuth @'[JWT] ky
+
+launchWithCookie :: JWK -> Int -> IO ()
+launchWithCookie ky port = do
+        run port $ serveWithAuth @'[Cookie] ky
 
 exampleResponse :: ByteString
 exampleResponse = "3!200!!20170515T172311Z!oANAuhC9fZmMlZUPIm53y5vn!http://localhost:3000/foo/query!test0244!current!!pwd!30380!IlRoaXMgaXMgMTAwJSBvZiB0aGUgZGF0YSEgQW5kIGl04oCZcyByZWFsbHkgcXVpdGUgY29vbCI_!901!RzC9KZWALCSeK0n9885X4zzemHizuj8K.NOpt.n1hfRCTE2ZBgvJ-fBvT-PaL80cSFGpyCJgt9LvM4-peJzcidoKC6zhBEvG0QnlqWTLsphbIA0JmBRiOoeqyLYRVGwDEdLdacdsQRM.u7bik.enhbuN1-aIQCOdB5MutxtYiu4_"

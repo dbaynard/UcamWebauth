@@ -13,6 +13,7 @@ dependencies:
 - errors
 - jose
 - microlens-mtl
+- servant-auth
 - servant-auth-server
 - text
 

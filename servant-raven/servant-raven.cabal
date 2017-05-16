@@ -29,6 +29,7 @@ library
     , errors
     , jose
     , microlens-mtl
+    , servant-auth
     , servant-auth-server
     , text
     , aeson
@@ -58,6 +59,7 @@ executable servant-raven-example
     , errors
     , jose
     , microlens-mtl
+    , servant-auth
     , servant-auth-server
     , text
     , microlens
@@ -79,6 +81,7 @@ test-suite test
     , errors
     , jose
     , microlens-mtl
+    , servant-auth
     , servant-auth-server
     , text
     , servant-raven

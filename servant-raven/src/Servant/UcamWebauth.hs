@@ -27,6 +27,10 @@ for 'readRSAKeyFile'.
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE PartialTypeSignatures #-}
 {-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeInType #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
 
 module Servant.UcamWebauth (
     module Servant.UcamWebauth
@@ -38,6 +42,7 @@ import "Ucam-Webauth" Network.Protocol.UcamWebauth as X
 
 import "base" GHC.Generics
 import "base" Control.Monad.IO.Class
+import "base" Data.Kind
 
 import "text" Data.Text (Text)
 
@@ -83,10 +88,13 @@ type API auths
 server :: CookieSettings -> JWTSettings -> Server (API auths)
 server cs jwts = protected :<|> unprotected cs jwts
 
-
-serveWithJWT :: JWK -> Application
-serveWithJWT ky =
-        Proxy @(API '[JWT]) `serveWithContext` cfg $ server defaultCookieSettings jwtCfg
+-- Auths may be '[JWT] or '[Cookie] or even both.
+serveWithAuth
+    :: forall (auths :: [Type]) .
+        AreAuths auths '[CookieSettings, JWTSettings] User
+    => JWK -> Application
+serveWithAuth ky =
+        Proxy @(API auths) `serveWithContext` cfg $ server defaultCookieSettings jwtCfg
     where
         -- Adding some configurations. All authentications require CookieSettings to
         -- be in the context.
