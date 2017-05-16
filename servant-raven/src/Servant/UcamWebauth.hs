@@ -39,10 +39,7 @@ import "Ucam-Webauth" Network.Protocol.UcamWebauth as X
 import "base" GHC.Generics
 import "base" Control.Monad.IO.Class
 
-import "bytestring" Data.ByteString (ByteString)
 import "text" Data.Text (Text)
-import "text" Data.Text.Encoding
-import "time" Data.Time
 
 import "servant-server" Servant
 import "servant-auth-server" Servant.Auth.Server
@@ -60,12 +57,6 @@ instance ToJWT User
 instance FromJSON User
 instance FromJWT User
 
-newtype Login a = Login { authInfo :: UcamWebauthInfo a }
-    deriving (Eq, Show, Generic1, Generic)
-
-instance ToJSON a => ToJSON (Login a)
-instance FromJSON a => FromJSON (Login a)
-
 type Protected
     = "user" :> Get '[JSON] Text
 
@@ -74,7 +65,7 @@ protected (Authenticated (User user)) = return user
 protected _ = throwAll err401
 
 type Unprotected
-    = "login" :> ReqBody '[JSON] (Login Text) :> PostNoContent '[JSON]
+    = "login" :> ReqBody '[JSON] (UcamWebauthInfo Text) :> PostNoContent '[JSON]
         ( Headers
            '[ Header "Set-Cookie" SetCookie
             , Header "Set-Cookie" SetCookie
@@ -113,12 +104,12 @@ tokenise ky crsid = let jwtCfg = defaultJWTSettings ky in do
 checkCreds
     :: CookieSettings
     -> JWTSettings
-    -> Login Text
+    -> UcamWebauthInfo Text
     -> Handler (Headers
        '[ Header "Set-Cookie" SetCookie
         , Header "Set-Cookie" SetCookie
         ] NoContent)
-checkCreds cookieSettings jwtSettings (Login _) = do
+checkCreds cookieSettings jwtSettings _ = do
     -- Usually you would ask a database for the user info. This is just a
     -- regular servant handler, so you can follow your normal database access
     -- patterns (including using 'enter').
@@ -127,7 +118,6 @@ checkCreds cookieSettings jwtSettings (Login _) = do
     case mApplyCookies of
         Nothing           -> throwError err401
         Just applyCookies -> return $ applyCookies NoContent
-checkCreds _ _ _ = throwError err401
 
 ------------------------------------------------------------------------------
 --
