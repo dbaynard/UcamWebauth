@@ -48,7 +48,9 @@ import qualified "bytestring" Data.ByteString.Char8 as B
 import qualified "bytestring" Data.ByteString.Lazy.Char8 as BL
 import qualified "bytestring" Data.ByteString.Lazy as BSL
 import "text" Data.Text (Text)
+import "text" Data.Text.Encoding
 import qualified "text" Data.Text as T
+import qualified "text" Data.Text.Lazy.Encoding as TL
 import "base" Data.Char (isAlphaNum, isAscii)
 
 import "aeson" Data.Aeson.Types
@@ -708,8 +710,25 @@ wlsUrl f MakeWAASettings{..} = (\_wlsUrl -> MakeWAASettings{_wlsUrl, ..}) <$> f 
 newtype Base64BS = B64 { unB64 :: ByteString }
     deriving (Show, Read, Eq, Ord, Semigroup, Monoid, IsString, Generic, Typeable, Data)
 
+instance FromJSON Base64BS where
+    parseJSON = withObject "Base 64 ByteString" $ \v -> B64 . encodeUtf8
+        <$> v .: "Base 64 ByteString"
+
+instance ToJSON Base64BS where
+    toJSON = toJSON . decodeUtf8 . unB64
+    toEncoding = toEncoding . decodeUtf8 . unB64
+
 newtype Base64BSL = B64L { unB64L :: BSL.ByteString }
     deriving (Show, Read, Eq, Ord, Semigroup, Monoid, IsString, Generic, Typeable, Data)
+
+instance FromJSON Base64BSL where
+    parseJSON = withObject "Base 64 ByteString" $ \v -> B64L . TL.encodeUtf8
+        <$> v .: "Base 64 ByteString"
+
+instance ToJSON Base64BSL where
+    toJSON = toJSON . TL.decodeUtf8 . unB64L
+    toEncoding = toEncoding . TL.decodeUtf8 . unB64L
+
 
 {-|
   Ensure Base 64 text modified to fit the Ucam-Webauth protocol is not confused with other 'ByteString's
