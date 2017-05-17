@@ -9,6 +9,7 @@ Key parts of the implementation of the protocol itself.
 
 -}
 
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE PackageImports #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE ViewPatterns #-}
@@ -17,6 +18,7 @@ Key parts of the implementation of the protocol itself.
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
 
 module Network.Protocol.UcamWebauth (
     module Network.Protocol.UcamWebauth
@@ -34,6 +36,7 @@ import "base" Control.Monad.IO.Class
 import "base" Control.Applicative
 import "base" Control.Monad
 import "base" Data.Semigroup
+import "base" Data.Bifunctor
 
 import "mtl" Control.Monad.State
 import "mtl" Control.Monad.Except
@@ -50,6 +53,7 @@ import "attoparsec" Data.Attoparsec.ByteString.Char8 hiding (count, take)
 
 -- HTTP protocol
 import "http-types" Network.HTTP.Types
+import "http-api-data" Web.HttpApiData
 
 -- Character encoding
 import "bytestring" Data.ByteString (ByteString)
@@ -87,6 +91,13 @@ infixl 1 &~
 -- * Top level functions
 
 {-|
+  If the supplied response is valid and corresponds to the settigns, return a 'UcamWebauthInfo' value.
+
+-}
+authInfo :: (MonadIO m, MonadPlus m, MonadError Text m) => SetWAA a -> SignedAuthResponse 'MaybeValid a -> m (UcamWebauthInfo a)
+authInfo waa = getAuthInfo <=< validateAuthResponse waa
+
+{-|
   'maybeAuthInfo' takes the 'AuthRequest' from its environment, and a 'ByteString' containing the @WLS@
   response, and if the response is valid, returns a 'UcamWebauthInfo' value.
 
@@ -107,6 +118,10 @@ maybeAuthCode waa = validateAuthResponse waa <=< authCode
 -}
 authCode :: (FromJSON a, MonadPlus m) => ByteString -> m (SignedAuthResponse 'MaybeValid a)
 authCode = liftMaybe . maybeResult . flip feed "" . parse ucamResponseParser
+
+-- | Parse a not-yet-validated 'SignedAuthResponse' from a form response.
+instance FromJSON a => FromHttpApiData (SignedAuthResponse 'MaybeValid a) where
+    parseQueryParam = first T.pack . parseOnly ucamResponseParser . encodeUtf8
 
 ------------------------------------------------------------------------------
 -- * Printing
