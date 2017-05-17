@@ -68,9 +68,9 @@ instance FromJWT User
 type Protected
     = "user" :> Get '[JSON] Text
 
-protected :: AuthResult User -> Server Protected
-protected (Authenticated (User user)) = return user
-protected _ = throwAll err401
+protected :: ThrowAll (Handler protected) => (a -> Handler protected) -> AuthResult a -> Handler protected
+protected f (Authenticated user) = f user
+protected _ _ = throwAll err401
 
 type Raven a
     = "raven" :> Get '[JSON] (UcamWebauthInfo a)
@@ -101,7 +101,7 @@ type API auths a
 
 server :: ToJSON a => SetWAA a -> CookieSettings -> JWTSettings -> Server (API auths a)
 server rs cs jwts =
-        protected
+        protected (return . (\(User user) -> user))
     :<|> raven rs
     :<|> unprotected cs jwts
 
