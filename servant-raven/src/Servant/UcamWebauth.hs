@@ -49,6 +49,8 @@ import "errors" Control.Error
 
 import "text" Data.Text (Text)
 
+import "time" Data.Time
+
 import "servant-server" Servant
 import "servant-auth-server" Servant.Auth.Server
 import "servant-auth-server" Servant.Auth.Server.SetCookieOrphan ()
@@ -65,6 +67,9 @@ instance ToJWT User
 instance FromJSON User
 instance FromJWT User
 
+instance ToJSON a => ToJWT (UcamWebauthInfo a)
+instance FromJSON a => FromJWT (UcamWebauthInfo a)
+
 type Protected
     = "user" :> Get '[JSON] Text
 
@@ -72,8 +77,11 @@ protected :: ThrowAll (Handler protected) => (a -> Handler protected) -> AuthRes
 protected f (Authenticated user) = f user
 protected _ _ = throwAll err401
 
-type UcamWebAuthenticate r a
-    = r :> QueryParam "WLS-Response" (SignedAuthResponse 'MaybeValid a) :> Get '[JSON] (UcamWebauthInfo a)
+type UcamWebAuthenticate route a
+    = route :> QueryParam "WLS-Response" (SignedAuthResponse 'MaybeValid a) :> Get '[JSON] (UcamWebauthInfo a)
+
+type UcamWebAuthToken route token a
+    = route :> QueryParam "WLS-Response" (SignedAuthResponse 'MaybeValid a) :> Get '[JSON] token
 
 {-ucamWebAuthenticate :: forall r a . ToJSON a => SetWAA a -> Server (Raven r a)-}
 ucamWebAuthenticate :: forall a. ToJSON a => SetWAA a -> Maybe (SignedAuthResponse 'MaybeValid a) -> Handler (UcamWebauthInfo a)
@@ -83,6 +91,13 @@ ucamWebAuthenticate settings mresponse = do
     where
         needToAuthenticate = noteT err303 {errHeaders = [ucamWebauthQuery settings]}
         ravenError = withExceptT . const $ err401 { errBody = "Raven error" }
+
+ucamWebAuthToken :: forall a. ToJSON a => SetWAA a -> Maybe UTCTime -> JWK -> Maybe (SignedAuthResponse 'MaybeValid a) -> Handler Base64UBSL
+ucamWebAuthToken settings mexpires ky mresponse = let jwtCfg = defaultJWTSettings ky in do
+        uwi <- ucamWebAuthenticate settings mresponse
+        Handler . bimapExceptT trans B64UL . ExceptT $ makeJWT uwi jwtCfg mexpires
+    where
+        trans _ = err401 { errBody = "Token error" }
 
 type Unprotected
     = "login" :> ReqBody '[JSON] (UcamWebauthInfo Text) :> PostNoContent '[JSON]
@@ -98,13 +113,13 @@ unprotected cs jwts = checkCreds cs jwts :<|> serveDirectoryFileServer "example/
 
 type API auths a
     = Auth auths User :> Protected
-    :<|> UcamWebAuthenticate "authenticate" a
+    :<|> UcamWebAuthToken "authenticate" Base64UBSL a
     :<|> Unprotected
 
-server :: ToJSON a => SetWAA a -> CookieSettings -> JWTSettings -> Server (API auths a)
-server rs cs jwts =
+server :: ToJSON a => SetWAA a -> CookieSettings -> JWTSettings -> JWK -> Server (API auths a)
+server rs cs jwts ky =
         protected (return . (\(User user) -> user))
-    :<|> ucamWebAuthenticate rs
+    :<|> ucamWebAuthToken rs Nothing ky
     :<|> unprotected cs jwts
 
 -- Auths may be '[JWT] or '[Cookie] or even both.
@@ -116,7 +131,7 @@ serveWithAuth
         )
     => JWK -> SetWAA a -> Application
 serveWithAuth ky rs =
-        Proxy @(API auths a) `serveWithContext` cfg $ server rs defaultCookieSettings jwtCfg
+        Proxy @(API auths a) `serveWithContext` cfg $ server rs defaultCookieSettings jwtCfg ky
     where
         -- Adding some configurations. All authentications require CookieSettings to
         -- be in the context.
