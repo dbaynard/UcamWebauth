@@ -40,8 +40,8 @@ import "base" Control.Arrow ((&&&))
 import "microlens" Lens.Micro
 
 -- Character encoding
-import qualified "base64-bytestring" Data.ByteString.Base64 as B
-import qualified "base64-bytestring" Data.ByteString.Base64.Lazy as BL
+import qualified "base64-bytestring" Data.ByteString.Base64.URL as B
+import qualified "base64-bytestring" Data.ByteString.Base64.URL.Lazy as BL
 
 import "bytestring" Data.ByteString (ByteString)
 import qualified "bytestring" Data.ByteString.Char8 as B
@@ -241,7 +241,7 @@ ucamAKid :: SignedAuthResponse valid a `Lens'` Maybe KeyID
 ucamAKid f SignedAuthResponse{..} = (\_ucamAKid -> SignedAuthResponse{_ucamAKid, ..}) <$> f _ucamAKid
 
 {-|
-  Required if status is 200, otherwise Nothing. Public key signature of everything up to kid, using the private key identified by kid, the SHA-1 algorithm and RSASSA-PKCS1-v1_5 (PKCS #1 v2.1 RFC 3447), encoded using the base64 scheme (RFC 1521) but with "-._" replacing "+/="
+  Required if status is 200, otherwise Nothing. Public key signature of everything up to kid, using the private key identified by kid, the SHA-1 algorithm and RSASSA-PKCS1-v1_5 (PKCS #1 v2.1 RFC 3447), encoded using the base64 scheme (RFC 1521) but with "-._" replacing "+/=" (equivalent to the RFC 4648 with "._" replacing "_=").
 -}
 ucamASig :: SignedAuthResponse valid a `Lens'` Maybe UcamBase64BS
 ucamASig f SignedAuthResponse{..} = (\_ucamASig -> SignedAuthResponse{_ucamASig, ..}) <$> f _ucamASig
@@ -705,33 +705,32 @@ wlsUrl f MakeWAASettings{..} = (\_wlsUrl -> MakeWAASettings{_wlsUrl, ..}) <$> f 
 -- * Text encoding
 
 {-|
-  Ensure Base 64 text is not confused with other 'ByteString's
+  Ensure Base 64 URL text is not confused with other 'ByteString's
 -}
-newtype Base64BS = B64 { unB64 :: ByteString }
+newtype Base64UBS = B64U { unB64U :: ByteString }
     deriving (Show, Read, Eq, Ord, Semigroup, Monoid, IsString, Generic, Typeable, Data)
 
-instance FromJSON Base64BS where
-    parseJSON = withObject "Base 64 ByteString" $ \v -> B64 . encodeUtf8
-        <$> v .: "Base 64 ByteString"
+instance FromJSON Base64UBS where
+    parseJSON = withObject "Base 64 URL ByteString" $ \v -> B64U . encodeUtf8
+        <$> v .: "Base 64U ByteString"
 
-instance ToJSON Base64BS where
-    toJSON = toJSON . decodeUtf8 . unB64
-    toEncoding = toEncoding . decodeUtf8 . unB64
+instance ToJSON Base64UBS where
+    toJSON = toJSON . decodeUtf8 . unB64U
+    toEncoding = toEncoding . decodeUtf8 . unB64U
 
-newtype Base64BSL = B64L { unB64L :: BSL.ByteString }
+newtype Base64UBSL = B64UL { unB64UL :: BSL.ByteString }
     deriving (Show, Read, Eq, Ord, Semigroup, Monoid, IsString, Generic, Typeable, Data)
 
-instance FromJSON Base64BSL where
-    parseJSON = withObject "Base 64 ByteString" $ \v -> B64L . TL.encodeUtf8
-        <$> v .: "Base 64 ByteString"
+instance FromJSON Base64UBSL where
+    parseJSON = withObject "Base 64 URL ByteString" $ \v -> B64UL . TL.encodeUtf8
+        <$> v .: "Base 64U ByteString"
 
-instance ToJSON Base64BSL where
-    toJSON = toJSON . TL.decodeUtf8 . unB64L
-    toEncoding = toEncoding . TL.decodeUtf8 . unB64L
-
+instance ToJSON Base64UBSL where
+    toJSON = toJSON . TL.decodeUtf8 . unB64UL
+    toEncoding = toEncoding . TL.decodeUtf8 . unB64UL
 
 {-|
-  Ensure Base 64 text modified to fit the Ucam-Webauth protocol is not confused with other 'ByteString's
+  Ensure Base 64 URL text modified to fit the Ucam-Webauth protocol is not confused with other 'ByteString's
 -}
 newtype UcamBase64BS = UcamB64 { unUcamB64 :: ByteString }
     deriving (Show, Read, Eq, Ord, Semigroup, Monoid, IsString, Generic, Typeable, Data)
@@ -748,30 +747,28 @@ newtype ASCII = ASCII { unASCII :: Text }
 {-|
   Convert to the protocol’s version of base64
 -}
-convertB64Ucam :: Base64BS -> UcamBase64BS
-convertB64Ucam = UcamB64 . B.map camEncodeFilter . unB64
+convertB64Ucam :: Base64UBS -> UcamBase64BS
+convertB64Ucam = UcamB64 . B.map camEncodeFilter . unB64U
 
-convertB64UcamL :: Base64BSL -> UcamBase64BSL
-convertB64UcamL = UcamB64L . BL.map camEncodeFilter . unB64L
+convertB64UcamL :: Base64UBSL -> UcamBase64BSL
+convertB64UcamL = UcamB64L . BL.map camEncodeFilter . unB64UL
 
 camEncodeFilter :: Char -> Char
-camEncodeFilter '+' = '-'
-camEncodeFilter '/' = '.'
+camEncodeFilter '_' = '.'
 camEncodeFilter '=' = '_'
 camEncodeFilter x = x
 
 {-|
   Convert from the protocol’s version of base64
 -}
-convertUcamB64 :: UcamBase64BS -> Base64BS
-convertUcamB64 = B64 . B.map camDecodeFilter . unUcamB64
+convertUcamB64 :: UcamBase64BS -> Base64UBS
+convertUcamB64 = B64U . B.map camDecodeFilter . unUcamB64
 
-convertUcamB64L :: UcamBase64BSL -> Base64BSL
-convertUcamB64L = B64L . BL.map camDecodeFilter . unUcamB64L
+convertUcamB64L :: UcamBase64BSL -> Base64UBSL
+convertUcamB64L = B64UL . BL.map camDecodeFilter . unUcamB64L
 
 camDecodeFilter :: Char -> Char
-camDecodeFilter '-' = '+'
-camDecodeFilter '.' = '/'
+camDecodeFilter '.' = '_'
 camDecodeFilter '_' = '='
 camDecodeFilter x = x
 
@@ -781,19 +778,19 @@ camDecodeFilter x = x
   TODO It should not be a problem, if operating on validated input, but might be worth testing (low priority).
 -}
 decodeUcamB64 :: UcamBase64BS -> StringType
-decodeUcamB64 = B.decodeLenient . unB64 . convertUcamB64
+decodeUcamB64 = B.decodeLenient . unB64U . convertUcamB64
 
 decodeUcamB64L :: UcamBase64BSL -> BSL.ByteString
-decodeUcamB64L = BL.decodeLenient . unB64L . convertUcamB64L
+decodeUcamB64L = BL.decodeLenient . unB64UL . convertUcamB64L
 
 {-|
   Unlike decoding, this is fully pure.
 -}
 encodeUcamB64 :: StringType -> UcamBase64BS
-encodeUcamB64 = convertB64Ucam . B64 . B.encode
+encodeUcamB64 = convertB64Ucam . B64U . B.encode
 
 encodeUcamB64L :: BSL.ByteString -> UcamBase64BSL
-encodeUcamB64L = convertB64UcamL . B64L . BL.encode
+encodeUcamB64L = convertB64UcamL . B64UL . BL.encode
 
 {-|
   Extract ascii text.
