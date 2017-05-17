@@ -31,6 +31,7 @@ for 'readRSAKeyFile'.
 {-# LANGUAGE TypeInType #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 
 module Servant.UcamWebauth (
     module Servant.UcamWebauth
@@ -73,6 +74,11 @@ instance FromJSON a => FromJWT (UcamWebauthInfo a)
 type Protected
     = "user" :> Get '[JSON] Text
 
+instance MimeRender OctetStream Base64UBSL where
+    mimeRender _ = unB64UL
+instance MimeUnrender OctetStream Base64UBSL where
+    mimeUnrender _ = pure . B64UL
+
 protected :: ThrowAll (Handler protected) => (a -> Handler protected) -> AuthResult a -> Handler protected
 protected f (Authenticated user) = f user
 protected _ _ = throwAll err401
@@ -81,7 +87,7 @@ type UcamWebAuthenticate route a
     = route :> QueryParam "WLS-Response" (SignedAuthResponse 'MaybeValid a) :> Get '[JSON] (UcamWebauthInfo a)
 
 type UcamWebAuthToken route token a
-    = route :> QueryParam "WLS-Response" (SignedAuthResponse 'MaybeValid a) :> Get '[JSON] token
+    = route :> QueryParam "WLS-Response" (SignedAuthResponse 'MaybeValid a) :> Get '[OctetStream] token
 
 {-ucamWebAuthenticate :: forall r a . ToJSON a => SetWAA a -> Server (Raven r a)-}
 ucamWebAuthenticate :: forall a. ToJSON a => SetWAA a -> Maybe (SignedAuthResponse 'MaybeValid a) -> Handler (UcamWebauthInfo a)
