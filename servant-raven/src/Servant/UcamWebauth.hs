@@ -45,7 +45,7 @@ import "base" Control.Monad.IO.Class
 import "base" Data.Kind
 import "base" Control.Monad
 
-import "mtl" Control.Monad.Except
+import "errors" Control.Error
 
 import "text" Data.Text (Text)
 
@@ -72,15 +72,17 @@ protected :: ThrowAll (Handler protected) => (a -> Handler protected) -> AuthRes
 protected f (Authenticated user) = f user
 protected _ _ = throwAll err401
 
-type Raven a
-    = "raven" :> Get '[JSON] (UcamWebauthInfo a)
-    :<|> "authenticate" :> QueryParam "WLS-Response" (SignedAuthResponse 'MaybeValid a) :> Get '[JSON] (UcamWebauthInfo a)
+type Raven r a
+    = r :> QueryParam "WLS-Response" (SignedAuthResponse 'MaybeValid a) :> Get '[JSON] (UcamWebauthInfo a)
 
-raven :: ToJSON a => SetWAA a -> Server (Raven a)
-raven settings = throwError err303 {errHeaders = [ucamWebauthQuery settings]}
-    :<|> Handler . ravenError . (authInfo settings <=< liftMaybe)
-        where
-            ravenError = withExceptT . const $ err401 { errBody = "Raven error" }
+{-raven :: forall r a . ToJSON a => SetWAA a -> Server (Raven r a)-}
+raven :: forall a. ToJSON a => SetWAA a -> Maybe (SignedAuthResponse 'MaybeValid a) -> Handler (UcamWebauthInfo a)
+raven settings mresponse = do
+        response <- Handler . needToAuthenticate . liftMaybe $ mresponse
+        Handler . ravenError . authInfo settings $ response
+    where
+        needToAuthenticate = noteT err303 {errHeaders = [ucamWebauthQuery settings]}
+        ravenError = withExceptT . const $ err401 { errBody = "Raven error" }
 
 type Unprotected
     = "login" :> ReqBody '[JSON] (UcamWebauthInfo Text) :> PostNoContent '[JSON]
@@ -96,7 +98,7 @@ unprotected cs jwts = checkCreds cs jwts :<|> serveDirectoryFileServer "example/
 
 type API auths a
     = Auth auths User :> Protected
-    :<|> Raven a
+    :<|> Raven "authenticate" a
     :<|> Unprotected
 
 server :: ToJSON a => SetWAA a -> CookieSettings -> JWTSettings -> Server (API auths a)

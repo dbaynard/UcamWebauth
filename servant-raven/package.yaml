@@ -25,6 +25,7 @@ library:
   exposed-modules: []
   dependencies:
   - aeson
+  - errors
   - containers
   - servant-server
   - Ucam-Webauth

@@ -35,6 +35,7 @@ library
     , text
     , time
     , aeson
+    , errors
     , containers
     , servant-server
     , Ucam-Webauth
