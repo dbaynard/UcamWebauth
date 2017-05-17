@@ -72,12 +72,12 @@ protected :: ThrowAll (Handler protected) => (a -> Handler protected) -> AuthRes
 protected f (Authenticated user) = f user
 protected _ _ = throwAll err401
 
-type Raven r a
+type UcamWebAuthenticate r a
     = r :> QueryParam "WLS-Response" (SignedAuthResponse 'MaybeValid a) :> Get '[JSON] (UcamWebauthInfo a)
 
-{-raven :: forall r a . ToJSON a => SetWAA a -> Server (Raven r a)-}
-raven :: forall a. ToJSON a => SetWAA a -> Maybe (SignedAuthResponse 'MaybeValid a) -> Handler (UcamWebauthInfo a)
-raven settings mresponse = do
+{-ucamWebAuthenticate :: forall r a . ToJSON a => SetWAA a -> Server (Raven r a)-}
+ucamWebAuthenticate :: forall a. ToJSON a => SetWAA a -> Maybe (SignedAuthResponse 'MaybeValid a) -> Handler (UcamWebauthInfo a)
+ucamWebAuthenticate settings mresponse = do
         response <- Handler . needToAuthenticate . liftMaybe $ mresponse
         Handler . ravenError . authInfo settings $ response
     where
@@ -98,13 +98,13 @@ unprotected cs jwts = checkCreds cs jwts :<|> serveDirectoryFileServer "example/
 
 type API auths a
     = Auth auths User :> Protected
-    :<|> Raven "authenticate" a
+    :<|> UcamWebAuthenticate "authenticate" a
     :<|> Unprotected
 
 server :: ToJSON a => SetWAA a -> CookieSettings -> JWTSettings -> Server (API auths a)
 server rs cs jwts =
         protected (return . (\(User user) -> user))
-    :<|> raven rs
+    :<|> ucamWebAuthenticate rs
     :<|> unprotected cs jwts
 
 -- Auths may be '[JWT] or '[Cookie] or even both.
