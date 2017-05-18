@@ -33,6 +33,7 @@ for 'readRSAKeyFile'.
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TypeFamilies #-}
 
 module Servant.UcamWebauth (
     module Servant.UcamWebauth
@@ -47,15 +48,20 @@ import "base" Control.Monad.IO.Class
 import "base" Data.Kind
 
 import "errors" Control.Error
+import "microlens-mtl" Lens.Micro.Mtl
+import "reflection" Data.Reflection
 
 import "text" Data.Text (Text)
+import qualified "text" Data.Text as T
 
 import "time" Data.Time
 
+import "servant" Servant.Utils.Links
 import "servant-server" Servant
 import "servant-auth-server" Servant.Auth.Server
 import "servant-auth-server" Servant.Auth.Server.SetCookieOrphan ()
 import "jose" Crypto.JOSE.JWK (JWK)
+import "network-uri" Network.URI
 
 import "aeson" Data.Aeson.Types hiding ((.=))
 
@@ -88,8 +94,8 @@ authenticated _ _ = throwAll err401
 
 -- | A bifunctional endpoint for authentication, which both delegates and
 -- responds to the Web Login Service (WLS).
-type UcamWebAuthenticate a
-    = QueryParam "WLS-Response" (SignedAuthResponse 'MaybeValid a) :> Get '[JSON] (UcamWebauthInfo a)
+type UcamWebAuthenticate route a
+    = route :> QueryParam "WLS-Response" (SignedAuthResponse 'MaybeValid a) :> Get '[JSON] (UcamWebauthInfo a)
 
 -- | If a GET request is made with no query parameters, redirect (303) to the authentication server.
 --
@@ -110,8 +116,8 @@ ucamWebAuthenticate settings mresponse = do
 
 -- | A bifunctional endpoint for authentication, which both delegates and
 -- responds to the Web Login Service (WLS).
-type UcamWebAuthToken token a
-    = QueryParam "WLS-Response" (SignedAuthResponse 'MaybeValid a) :> Get '[OctetStream] token
+type UcamWebAuthToken route token a
+    = route :> QueryParam "WLS-Response" (SignedAuthResponse 'MaybeValid a) :> Get '[OctetStream] token
 
 -- | Here, if a GET request is made with a valid WLS-Response query parameter, return the
 -- 'UcamWebauthInfo a' as a log in token.
@@ -127,6 +133,33 @@ ucamWebAuthToken settings mexpires ky mresponse = let jwtCfg = defaultJWTSetting
         Handler . bimapExceptT trans B64UL . ExceptT $ makeJWT uwi jwtCfg mexpires
     where
         trans _ = err401 { errBody = "Token error" }
+
+-- | The default settings for UcamWebauth should generate the application
+-- link from the api type.
+--
+-- This must be reified with a 'Network.URI.URIAuth' value corresponding to
+-- the base url of the api.
+ucamWebAuthSettings
+    :: forall baseurl (api :: Type) a route token (endpoint :: Type) query .
+       ( IsElem endpoint api
+       , HasLink endpoint
+       , MkLink endpoint ~ (query -> Link)
+       , query ~ Maybe (SignedAuthResponse 'MaybeValid a)
+       , endpoint ~ UcamWebAuthToken route token a
+       , Reifies baseurl URIAuth
+       )
+    => SetWAA a
+ucamWebAuthSettings = do
+        wSet . applicationUrl .= authLink Nothing
+    where
+        authLink :: query -> Text
+        authLink = authURI . linkURI . safeLink (Proxy @api) (Proxy @endpoint)
+        authURI :: URI -> Text
+        authURI uri = T.pack . show $ uri {uriAuthority = Just $ reflect @baseurl Proxy}
+
+-- TODO This is a dummy implementation
+instance ToHttpApiData (SignedAuthResponse 'MaybeValid a) where
+    toQueryParam = const ""
 
 ------------------------------------------------------------------------------
 
@@ -155,7 +188,7 @@ unprotected cs jwts = checkCreds cs jwts :<|> serveDirectoryFileServer "example/
 
 type API auths a
     = Auth auths User :> Protected
-    :<|> "authenticate" :> UcamWebAuthToken Base64UBSL a
+    :<|> UcamWebAuthToken "authenticate" Base64UBSL a
     :<|> Unprotected
 
 server :: ToJSON a => SetWAA a -> CookieSettings -> JWTSettings -> JWK -> Server (API auths a)

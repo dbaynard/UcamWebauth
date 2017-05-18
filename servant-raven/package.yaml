@@ -15,6 +15,7 @@ dependencies:
 - jose
 - microlens-mtl
 - mtl
+- reflection
 - servant-auth
 - servant-auth-server
 - text
@@ -27,6 +28,8 @@ library:
   - aeson
   - errors
   - containers
+  - network-uri
+  - servant
   - servant-server
   - Ucam-Webauth
   when:

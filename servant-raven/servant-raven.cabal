@@ -30,6 +30,7 @@ library
     , jose
     , microlens-mtl
     , mtl
+    , reflection
     , servant-auth
     , servant-auth-server
     , text
@@ -37,6 +38,8 @@ library
     , aeson
     , errors
     , containers
+    , network-uri
+    , servant
     , servant-server
     , Ucam-Webauth
   if flag(dev)
@@ -62,6 +65,7 @@ executable servant-raven-example
     , jose
     , microlens-mtl
     , mtl
+    , reflection
     , servant-auth
     , servant-auth-server
     , text
@@ -86,6 +90,7 @@ test-suite test
     , jose
     , microlens-mtl
     , mtl
+    , reflection
     , servant-auth
     , servant-auth-server
     , text
