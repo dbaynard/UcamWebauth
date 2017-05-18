@@ -14,6 +14,12 @@ It is possible to test applications using the "Servant.Raven.Test" module, inste
 
 {-# LANGUAGE PackageImports #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE DataKinds #-}
 
 module Servant.Raven.Auth (
     module Servant.Raven.Auth
@@ -21,6 +27,7 @@ module Servant.Raven.Auth (
 )   where
 
 import "microlens-mtl" Lens.Micro.Mtl
+import "servant" Servant.Utils.Links
 
 -- The protocol
 import Servant.UcamWebauth
@@ -35,8 +42,16 @@ import Servant.Raven.Internal as X
 
   > wlsUrl .= "https://raven.cam.ac.uk/auth/authenticate.html"
 -}
-ravenSettings :: SetWAA a
+ravenSettings
+    :: forall baseurl api e (route :: Symbol) token a endpoint .
+       ( Reifies baseurl URIAuth
+       , IsElem endpoint api
+       , HasLink endpoint
+       , endpoint ~ Unqueried e
+       , e ~ UcamWebAuthToken route token a
+       )
+    => SetWAA a
 ravenSettings = do
-        ravenDefSettings
+        ravenDefSettings @baseurl @api @e
         wSet . validKids .= ["2"]
         wSet . wlsUrl .= "https://raven.cam.ac.uk/auth/authenticate.html"

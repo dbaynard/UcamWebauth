@@ -46,6 +46,7 @@ import "Ucam-Webauth" Network.Protocol.UcamWebauth as X
 import "base" GHC.Generics
 import "base" Control.Monad.IO.Class
 import "base" Data.Kind
+import "base" GHC.TypeLits
 
 import "errors" Control.Error
 import "microlens-mtl" Lens.Micro.Mtl
@@ -148,11 +149,11 @@ ucamWebAuthToken settings mexpires ky mresponse = let jwtCfg = defaultJWTSetting
 -- This must be reified with a 'Network.URI.URIAuth' value corresponding to
 -- the base url of the api.
 ucamWebAuthSettings
-    :: forall baseurl (api :: Type) a route token (endpoint :: Type) .
+    :: forall baseurl (api :: Type) (e :: Type) (route :: Symbol) token a endpoint .
        ( IsElem endpoint api
        , HasLink endpoint
-       , MkLink endpoint ~ Link
-       , endpoint ~ Unqueried (UcamWebAuthToken route token a)
+       , endpoint ~ Unqueried e
+       , e ~ UcamWebAuthToken route token a
        , Reifies baseurl URIAuth
        )
     => SetWAA a
@@ -189,9 +190,11 @@ type Unprotected
 unprotected :: CookieSettings -> JWTSettings -> Server Unprotected
 unprotected cs jwts = checkCreds cs jwts :<|> serveDirectoryFileServer "example/static"
 
+type Raven a = UcamWebAuthToken "authenticate" Base64UBSL a
+
 type API auths a
     = Auth auths User :> Protected
-    :<|> UcamWebAuthToken "authenticate" Base64UBSL a
+    :<|> Raven a
     :<|> Unprotected
 
 server :: ToJSON a => SetWAA a -> CookieSettings -> JWTSettings -> JWK -> Server (API auths a)

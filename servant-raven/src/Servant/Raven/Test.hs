@@ -14,6 +14,12 @@ The functions in this file shadow the names in the "Servant.Raven.Auth" module. 
 -}
 {-# LANGUAGE PackageImports #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE DataKinds #-}
 
 module Servant.Raven.Test {-# WARNING "Do not use this module for production code. It is only for testing." #-} (
     module Servant.Raven.Test
@@ -22,6 +28,7 @@ module Servant.Raven.Test {-# WARNING "Do not use this module for production cod
 
 -- Prelude
 import "microlens-mtl" Lens.Micro.Mtl
+import "servant" Servant.Utils.Links
 
 -- The protocol
 import Servant.UcamWebauth
@@ -36,9 +43,17 @@ import Servant.Raven.Internal as X
 
   > wlsUrl .= "https://demo.raven.cam.ac.uk/auth/authenticate.html"
 -}
-ravenSettings :: SetWAA a
+ravenSettings
+    :: forall baseurl api e (route :: Symbol) token a endpoint .
+       ( Reifies baseurl URIAuth
+       , IsElem endpoint api
+       , HasLink endpoint
+       , endpoint ~ Unqueried e
+       , e ~ UcamWebAuthToken route token a
+       )
+    => SetWAA a
 ravenSettings = do
-        ravenDefSettings
+        ravenDefSettings @baseurl @api @e
         wSet . validKids .= ["901"]
         wSet . syncTimeOut .= 600
         wSet . wlsUrl .= "https://demo.raven.cam.ac.uk/auth/authenticate.html"

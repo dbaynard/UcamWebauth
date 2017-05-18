@@ -18,6 +18,7 @@ abstract: |
 {-# LANGUAGE TypeInType #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module Main where
 
@@ -29,6 +30,7 @@ import "base" Control.Applicative
 import "base" Control.Concurrent
 import "base" Control.Monad
 import "base" Data.Kind
+import "base" Data.Proxy
 
 import "errors" Control.Error
 import "microlens" Lens.Micro
@@ -36,6 +38,7 @@ import "microlens-mtl" Lens.Micro.Mtl
 import "mtl" Control.Monad.State
 import "mtl" Control.Monad.Except
 import "time" Data.Time
+import "reflection" Data.Reflection
 
 import "bytestring" Data.ByteString (ByteString)
 
@@ -112,10 +115,9 @@ launch ky port = do
 exampleResponse :: ByteString
 exampleResponse = "3!200!!20170515T172311Z!oANAuhC9fZmMlZUPIm53y5vn!http://localhost:3000/foo/query!test0244!current!!pwd!30380!IlRoaXMgaXMgMTAwJSBvZiB0aGUgZGF0YSEgQW5kIGl04oCZcyByZWFsbHkgcXVpdGUgY29vbCI_!901!RzC9KZWALCSeK0n9885X4zzemHizuj8K.NOpt.n1hfRCTE2ZBgvJ-fBvT-PaL80cSFGpyCJgt9LvM4-peJzcidoKC6zhBEvG0QnlqWTLsphbIA0JmBRiOoeqyLYRVGwDEdLdacdsQRM.u7bik.enhbuN1-aIQCOdB5MutxtYiu4_"
 
-mySettings :: SetWAA Text
-mySettings = do
-        ravenSettings
-        wSet . applicationUrl .= "http://localhost:7249/authenticate"
+mySettings :: forall (auths :: [Type]) . SetWAA Text
+mySettings = URIAuth{..} `reify` \(Proxy :: Proxy baseurl) -> do
+        ravenSettings @baseurl @(API auths Text) @(Raven Text)
         waa <- get
         aReq . ucamQUrl .= waa ^. wSet . applicationUrl
         aReq . ucamQDesc .= pure "This is a sample; it’s rather excellent!"
@@ -125,4 +127,8 @@ mySettings = do
         aReq . ucamQParams .= pure "This is 100% of the data! And it’s really quite cool"
         aReq . ucamQDate .= pure (waa ^. wSet . recentTime)
         aReq . ucamQFail .= empty
+    where
+        uriUserInfo = ""
+        uriRegName = "127.0.0.1"
+        uriPort = ":7249"
 ```
