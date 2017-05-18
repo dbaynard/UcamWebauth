@@ -25,23 +25,18 @@ library
       src
   build-depends:
       base >= 4.7 && < 5
-    , bytestring
     , errors
     , jose
     , microlens-mtl
-    , mtl
     , reflection
-    , servant-auth
     , servant-auth-server
+    , servant-server
     , text
-    , template-haskell
     , time
     , aeson
-    , errors
-    , containers
     , network-uri
     , servant
-    , servant-server
+    , template-haskell
     , Ucam-Webauth
   if flag(dev)
     ghc-options: -Wall -fwarn-tabs -O0
@@ -61,19 +56,20 @@ executable servant-raven-example
       app
   build-depends:
       base >= 4.7 && < 5
-    , bytestring
     , errors
     , jose
     , microlens-mtl
-    , mtl
     , reflection
-    , servant-auth
     , servant-auth-server
+    , servant-server
     , text
-    , template-haskell
     , time
+    , bytestring
     , microlens
+    , mtl
     , optparse-generic
+    , servant-auth
+    , servant-raven
     , wai-extra
     , warp
     , yaml
@@ -87,16 +83,13 @@ test-suite test
   ghc-options: -Wall
   build-depends:
       base >= 4.7 && < 5
-    , bytestring
     , errors
     , jose
     , microlens-mtl
-    , mtl
     , reflection
-    , servant-auth
     , servant-auth-server
+    , servant-server
     , text
-    , template-haskell
     , time
     , servant-raven
     , hspec >=2.0.0

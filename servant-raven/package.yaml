@@ -10,16 +10,13 @@ category:            Web
 
 dependencies:
 - base >= 4.7 && < 5
-- bytestring
 - errors
 - jose
 - microlens-mtl
-- mtl
 - reflection
-- servant-auth
 - servant-auth-server
+- servant-server
 - text
-- template-haskell
 - time
 
 library:
@@ -27,11 +24,9 @@ library:
   exposed-modules: []
   dependencies:
   - aeson
-  - errors
-  - containers
   - network-uri
   - servant
-  - servant-server
+  - template-haskell
   - Ucam-Webauth
   when:
   - condition: flag(dev)
@@ -51,8 +46,12 @@ executables:
     source-dirs:      app
     main:             Main.lhs
     dependencies:
+    - bytestring
     - microlens
+    - mtl
     - optparse-generic
+    - servant-auth
+    - servant-raven
     - wai-extra
     - warp
     - yaml

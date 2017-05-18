@@ -20,6 +20,8 @@ abstract: |
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE DeriveGeneric #-}
 
 module Main where
 
@@ -52,6 +54,7 @@ import "yaml" Data.Yaml hiding ((.=))
 
 import "optparse-generic" Options.Generic
 
+import "servant-server" Servant
 import "servant-auth" Servant.Auth
 import "servant-auth-server" Servant.Auth.Server
 import "jose" Crypto.JOSE
@@ -128,4 +131,85 @@ mySettings = [uri|http://127.0.0.1:7249|] `reify` \(Proxy :: Proxy baseurl) -> d
         aReq . ucamQParams .= pure "This is 100% of the data! And it’s really quite cool"
         aReq . ucamQDate .= pure (waa ^. wSet . recentTime)
         aReq . ucamQFail .= empty
+
+------------------------------------------------------------------------------
+
+newtype User = User Text
+    deriving (Eq, Show, Read, Generic)
+
+instance ToJSON User
+instance ToJWT User
+instance FromJSON User
+instance FromJWT User
+
+type Protected
+    = "user" :> Get '[JSON] Text
+
+type Unprotected
+    = "login" :> ReqBody '[JSON] (UcamWebauthInfo Text) :> PostNoContent '[JSON]
+        ( Headers
+           '[ Header "Set-Cookie" SetCookie
+            , Header "Set-Cookie" SetCookie
+            ] NoContent
+        )
+    :<|> Raw
+
+unprotected :: CookieSettings -> JWTSettings -> Server Unprotected
+unprotected cs jwts = checkCreds cs jwts :<|> serveDirectoryFileServer "example/static"
+
+type Raven a = UcamWebAuthToken "authenticate" Base64UBSL a
+
+type API auths a
+    = Auth auths User :> Protected
+    :<|> Raven a
+    :<|> Unprotected
+
+server :: ToJSON a => SetWAA a -> CookieSettings -> JWTSettings -> JWK -> Server (API auths a)
+server rs cs jwts ky =
+        authenticated (return . (\(User user) -> user))
+    :<|> ucamWebAuthToken rs Nothing ky
+    :<|> unprotected cs jwts
+
+-- Auths may be '[JWT] or '[Cookie] or even both.
+serveWithAuth
+    :: forall (auths :: [Type]) a .
+        ( AreAuths auths '[CookieSettings, JWTSettings] User
+        , ToJSON a
+        , FromJSON a
+        )
+    => JWK -> SetWAA a -> Application
+serveWithAuth ky rs =
+        Proxy @(API auths a) `serveWithContext` cfg $ server rs defaultCookieSettings jwtCfg ky
+    where
+        -- Adding some configurations. All authentications require CookieSettings to
+        -- be in the context.
+        jwtCfg = defaultJWTSettings ky
+        cfg = defaultCookieSettings :. jwtCfg :. EmptyContext
+
+tokenise :: JWK -> Text -> IO ()
+tokenise ky crsid = let jwtCfg = defaultJWTSettings ky in do
+        etoken <- makeJWT (User crsid) jwtCfg Nothing
+        case etoken of
+            Left e -> putStrLn $ "Error generating token:\t" ++ show e
+            Right v -> putStrLn $ "New token:\t" ++ show v
+
+-- Here is the login handler
+checkCreds
+    :: CookieSettings
+    -> JWTSettings
+    -> UcamWebauthInfo Text
+    -> Handler (Headers
+       '[ Header "Set-Cookie" SetCookie
+        , Header "Set-Cookie" SetCookie
+        ] NoContent)
+checkCreds cookieSettings jwtSettings _ = do
+    -- Usually you would ask a database for the user info. This is just a
+    -- regular servant handler, so you can follow your normal database access
+    -- patterns (including using 'enter').
+    let usr = User "db506"
+    mApplyCookies <- liftIO $ acceptLogin cookieSettings jwtSettings usr
+    case mApplyCookies of
+        Nothing           -> throwError err401
+        Just applyCookies -> return $ applyCookies NoContent
+
 ```

@@ -22,7 +22,6 @@ for 'readRSAKeyFile'.
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE PackageImports #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TypeOperators #-}
@@ -45,8 +44,6 @@ module Servant.UcamWebauth (
 -- Prelude
 import "Ucam-Webauth" Network.Protocol.UcamWebauth as X
 
-import "base" GHC.Generics
-import "base" Control.Monad.IO.Class
 import "base" Data.Kind
 import "base" GHC.TypeLits
 
@@ -167,84 +164,4 @@ ucamWebAuthSettings = do
         authURI URI{..} = T.pack . show $ uri {uriPath='/':uriPath, uriQuery, uriFragment}
         uri :: URI
         uri = reflect @baseurl Proxy
-
-------------------------------------------------------------------------------
-
-newtype User = User Text
-    deriving (Eq, Show, Read, Generic)
-
-instance ToJSON User
-instance ToJWT User
-instance FromJSON User
-instance FromJWT User
-
-type Protected
-    = "user" :> Get '[JSON] Text
-
-type Unprotected
-    = "login" :> ReqBody '[JSON] (UcamWebauthInfo Text) :> PostNoContent '[JSON]
-        ( Headers
-           '[ Header "Set-Cookie" SetCookie
-            , Header "Set-Cookie" SetCookie
-            ] NoContent
-        )
-    :<|> Raw
-
-unprotected :: CookieSettings -> JWTSettings -> Server Unprotected
-unprotected cs jwts = checkCreds cs jwts :<|> serveDirectoryFileServer "example/static"
-
-type Raven a = UcamWebAuthToken "authenticate" Base64UBSL a
-
-type API auths a
-    = Auth auths User :> Protected
-    :<|> Raven a
-    :<|> Unprotected
-
-server :: ToJSON a => SetWAA a -> CookieSettings -> JWTSettings -> JWK -> Server (API auths a)
-server rs cs jwts ky =
-        authenticated (return . (\(User user) -> user))
-    :<|> ucamWebAuthToken rs Nothing ky
-    :<|> unprotected cs jwts
-
--- Auths may be '[JWT] or '[Cookie] or even both.
-serveWithAuth
-    :: forall (auths :: [Type]) a .
-        ( AreAuths auths '[CookieSettings, JWTSettings] User
-        , ToJSON a
-        , FromJSON a
-        )
-    => JWK -> SetWAA a -> Application
-serveWithAuth ky rs =
-        Proxy @(API auths a) `serveWithContext` cfg $ server rs defaultCookieSettings jwtCfg ky
-    where
-        -- Adding some configurations. All authentications require CookieSettings to
-        -- be in the context.
-        jwtCfg = defaultJWTSettings ky
-        cfg = defaultCookieSettings :. jwtCfg :. EmptyContext
-
-tokenise :: JWK -> Text -> IO ()
-tokenise ky crsid = let jwtCfg = defaultJWTSettings ky in do
-        etoken <- makeJWT (User crsid) jwtCfg Nothing
-        case etoken of
-            Left e -> putStrLn $ "Error generating token:\t" ++ show e
-            Right v -> putStrLn $ "New token:\t" ++ show v
-
--- Here is the login handler
-checkCreds
-    :: CookieSettings
-    -> JWTSettings
-    -> UcamWebauthInfo Text
-    -> Handler (Headers
-       '[ Header "Set-Cookie" SetCookie
-        , Header "Set-Cookie" SetCookie
-        ] NoContent)
-checkCreds cookieSettings jwtSettings _ = do
-    -- Usually you would ask a database for the user info. This is just a
-    -- regular servant handler, so you can follow your normal database access
-    -- patterns (including using 'enter').
-    let usr = User "db506"
-    mApplyCookies <- liftIO $ acceptLogin cookieSettings jwtSettings usr
-    case mApplyCookies of
-        Nothing           -> throwError err401
-        Just applyCookies -> return $ applyCookies NoContent
 
