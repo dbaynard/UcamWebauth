@@ -34,6 +34,8 @@ for 'readRSAKeyFile'.
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module Servant.UcamWebauth (
     module Servant.UcamWebauth
@@ -62,7 +64,6 @@ import "servant-server" Servant
 import "servant-auth-server" Servant.Auth.Server
 import "servant-auth-server" Servant.Auth.Server.SetCookieOrphan ()
 import "jose" Crypto.JOSE.JWK (JWK)
-import "network-uri" Network.URI
 
 import "aeson" Data.Aeson.Types hiding ((.=))
 
@@ -154,7 +155,7 @@ ucamWebAuthSettings
        , HasLink endpoint
        , endpoint ~ Unqueried e
        , e ~ UcamWebAuthToken route token a
-       , Reifies baseurl URIAuth
+       , Reifies baseurl URI
        )
     => SetWAA a
 ucamWebAuthSettings = do
@@ -163,7 +164,9 @@ ucamWebAuthSettings = do
         authLink :: Text
         authLink = authURI . linkURI $ safeLink (Proxy @api) (Proxy @endpoint)
         authURI :: URI -> Text
-        authURI uri = T.pack . show $ uri {uriAuthority = Just $ reflect @baseurl Proxy}
+        authURI URI{..} = T.pack . show $ uri {uriPath='/':uriPath, uriQuery, uriFragment}
+        uri :: URI
+        uri = reflect @baseurl Proxy
 
 ------------------------------------------------------------------------------
 

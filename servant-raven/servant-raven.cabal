@@ -34,6 +34,7 @@ library
     , servant-auth
     , servant-auth-server
     , text
+    , template-haskell
     , time
     , aeson
     , errors
@@ -69,6 +70,7 @@ executable servant-raven-example
     , servant-auth
     , servant-auth-server
     , text
+    , template-haskell
     , time
     , microlens
     , optparse-generic
@@ -94,6 +96,7 @@ test-suite test
     , servant-auth
     , servant-auth-server
     , text
+    , template-haskell
     , time
     , servant-raven
     , hspec >=2.0.0

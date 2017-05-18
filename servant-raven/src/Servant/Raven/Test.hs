@@ -45,7 +45,7 @@ import Servant.Raven.Internal as X
 -}
 ravenSettings
     :: forall baseurl api e (route :: Symbol) token a endpoint .
-       ( Reifies baseurl URIAuth
+       ( Reifies baseurl URI
        , IsElem endpoint api
        , HasLink endpoint
        , endpoint ~ Unqueried e

@@ -19,6 +19,7 @@ abstract: |
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE QuasiQuotes #-}
 
 module Main where
 
@@ -116,7 +117,7 @@ exampleResponse :: ByteString
 exampleResponse = "3!200!!20170515T172311Z!oANAuhC9fZmMlZUPIm53y5vn!http://localhost:3000/foo/query!test0244!current!!pwd!30380!IlRoaXMgaXMgMTAwJSBvZiB0aGUgZGF0YSEgQW5kIGl04oCZcyByZWFsbHkgcXVpdGUgY29vbCI_!901!RzC9KZWALCSeK0n9885X4zzemHizuj8K.NOpt.n1hfRCTE2ZBgvJ-fBvT-PaL80cSFGpyCJgt9LvM4-peJzcidoKC6zhBEvG0QnlqWTLsphbIA0JmBRiOoeqyLYRVGwDEdLdacdsQRM.u7bik.enhbuN1-aIQCOdB5MutxtYiu4_"
 
 mySettings :: forall (auths :: [Type]) . SetWAA Text
-mySettings = URIAuth{..} `reify` \(Proxy :: Proxy baseurl) -> do
+mySettings = [uri|http://127.0.0.1:7249|] `reify` \(Proxy :: Proxy baseurl) -> do
         ravenSettings @baseurl @(API auths Text) @(Raven Text)
         waa <- get
         aReq . ucamQUrl .= waa ^. wSet . applicationUrl
@@ -127,8 +128,4 @@ mySettings = URIAuth{..} `reify` \(Proxy :: Proxy baseurl) -> do
         aReq . ucamQParams .= pure "This is 100% of the data! And it’s really quite cool"
         aReq . ucamQDate .= pure (waa ^. wSet . recentTime)
         aReq . ucamQFail .= empty
-    where
-        uriUserInfo = ""
-        uriRegName = "127.0.0.1"
-        uriPort = ":7249"
 ```

@@ -19,6 +19,7 @@ dependencies:
 - servant-auth
 - servant-auth-server
 - text
+- template-haskell
 - time
 
 library:
