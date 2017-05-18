@@ -92,10 +92,16 @@ authenticated
 authenticated f (Authenticated user) = f user
 authenticated _ _ = throwAll err401
 
+-- | Remove the query parameters from a type for easier safe-link making
+-- TODO Make injective?
+type family Unqueried a = p
+
 -- | A bifunctional endpoint for authentication, which both delegates and
 -- responds to the Web Login Service (WLS).
 type UcamWebAuthenticate route a
     = route :> QueryParam "WLS-Response" (SignedAuthResponse 'MaybeValid a) :> Get '[JSON] (UcamWebauthInfo a)
+
+type instance Unqueried (UcamWebAuthenticate route a) = route :> Get '[JSON] (UcamWebauthInfo a)
 
 -- | If a GET request is made with no query parameters, redirect (303) to the authentication server.
 --
@@ -119,6 +125,8 @@ ucamWebAuthenticate settings mresponse = do
 type UcamWebAuthToken route token a
     = route :> QueryParam "WLS-Response" (SignedAuthResponse 'MaybeValid a) :> Get '[OctetStream] token
 
+type instance Unqueried (UcamWebAuthToken route token a) = route :> Get '[OctetStream] token
+
 -- | Here, if a GET request is made with a valid WLS-Response query parameter, return the
 -- 'UcamWebauthInfo a' as a log in token.
 ucamWebAuthToken
@@ -140,26 +148,21 @@ ucamWebAuthToken settings mexpires ky mresponse = let jwtCfg = defaultJWTSetting
 -- This must be reified with a 'Network.URI.URIAuth' value corresponding to
 -- the base url of the api.
 ucamWebAuthSettings
-    :: forall baseurl (api :: Type) a route token (endpoint :: Type) query .
+    :: forall baseurl (api :: Type) a route token (endpoint :: Type) .
        ( IsElem endpoint api
        , HasLink endpoint
-       , MkLink endpoint ~ (query -> Link)
-       , query ~ Maybe (SignedAuthResponse 'MaybeValid a)
-       , endpoint ~ UcamWebAuthToken route token a
+       , MkLink endpoint ~ Link
+       , endpoint ~ Unqueried (UcamWebAuthToken route token a)
        , Reifies baseurl URIAuth
        )
     => SetWAA a
 ucamWebAuthSettings = do
-        wSet . applicationUrl .= authLink Nothing
+        wSet . applicationUrl .= authLink
     where
-        authLink :: query -> Text
-        authLink = authURI . linkURI . safeLink (Proxy @api) (Proxy @endpoint)
+        authLink :: Text
+        authLink = authURI . linkURI $ safeLink (Proxy @api) (Proxy @endpoint)
         authURI :: URI -> Text
         authURI uri = T.pack . show $ uri {uriAuthority = Just $ reflect @baseurl Proxy}
-
--- TODO This is a dummy implementation
-instance ToHttpApiData (SignedAuthResponse 'MaybeValid a) where
-    toQueryParam = const ""
 
 ------------------------------------------------------------------------------
 
