@@ -10,20 +10,12 @@ category:            Web
 
 dependencies:
 - base >= 4.7 && < 5
-- errors
-- microlens-mtl
-- network-uri
-- reflection
 - servant
-- template-haskell
-- text
 - ucam-webauth-types
 
 library:
   source-dirs: src
   exposed-modules:
-  - Servant.Raven.Test
-  - Servant.Raven.Auth
   - Servant.UcamWebauth.API
   dependencies: []
   when:

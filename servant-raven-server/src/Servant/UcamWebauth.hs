@@ -40,12 +40,23 @@ module Servant.UcamWebauth (
     module Servant.UcamWebauth
 )   where
 
+import "servant-raven" Servant.UcamWebauth.API
 import "ucam-webauth" Network.Protocol.UcamWebauth
 
+import "base" Data.Kind
+import "base" Data.Proxy
+import "base" GHC.TypeLits
+import "reflection" Data.Reflection
+
 import "errors" Control.Error
+import "microlens-mtl" Lens.Micro.Mtl
+
+import "text" Data.Text (Text)
+import qualified "text" Data.Text as T
 
 import "time" Data.Time
 
+import "servant" Servant.Utils.Links
 import "servant-server" Servant
 import "servant-auth-server" Servant.Auth.Server
 import "servant-auth-server" Servant.Auth.Server.SetCookieOrphan ()
@@ -111,4 +122,28 @@ ucamWebAuthToken settings mexpires ky mresponse = let jwtCfg = defaultJWTSetting
         Handler . bimapExceptT trans B64UL . ExceptT $ makeJWT uwi jwtCfg mexpires
     where
         trans _ = err401 { errBody = "Token error" }
+
+-- | The default settings for UcamWebauth should generate the application
+-- link from the api type.
+--
+-- This must be reified with a 'Network.URI.URIAuth' value corresponding to
+-- the base url of the api.
+ucamWebAuthSettings
+    :: forall baseurl (api :: Type) (e :: Type) (route :: Symbol) token a endpoint .
+       ( IsElem endpoint api
+       , HasLink endpoint
+       , endpoint ~ Unqueried e
+       , e ~ UcamWebAuthToken route token a
+       , Reifies baseurl URI
+       )
+    => SetWAA a
+ucamWebAuthSettings = do
+        wSet . applicationUrl .= authLink
+    where
+        authLink :: Text
+        authLink = authURI . linkURI $ safeLink (Proxy @api) (Proxy @endpoint)
+        authURI :: URI -> Text
+        authURI URI{..} = T.pack . show $ uri {uriPath='/':uriPath, uriQuery, uriFragment}
+        uri :: URI
+        uri = reflect @baseurl Proxy
 
