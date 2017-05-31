@@ -40,7 +40,7 @@ module Servant.UcamWebauth (
     module Servant.UcamWebauth
 )   where
 
-import "Ucam-Webauth" Network.Protocol.UcamWebauth
+import "ucam-webauth" Network.Protocol.UcamWebauth
 
 import "errors" Control.Error
 

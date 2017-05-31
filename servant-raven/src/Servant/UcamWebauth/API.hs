@@ -14,7 +14,7 @@ module Servant.UcamWebauth.API (
     module Servant.UcamWebauth.API
 )   where
 
-import "Ucam-Webauth" Network.Protocol.UcamWebauth
+import "ucam-webauth" Network.Protocol.UcamWebauth
 
 import "base" Data.Kind
 import "base" Data.Proxy

@@ -32,7 +32,7 @@ import "servant" Servant.Utils.Links
 
 -- The protocol
 import Servant.UcamWebauth.API
-import "Ucam-Webauth" Network.Protocol.UcamWebauth
+import "ucam-webauth" Network.Protocol.UcamWebauth
 
 import Servant.Raven.Internal as X
 
