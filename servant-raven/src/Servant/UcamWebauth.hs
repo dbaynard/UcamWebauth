@@ -38,11 +38,9 @@ for 'readRSAKeyFile'.
 
 module Servant.UcamWebauth (
     module Servant.UcamWebauth
-  , module X
 )   where
 
-import Servant.UcamWebauth.API as X
-import "Ucam-Webauth" Network.Protocol.UcamWebauth as X
+import "Ucam-Webauth" Network.Protocol.UcamWebauth
 
 import "errors" Control.Error
 

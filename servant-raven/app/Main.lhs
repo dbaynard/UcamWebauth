@@ -25,9 +25,10 @@ abstract: |
 
 module Main where
 
-
 import Servant.UcamWebauth
+import Servant.UcamWebauth.API
 import Servant.Raven.Test
+import "Ucam-Webauth" Network.Protocol.UcamWebauth
 
 import "base" Control.Applicative
 import "base" Control.Concurrent
