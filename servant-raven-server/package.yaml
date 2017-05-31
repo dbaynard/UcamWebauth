@@ -15,7 +15,7 @@ dependencies:
 - servant-auth-server
 - servant-server
 - time
-- Ucam-Webauth
+- ucam-webauth
 
 library:
   source-dirs: src

@@ -28,7 +28,7 @@ module Network.Wai.Protocol.UcamWebauth (
 )   where
 
 -- Prelude
-import "Ucam-Webauth" Network.Protocol.UcamWebauth as X
+import "ucam-webauth" Network.Protocol.UcamWebauth as X
 
 import "base" Control.Monad
 

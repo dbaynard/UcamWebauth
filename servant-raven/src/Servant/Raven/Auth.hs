@@ -26,12 +26,14 @@ module Servant.Raven.Auth (
   , module X
 )   where
 
+
 import "microlens-mtl" Lens.Micro.Mtl
 import "servant" Servant.Utils.Links
 
 -- The protocol
 import Servant.UcamWebauth.API
-import "Ucam-Webauth" Network.Protocol.UcamWebauth
+import "ucam-webauth-types" Network.Protocol.UcamWebauth.Settings
+import "ucam-webauth-types" Network.Protocol.UcamWebauth.Data
 
 import Servant.Raven.Internal as X
 

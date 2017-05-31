@@ -19,7 +19,7 @@ module Network.Protocol.UcamWebauth.Parser (
 )   where
 
 -- Prelude
-import Network.Protocol.UcamWebauth.Data
+import "ucam-webauth-types" Network.Protocol.UcamWebauth.Data
 import "base" Control.Applicative
 import "base" Control.Arrow ((***))
 import "base" Data.Maybe

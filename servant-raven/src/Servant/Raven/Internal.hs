@@ -23,7 +23,7 @@ module Servant.Raven.Internal (
   , Symbol
 )   where
 
-import "Ucam-Webauth" Network.Protocol.UcamWebauth
+import "ucam-webauth-types" Network.Protocol.UcamWebauth.Settings
 
 import "base" GHC.TypeLits
 

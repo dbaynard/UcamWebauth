@@ -10,7 +10,8 @@ packages:
 - 'raven-wai'
 - 'servant-raven'
 - 'servant-raven-server'
-- 'Ucam-Webauth'
+- 'ucam-webauth'
+- 'ucam-webauth-types'
 - location:
     git: https://@github.com/dbaynard/time-qq
     commit: 058c4773a7351cdac18dcb50d5543304590affe0

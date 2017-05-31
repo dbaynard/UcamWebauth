@@ -1,4 +1,4 @@
-name: Ucam-Webauth
+name: ucam-webauth
 version: '0.0.1'
 synopsis: The Ucam-Webauth protocol, used by raven
 description: Please see README.md
@@ -9,6 +9,7 @@ copyright: 2017 David Baynard
 license: Apache
 dependencies:
 - base >=4 && <5
+- ucam-webauth-types
 library:
   source-dirs: src
   exposed-modules:
@@ -49,7 +50,7 @@ tests:
     source-dirs: test
     ghc-options: -Wall
     dependencies:
-    - Ucam-Webauth
+    - ucam-webauth
     - hspec >=2.0.0
 flags:
   dev:
