@@ -35,7 +35,7 @@ import "http-types" Network.HTTP.Types
 -- Time
 import "timerep" Data.Time.RFC3339
 import "time" Data.Time.LocalTime
-import "time" Data.Time (UTCTime, secondsToDiffTime)
+import "time" Data.Time (UTCTime)
 
 -- Character encoding
 import "text" Data.Text (Text)
@@ -76,7 +76,7 @@ ucamResponseParser = do
                     _ucamAPtags <- parsePtags _ucamAVer
                     _ucamAAuth <- noBang . optionMaybe $ authTypeParser
                     _ucamASso <- parseSso _ucamAStatus _ucamAAuth
-                    _ucamALife <- noBang . optionMaybe . fmap secondsToDiffTime $ decimal
+                    _ucamALife <- noBang . optionMaybe . fmap timePeriodFromSeconds $ decimal
                     _ucamAParams <- A.decodeStrict . B.decodeLenient <$> betweenBangs
                     pure AuthResponse{..}
             noBang :: Parser b -> Parser b

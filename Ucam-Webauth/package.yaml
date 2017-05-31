@@ -21,6 +21,7 @@ library:
   - containers
   - cryptonite
   - errors
+  - http-api-data
   - http-types
   - microlens
   - microlens-mtl

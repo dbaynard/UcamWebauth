@@ -1,7 +1,7 @@
 ---
 title:  Ucam Webauth  
 author: David Baynard  
-date:   13 May 2017  
+date:   31 May 2017  
 fontfamily:   libertine
 csl:    chemical-engineering-science.csl
 link-citations: true
@@ -22,3 +22,11 @@ This implements the client authentication protocol.
 # raven-wai
 
 This adds [wai](//hackage.haskell.org/package/wai) middleware enabling authentication using _Raven_.
+
+# servant-raven
+
+API combinators for [servant](//hackage.haskell.org/package/servant), using [servant-auth](//hackage.haskell.org/package/servant-auth).
+
+# servant-raven-server
+
+The handlers for [servant](//hackage.haskell.org/package/servant).

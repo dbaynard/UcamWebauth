@@ -1,0 +1,69 @@
+name:                servant-raven-server
+version:             0.0.1.0
+synopsis:            Servant server for raven authentication
+description:         See README.md
+license:             APACHE
+author:              David Baynard
+maintainer:          davidbaynard@gmail.com
+copyright:           2017 David Baynard
+category:            Web
+
+dependencies:
+- base >= 4.7 && < 5
+- errors
+- jose
+- servant-auth-server
+- servant-server
+- time
+- Ucam-Webauth
+
+library:
+  source-dirs: src
+  exposed-modules:
+  - Servant.UcamWebauth
+  dependencies:
+  - aeson
+  when:
+  - condition: flag(dev)
+    then:
+      ghc-options:
+      - -Wall
+      - -fwarn-tabs
+      - -O0
+    else:
+      ghc-options:
+      - -Wall
+      - -fwarn-tabs
+      - -O2
+
+executables:
+  servant-raven-example:
+    source-dirs:      app
+    main:             Main.lhs
+    dependencies:
+    - bytestring
+    - microlens
+    - microlens-mtl
+    - mtl
+    - optparse-generic
+    - reflection
+    - servant-auth
+    - servant-raven
+    - text
+    - wai-extra
+    - warp
+    - yaml
+
+tests:
+  test:
+    main: Spec.hs
+    source-dirs: test
+    ghc-options: -Wall
+    dependencies:
+    - servant-raven
+    - hspec >=2.0.0
+flags:
+  dev:
+    description: Build for development
+    manual: false
+    default: false

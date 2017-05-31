@@ -1,0 +1,54 @@
+name:                servant-raven
+version:             0.0.1.0
+synopsis:            Combinators for raven
+description:         See README.md
+license:             APACHE
+author:              David Baynard
+maintainer:          davidbaynard@gmail.com
+copyright:           2017 David Baynard
+category:            Web
+
+dependencies:
+- base >= 4.7 && < 5
+- errors
+- microlens-mtl
+- network-uri
+- reflection
+- servant
+- template-haskell
+- text
+- Ucam-Webauth
+
+library:
+  source-dirs: src
+  exposed-modules:
+  - Servant.Raven.Test
+  - Servant.Raven.Auth
+  - Servant.UcamWebauth.API
+  dependencies: []
+  when:
+  - condition: flag(dev)
+    then:
+      ghc-options:
+      - -Wall
+      - -fwarn-tabs
+      - -O0
+    else:
+      ghc-options:
+      - -Wall
+      - -fwarn-tabs
+      - -O2
+
+tests:
+  test:
+    main: Spec.hs
+    source-dirs: test
+    ghc-options: -Wall
+    dependencies:
+    - servant-raven
+    - hspec >=2.0.0
+flags:
+  dev:
+    description: Build for development
+    manual: false
+    default: false
