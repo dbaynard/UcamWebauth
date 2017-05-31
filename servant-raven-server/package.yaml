@@ -12,17 +12,28 @@ dependencies:
 - base >= 4.7 && < 5
 - errors
 - jose
+- microlens-mtl
+- mtl
+- reflection
 - servant-auth-server
 - servant-server
+- text
 - time
 - ucam-webauth
 
 library:
   source-dirs: src
   exposed-modules:
+  - Servant.Raven.Test
+  - Servant.Raven.Auth
   - Servant.UcamWebauth
   dependencies:
   - aeson
+  - network-uri
+  - servant
+  - servant-raven
+  - template-haskell
+  - ucam-webauth-types
   when:
   - condition: flag(dev)
     then:
@@ -43,13 +54,9 @@ executables:
     dependencies:
     - bytestring
     - microlens
-    - microlens-mtl
-    - mtl
     - optparse-generic
-    - reflection
     - servant-auth
     - servant-raven
-    - text
     - wai-extra
     - warp
     - yaml

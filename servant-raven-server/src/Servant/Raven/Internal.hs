@@ -38,7 +38,8 @@ import "servant" Servant.Utils.Links
 import "network-uri" Network.URI
 
 -- The protocol
-import Servant.UcamWebauth.API
+import "servant-raven" Servant.UcamWebauth.API
+import Servant.UcamWebauth
 
 {-|
   'WAASettings' for Raven

@@ -27,18 +27,30 @@ library
       base >= 4.7 && < 5
     , errors
     , jose
+    , microlens-mtl
+    , mtl
+    , reflection
     , servant-auth-server
     , servant-server
+    , text
     , time
     , ucam-webauth
     , aeson
+    , network-uri
+    , servant
+    , servant-raven
+    , template-haskell
+    , ucam-webauth-types
   if flag(dev)
     ghc-options: -Wall -fwarn-tabs -O0
   else
     ghc-options: -Wall -fwarn-tabs -O2
   exposed-modules:
+      Servant.Raven.Test
+      Servant.Raven.Auth
       Servant.UcamWebauth
   other-modules:
+      Servant.Raven.Internal
       Paths_servant_raven_server
   default-language: Haskell2010
 
@@ -50,19 +62,19 @@ executable servant-raven-example
       base >= 4.7 && < 5
     , errors
     , jose
+    , microlens-mtl
+    , mtl
+    , reflection
     , servant-auth-server
     , servant-server
+    , text
     , time
     , ucam-webauth
     , bytestring
     , microlens
-    , microlens-mtl
-    , mtl
     , optparse-generic
-    , reflection
     , servant-auth
     , servant-raven
-    , text
     , wai-extra
     , warp
     , yaml
@@ -78,8 +90,12 @@ test-suite test
       base >= 4.7 && < 5
     , errors
     , jose
+    , microlens-mtl
+    , mtl
+    , reflection
     , servant-auth-server
     , servant-server
+    , text
     , time
     , ucam-webauth
     , servant-raven

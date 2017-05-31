@@ -25,24 +25,15 @@ library
       src
   build-depends:
       base >= 4.7 && < 5
-    , errors
-    , microlens-mtl
-    , network-uri
-    , reflection
     , servant
-    , template-haskell
-    , text
     , ucam-webauth-types
   if flag(dev)
     ghc-options: -Wall -fwarn-tabs -O0
   else
     ghc-options: -Wall -fwarn-tabs -O2
   exposed-modules:
-      Servant.Raven.Test
-      Servant.Raven.Auth
       Servant.UcamWebauth.API
   other-modules:
-      Servant.Raven.Internal
       Paths_servant_raven
   default-language: Haskell2010
 
@@ -54,13 +45,7 @@ test-suite test
   ghc-options: -Wall
   build-depends:
       base >= 4.7 && < 5
-    , errors
-    , microlens-mtl
-    , network-uri
-    , reflection
     , servant
-    , template-haskell
-    , text
     , ucam-webauth-types
     , servant-raven
     , hspec >=2.0.0
