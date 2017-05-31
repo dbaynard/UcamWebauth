@@ -1,6 +1,6 @@
-name: ucam-webauth
+name: ucam-webauth-types
 version: '0.0.1'
-synopsis: The Ucam-Webauth protocol, used by raven
+synopsis: Types for the Ucam-Webauth protocol, as used by raven
 description: Please see README.md
 category: Web
 author: David Baynard
@@ -8,30 +8,24 @@ maintainer: davidbaynard@gmail.com
 copyright: 2017 David Baynard
 license: Apache
 dependencies:
+- aeson >=1.2
 - base >=4 && <5
-- ucam-webauth-types
+- base64-bytestring
+- bytestring >=0.9 && <0.11
+- containers
+- errors
+- http-types
+- microlens
+- mtl
+- text >=0.11 && <2.0
+- time
+- timerep
 library:
   source-dirs: src
   exposed-modules:
-  - Network.Protocol.UcamWebauth
-  dependencies:
-  - aeson >=1.2
-  - attoparsec
-  - base64-bytestring
-  - bytestring >=0.9 && <0.11
-  - containers
-  - cryptonite
-  - errors
-  - http-api-data
-  - http-types
-  - microlens
-  - microlens-mtl
-  - mtl
-  - pem
-  - text >=0.11 && <2.0
-  - time
-  - timerep
-  - x509
+  - Network.Protocol.UcamWebauth.Data
+  - Network.Protocol.UcamWebauth.Settings
+  dependencies: []
   when:
   - condition: flag(dev)
     then:

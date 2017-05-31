@@ -17,7 +17,7 @@ dependencies:
 - servant
 - template-haskell
 - text
-- ucam-webauth
+- ucam-webauth-types
 
 library:
   source-dirs: src

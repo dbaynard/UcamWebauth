@@ -24,8 +24,6 @@ module Network.Protocol.UcamWebauth.Data (
 )   where
 
 -- Prelude
-import Network.Protocol.UcamWebauth.Internal
-
 import "base" Data.Data
 import "base" GHC.Generics
 import "base" Control.Applicative
@@ -361,7 +359,7 @@ getAuthInfo = extractAuthInfo . _ucamAResponse
   TODO This should not be exported. Instead export 'getAuthInfo'
 -}
 extractAuthInfo :: Alternative f => AuthResponse a -> f (UcamWebauthInfo a)
-extractAuthInfo AuthResponse{..} = liftMaybe $ do
+extractAuthInfo AuthResponse{..} = maybe empty pure $ do
         _approveUser <- _ucamAPrincipal
         return AuthInfo{..}
         where

@@ -27,9 +27,9 @@ module Network.Protocol.UcamWebauth (
 
 -- Prelude
 
-import Network.Protocol.UcamWebauth.Settings as X
+import "ucam-webauth-types" Network.Protocol.UcamWebauth.Settings as X
 import Network.Protocol.UcamWebauth.Internal as X
-import Network.Protocol.UcamWebauth.Data as X
+import "ucam-webauth-types" Network.Protocol.UcamWebauth.Data as X
 import Network.Protocol.UcamWebauth.Parser as X
 
 import "base" Data.Coerce
