@@ -23,6 +23,8 @@ module Servant.Raven.Internal (
   , Symbol
 )   where
 
+import "Ucam-Webauth" Network.Protocol.UcamWebauth
+
 import "base" GHC.TypeLits
 
 import "template-haskell" Language.Haskell.TH.Quote
@@ -36,7 +38,7 @@ import "servant" Servant.Utils.Links
 import "network-uri" Network.URI
 
 -- The protocol
-import Servant.UcamWebauth
+import Servant.UcamWebauth.API
 
 {-|
   'WAASettings' for Raven

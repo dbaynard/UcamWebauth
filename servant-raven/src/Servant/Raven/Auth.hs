@@ -30,7 +30,8 @@ import "microlens-mtl" Lens.Micro.Mtl
 import "servant" Servant.Utils.Links
 
 -- The protocol
-import Servant.UcamWebauth
+import Servant.UcamWebauth.API
+import "Ucam-Webauth" Network.Protocol.UcamWebauth
 
 import Servant.Raven.Internal as X
 

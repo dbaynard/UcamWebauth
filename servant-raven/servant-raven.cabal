@@ -47,6 +47,7 @@ library
       Servant.Raven.Internal
       Servant.Raven.Test
       Servant.UcamWebauth
+      Servant.UcamWebauth.API
       Paths_servant_raven
   default-language: Haskell2010
 
