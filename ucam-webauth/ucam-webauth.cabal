@@ -25,6 +25,7 @@ library
           src
     exposed-modules:
           Network.Protocol.UcamWebauth
+          Network.Protocol.UcamWebauth.Settings
     other-modules:
           Network.Protocol.UcamWebauth.Data
           Network.Protocol.UcamWebauth.Internal

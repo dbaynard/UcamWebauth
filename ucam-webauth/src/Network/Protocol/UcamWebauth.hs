@@ -27,6 +27,7 @@ module Network.Protocol.UcamWebauth (
 
 -- Prelude
 
+import Network.Protocol.UcamWebauth.Settings as X
 import Network.Protocol.UcamWebauth.Internal as X
 import Network.Protocol.UcamWebauth.Data as X
 import Network.Protocol.UcamWebauth.Parser as X
@@ -38,7 +39,6 @@ import "base" Control.Monad
 import "base" Data.Semigroup
 import "base" Data.Bifunctor
 
-import "mtl" Control.Monad.State
 import "mtl" Control.Monad.Except
 
 import "microlens" Lens.Micro
@@ -81,11 +81,6 @@ import "x509" Data.X509
 import "pem" Data.PEM
 
 type LByteString = BSL.ByteString
-
-(&~) :: s -> State s a -> s
-(&~) = flip execState
-infixl 1 &~
-{-# INLINE (&~) #-}
 
 ------------------------------------------------------------------------------
 -- * Top level functions
@@ -159,11 +154,6 @@ ucamWebauthQuery (configWAA -> waa) = (hLocation,) . toByteString $ baseUrl waa 
 
 ------------------------------------------------------------------------------
 -- * 'WAASettings'
-
-{-|
-  Type synonym for WAASettings settings type.
--}
-type SetWAA a = State (WAAState a) ()
 
 {-|
   The default @WAA@ settings. To accept the defaults, use

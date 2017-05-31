@@ -13,6 +13,7 @@ library:
   source-dirs: src
   exposed-modules:
   - Network.Protocol.UcamWebauth
+  - Network.Protocol.UcamWebauth.Settings
   dependencies:
   - aeson >=1.2
   - attoparsec
