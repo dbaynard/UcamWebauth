@@ -161,7 +161,7 @@ kidParser = fmap (KeyID . B.pack) $ (:)
   'error'.
 -}
 utcTimeParser :: Parser UTCTime
-utcTimeParser = zonedTimeToUTC . fromMaybe (error "Cannot parse time as RFC3339. There’s a bug in the parser.") . parseTimeRFC3339 . unUcamTime <$> ucamTimeParser
+utcTimeParser = zonedTimeToUTC . fromMaybe (error "Cannot parse time as RFC3339. There’s a bug in the parser.") . zonedUcamTime <$> ucamTimeParser
 
 {-|
   This parses a 'StringType' into a 'UcamTime'
