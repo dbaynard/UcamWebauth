@@ -42,6 +42,7 @@ import "text" Data.Text (Text)
 import "text" Data.Text.Encoding
 import "base" Data.Char (isAlphaNum)
 import qualified "base64-bytestring" Data.ByteString.Base64 as B
+import "bytestring" Data.ByteString (ByteString)
 import qualified "bytestring" Data.ByteString.Char8 as B
 
 -- JSON (Aeson)
@@ -81,9 +82,9 @@ ucamResponseParser = do
                     pure AuthResponse{..}
             noBang :: Parser b -> Parser b
             noBang = (<* "!")
-            -- urlWrap :: Functor f => f StringType -> f ByteString
+            -- urlWrap :: Functor f => f ByteString -> f ByteString
             -- urlWrap = fmap (urlDecode False)
-            urlWrapText :: Functor f => f StringType -> f Text
+            urlWrapText :: Functor f => f ByteString -> f Text
             urlWrapText = fmap (decodeUtf8 . urlDecode False)
             maybeBang :: Parser b -> Parser (Maybe b)
             maybeBang = noBang . optionMaybe
@@ -108,7 +109,7 @@ ucamResponseParser = do
 
               TODO Add tests to verify.
             -}
-            betweenBangs :: Parser StringType
+            betweenBangs :: Parser ByteString
             betweenBangs = takeWhile1 (/= '!')
 
 ------------------------------------------------------------------------------
@@ -164,7 +165,7 @@ utcTimeParser :: Parser UTCTime
 utcTimeParser = zonedTimeToUTC . fromMaybe (error "Cannot parse time as RFC3339. There’s a bug in the parser.") . zonedUcamTime <$> ucamTimeParser
 
 {-|
-  This parses a 'StringType' into a 'UcamTime'
+  This parses a 'ByteString' into a 'UcamTime'
 -}
 ucamTimeParser :: Parser UcamTime
 ucamTimeParser = do
@@ -177,7 +178,7 @@ ucamTimeParser = do
         pure . UcamTime . decodeUtf8 . mconcat $ [year, "-", month, "-", day, "T", hour, ":", minute, ":", sec, "Z"]
 
 {-|
-  A parser to represent a Ucam-Webauth variant base64–encoded 'StringType' as a 'UcamBase64BS'
+  A parser to represent a Ucam-Webauth variant base64–encoded 'ByteString' as a 'UcamBase64BS'
 -}
 ucamB64parser :: Parser UcamBase64BS
 ucamB64parser = UcamB64 <$> takeWhile1 (ors [isAlphaNum, inClass "-._"])
