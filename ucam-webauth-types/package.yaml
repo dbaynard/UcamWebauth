@@ -16,6 +16,7 @@ dependencies:
 - errors
 - http-types
 - microlens
+- microlens-mtl
 - mtl
 - text >=0.11 && <2.0
 - time

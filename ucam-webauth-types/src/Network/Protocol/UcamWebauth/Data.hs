@@ -11,6 +11,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE NumDecimals #-}
+{-# LANGUAGE PatternSynonyms #-}
 
 {-|
 Module      : Network.Protocol.UcamWebauth.Data
@@ -19,9 +20,117 @@ Maintainer  : David Baynard <davidbaynard@gmail.com>
 
 -}
 
-module Network.Protocol.UcamWebauth.Data (
-    module Network.Protocol.UcamWebauth.Data
-)   where
+module Network.Protocol.UcamWebauth.Data
+  ( UcamWebauthInfo()
+  , approveUniq
+  , approveUser
+  , approveAttribs
+  , approveLife
+  , approveParams
+
+  , AuthRequest()
+  , ucamQVer
+  , ucamQUrl
+  , ucamQDesc
+  , ucamQAauth
+  , ucamQIact
+  , ucamQMsg
+  , ucamQParams
+  , ucamQDate
+  , ucamQFail
+
+  , SignedAuthResponse()
+  , makeSignedAuthResponse
+  , ucamAResponse
+  , ucamAToSign
+  , ucamAKid
+  , ucamASig
+
+  , IsValid(..)
+
+  , AuthResponse()
+  , makeAuthResponse
+  , ucamAVer
+  , ucamAStatus
+  , ucamAMsg
+  , ucamAIssue
+  , ucamAId
+  , ucamAUrl
+  , ucamAPrincipal
+  , ucamAPtags
+  , ucamAAuth
+  , ucamASso
+  , ucamALife
+  , ucamAParams
+
+  -- $typed
+  , getAuthInfo
+
+  , WLSVersion(..)
+  , displayWLSVersion
+  , textWLSVersion
+
+  , AuthType(..)
+  , displayAuthType
+
+  , Ptag(..)
+  , displayPtag
+
+  , StatusCode(..)
+  , responseCodes
+  , getStatus
+  , noAuth510
+  , protoErr520
+  , paramErr530
+  , noInteract540
+  , unAuthAgent560
+  , declined570
+
+  , YesNo(..)
+  , displayYesNo
+  , displayYesNoS
+
+  , YesOnly(YesOnly)
+  , displayYesOnly
+  , displayYesOnlyS
+
+  , KeyID()
+
+  , UcamTime()
+  , zonedUcamTime
+  , ucamTime
+  , TimePeriod()
+  , secondsFromTimePeriod
+  , timePeriodFromSeconds
+
+  , WAAState()
+  , wSet
+  , aReq
+
+  , WAASettings()
+  , authAccepted
+  , needReauthentication
+  , syncTimeOut
+  , validKids
+  , recentTime
+  , applicationUrl
+  , wlsUrl
+
+  , Base64UBS()
+  , Base64UBSL()
+  , UcamBase64BS()
+  , UcamBase64BSL()
+  , ASCII()
+  , convertB64Ucam
+  , convertB64UcamL
+  , convertUcamB64
+  , convertUcamB64L
+  , decodeUcamB64
+  , decodeUcamB64L
+  , encodeUcamB64
+  , encodeUcamB64L
+  , decodeASCII'
+  ) where
 
 -- Prelude
 import "base" Data.Data
@@ -356,7 +465,7 @@ getAuthInfo = extractAuthInfo . _ucamAResponse
 {-|
   Convert an 'AuthResponse' into a 'UcamWebauthInfo' for export.
 
-  TODO This should not be exported. Instead export 'getAuthInfo'
+  This should not be exported. Instead export 'getAuthInfo'
 -}
 extractAuthInfo :: Alternative f => AuthResponse a -> f (UcamWebauthInfo a)
 extractAuthInfo AuthResponse{..} = maybe empty pure $ do
@@ -399,6 +508,8 @@ displayWLSVersion WLS3 = "3"
 
 {-|
   Like the 'Show' instance, but typed to 'StringType'.
+
+  -- TODO Rename to bsWLSVersion
 -}
 textWLSVersion :: WLSVersion -> StringType
 textWLSVersion = displayWLSVersion
@@ -510,6 +621,8 @@ displayYesNo _ = "no"
 
 {-|
   Monomorphic variant of 'displayYesNo'
+
+  -- TODO Rename to bsDisplayYesNo
 -}
 displayYesNoS :: YesNo -> StringType
 displayYesNoS = displayYesNo
@@ -531,21 +644,11 @@ displayYesOnly YesOnly = "yes"
 
 {-|
   Monomorphic variant of 'displayYesOnly'
+
+  -- TODO Rename to bsDisplayYesOnly
 -}
 displayYesOnlyS :: YesOnly -> StringType
 displayYesOnlyS = displayYesOnly
-
-
-------------------------------------------------------------------------------
--- *** 'Status' values
-
-noAuth510, protoErr520, paramErr530, noInteract540, unAuthAgent560, declined570 :: Status
-noAuth510 = mkStatus 510 "No mutually acceptable authentication types"
-protoErr520 = mkStatus 520 "Unsupported protocol version (Only for version 1)"
-paramErr530 = mkStatus 530 "General request parameter error"
-noInteract540 = mkStatus 540 "Interaction would be required but has been blocked"
-unAuthAgent560 = mkStatus 560 "Application agent is not authorised"
-declined570 = mkStatus 570 "Authentication declined"
 
 ------------------------------------------------------------------------------
 -- *** Keys
@@ -553,7 +656,7 @@ declined570 = mkStatus 570 "Authentication declined"
 {-|
   The key id, representing the public key for the @WLS@, is composed of a subset of 'ByteString' identifiers
 
-  TODO Do not export constructors
+  Do not export constructors
 -}
 newtype KeyID = KeyID { unKeyID :: ByteString }
     deriving (Read, Eq, Ord, Semigroup, Monoid, IsString, Generic, Typeable, Data)
@@ -568,13 +671,15 @@ instance Show KeyID where
   The modified UTCTime representation used in the protocol, based on RFC 3339. All
   time zones are 'utc'.
 
-  TODO Do not export constructor or accessor.
+  Do not export constructor or accessor.
 -}
 newtype UcamTime = UcamTime { unUcamTime :: Text }
     deriving (Show, Read, Eq, Ord, Semigroup, Monoid, IsString, Generic, Typeable, Data)
 
 {-|
   Convert a 'UTCTime' to the protocol time representation, based on the 'utc' time zone.
+
+  TODO Add inverse
 -}
 ucamTime :: UTCTime -> UcamTime
 ucamTime = UcamTime . T.filter isAlphaNum . formatTimeRFC3339 . utcToZonedTime utc
@@ -602,7 +707,7 @@ instance FromJSON TimePeriod where
   The state involved in authentication. This includes the settings as 'WAASettings' and 
   the request as 'AuthRequest'.
 
-  TODO Do not export constructors or accessors, only lenses.
+  Do not export constructors or accessors, only lenses.
 -}
 data WAAState a = MakeWAAState {
                   _wSet :: WAASettings
@@ -623,7 +728,7 @@ aReq f MakeWAAState{..} = (\_aReq -> MakeWAAState{_aReq, ..}) <$> f _aReq
 {-|
   The settings for the application.
 
-  TODO Do not export constructors or accessors, only lenses.
+  Do not export constructors or accessors, only lenses.
   TODO Make urls type safe
 -}
 data WAASettings = MakeWAASettings {
@@ -684,7 +789,7 @@ recentTime f MakeWAASettings{..} = (\_recentTime -> MakeWAASettings{_recentTime,
   user’s browser after the submission, and the url which it displays to the user
   (in the case of Raven).
 
-  Default is empty. The implementation __must__ override it.
+  TODO Default is empty. The implementation __must__ override it.
 -}
 applicationUrl :: WAASettings `Lens'` Text
 applicationUrl f MakeWAASettings{..} = (\_applicationUrl -> MakeWAASettings{_applicationUrl, ..}) <$> f _applicationUrl
@@ -694,7 +799,7 @@ applicationUrl f MakeWAASettings{..} = (\_applicationUrl -> MakeWAASettings{_app
   user’s browser after the submission, and the url which it displays to the user
   (in the case of Raven).
 
-  Default is empty. The implementation __must__ override it.
+  TODO Default is empty. The implementation __must__ override it.
 -}
 wlsUrl :: WAASettings `Lens'` Text
 wlsUrl f MakeWAASettings{..} = (\_wlsUrl -> MakeWAASettings{_wlsUrl, ..}) <$> f _wlsUrl
