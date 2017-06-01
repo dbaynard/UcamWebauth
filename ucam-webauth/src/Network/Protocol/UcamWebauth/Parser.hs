@@ -20,6 +20,8 @@ module Network.Protocol.UcamWebauth.Parser (
 
 -- Prelude
 import "ucam-webauth-types" Network.Protocol.UcamWebauth.Data
+import "ucam-webauth-types" Network.Protocol.UcamWebauth.Data.Internal
+
 import "base" Control.Applicative
 import "base" Control.Arrow ((***))
 import "base" Data.Maybe
@@ -33,7 +35,6 @@ import qualified "attoparsec" Data.Attoparsec.ByteString.Char8 as A
 import "http-types" Network.HTTP.Types
 
 -- Time
-import "timerep" Data.Time.RFC3339
 import "time" Data.Time.LocalTime
 import "time" Data.Time (UTCTime)
 

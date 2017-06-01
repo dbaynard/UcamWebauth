@@ -28,8 +28,12 @@ module Network.Protocol.UcamWebauth (
 -- Prelude
 
 import "ucam-webauth-types" Network.Protocol.UcamWebauth.Settings as X
+
 import Network.Protocol.UcamWebauth.Internal as X
+
 import "ucam-webauth-types" Network.Protocol.UcamWebauth.Data as X
+import "ucam-webauth-types" Network.Protocol.UcamWebauth.Data.Internal
+
 import Network.Protocol.UcamWebauth.Parser as X
 
 import "base" Data.Coerce
@@ -134,10 +138,10 @@ ucamWebauthQuery (configWAA -> waa) = (hLocation,) . toByteString $ baseUrl waa 
         theQuery = renderQueryBuilder True $ strictQs <> textQs <> lazyQs
         strictQs :: Query
         strictQs = toQuery [
-                   ("ver", pure . textWLSVersion $ waa ^. aReq . ucamQVer) :: (Text, Maybe ByteString)
-                 , ("desc", encodeUtf8 . decodeASCII <$> waa ^. aReq . ucamQDesc)
-                 , ("iact", displayYesNoS <$> waa ^. aReq . ucamQIact)
-                 , ("fail", displayYesOnlyS <$> waa ^. aReq . ucamQFail)
+                   ("ver", pure . bsDisplayWLSVersion $ waa ^. aReq . ucamQVer) :: (Text, Maybe ByteString)
+                 , ("desc", encodeUtf8 . decodeASCII' <$> waa ^. aReq . ucamQDesc)
+                 , ("iact", bsDisplayYesNo <$> waa ^. aReq . ucamQIact)
+                 , ("fail", bsDisplayYesOnly <$> waa ^. aReq . ucamQFail)
                  ]
         textQs :: Query
         textQs = toQuery [
