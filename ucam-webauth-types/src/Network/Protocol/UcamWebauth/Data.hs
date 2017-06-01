@@ -373,13 +373,14 @@ getAuthInfo = extractAuthInfo . _ucamAResponse
 ------------------------------------------------------------------------------
 -- *** Time
 
+{-|
+  Convert the protocol time representation to a 'UTCTime', based on the 'utc' time zone.
+-}
 zonedUcamTime :: UcamTime -> Maybe ZonedTime
 zonedUcamTime = parseTimeRFC3339 . unUcamTime
 
 {-|
   Convert a 'UTCTime' to the protocol time representation, based on the 'utc' time zone.
-
-  TODO Add inverse
 -}
 ucamTime :: UTCTime -> UcamTime
 ucamTime = UcamTime . T.filter isAlphaNum . formatTimeRFC3339 . utcToZonedTime utc
