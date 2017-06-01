@@ -25,6 +25,7 @@ library:
   source-dirs: src
   exposed-modules:
   - Network.Protocol.UcamWebauth.Data
+  - Network.Protocol.UcamWebauth.Data.Internal
   - Network.Protocol.UcamWebauth.Settings
   dependencies: []
   when:

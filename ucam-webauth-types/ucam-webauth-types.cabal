@@ -43,6 +43,7 @@ library
     ghc-options: -Wall -fwarn-tabs -O2
   exposed-modules:
       Network.Protocol.UcamWebauth.Data
+      Network.Protocol.UcamWebauth.Data.Internal
       Network.Protocol.UcamWebauth.Settings
   other-modules:
       Paths_ucam_webauth_types
