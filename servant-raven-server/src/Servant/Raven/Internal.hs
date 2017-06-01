@@ -29,6 +29,7 @@ import "base" GHC.TypeLits
 import "reflection" Data.Reflection
 
 import "servant" Servant.Utils.Links hiding (URI)
+import URI.Convert
 
 -- The protocol
 import "servant-raven" Servant.UcamWebauth.API

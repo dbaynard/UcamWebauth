@@ -29,6 +29,7 @@ library:
   - Servant.Raven.Test
   - Servant.Raven.Auth
   - Servant.UcamWebauth
+  - URI.Convert
   dependencies:
   - aeson
   - bytestring
