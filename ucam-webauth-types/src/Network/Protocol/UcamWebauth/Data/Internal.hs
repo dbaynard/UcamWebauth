@@ -18,6 +18,12 @@ Module      : Network.Protocol.UcamWebauth.Internal
 Description : Internal use for Ucam Webauth data types
 Maintainer  : David Baynard <davidbaynard@gmail.com>
 
+This module is *not* for general use.
+It is *not* considered part of the API.
+The only purpose is to allow core functionality to be split among various packages.
+
+Versions will not reflect changes to the API of this module.
+
 -}
 
 module Network.Protocol.UcamWebauth.Data.Internal
