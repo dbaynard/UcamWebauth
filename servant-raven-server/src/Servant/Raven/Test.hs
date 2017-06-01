@@ -28,7 +28,7 @@ module Servant.Raven.Test {-# WARNING "Do not use this module for production cod
 
 -- Prelude
 import "microlens-mtl" Lens.Micro.Mtl
-import "servant" Servant.Utils.Links
+import "servant" Servant.Utils.Links hiding (URI)
 
 -- The protocol
 import Servant.UcamWebauth.API

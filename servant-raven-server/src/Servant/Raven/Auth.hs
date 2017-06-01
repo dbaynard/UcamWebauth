@@ -28,7 +28,7 @@ module Servant.Raven.Auth
 
 
 import "microlens-mtl" Lens.Micro.Mtl
-import "servant" Servant.Utils.Links
+import "servant" Servant.Utils.Links hiding (URI)
 
 -- The protocol
 import Servant.UcamWebauth.API

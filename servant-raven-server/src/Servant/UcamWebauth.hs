@@ -41,6 +41,11 @@ module Servant.UcamWebauth
   , ucamWebAuthToken
   , ucamWebAuthenticate
   , ucamWebAuthSettings
+  , uriByteString
+  , networkUri
+  , UB.URI
+  -- , uriByteString'
+  -- , networkUri'
   ) where
 
 import "servant-raven" Servant.UcamWebauth.API
@@ -50,13 +55,14 @@ import "ucam-webauth-types" Network.Protocol.UcamWebauth.Data.Internal
 import "base" Control.Applicative
 import "base" Data.Kind
 import "base" Data.Proxy
-import "base" GHC.TypeLits
+import "base" GHC.TypeLits hiding (Text)
 import "reflection" Data.Reflection
 
 import "errors" Control.Error
 import "microlens-mtl" Lens.Micro.Mtl
 
 import "text" Data.Text (Text)
+import "text" Data.Text.Encoding
 import qualified "text" Data.Text as T
 
 import "time" Data.Time
@@ -68,6 +74,11 @@ import "servant-auth-server" Servant.Auth.Server.SetCookieOrphan ()
 import "jose" Crypto.JOSE.JWK (JWK)
 
 import "aeson" Data.Aeson.Types hiding ((.=))
+
+import qualified "network-uri" Network.URI as NU
+import qualified "uri-bytestring" URI.ByteString as UB
+
+import qualified "bytestring" Data.ByteString.Char8 as B8
 
 ------------------------------------------------------------------------------
 --
@@ -139,7 +150,7 @@ ucamWebAuthSettings
        , HasLink endpoint
        , endpoint ~ Unqueried e
        , e ~ UcamWebAuthToken route token a
-       , Reifies baseurl URI
+       , Reifies baseurl UB.URI
        )
     => SetWAA a
 ucamWebAuthSettings = do
@@ -147,10 +158,36 @@ ucamWebAuthSettings = do
     where
         authLink :: Text
         authLink = authURI . linkURI $ safeLink (Proxy @api) (Proxy @endpoint)
+
         authURI :: URI -> Text
-        authURI URI{..} = T.pack . show $ uri {uriPath='/':uriPath, uriQuery, uriFragment}
-        uri :: URI
-        uri = reflect @baseurl Proxy
+        authURI uri = "" `fromMaybe` do
+            relUri <- hush . UB.parseRelativeRef UB.laxURIParserOptions . B8.pack . show $ uri
+            pure . decodeUtf8 . UB.serializeURIRef' $ UB.uriScheme baseUri `UB.toAbsolute` relUri
+
+        baseUri :: UB.URI
+        baseUri = reflect @baseurl Proxy
 
 liftMaybe :: Alternative f => Maybe a -> f a
 liftMaybe = maybe empty pure
+
+uriByteString :: NU.URI -> Maybe (UB.URIRef UB.Absolute)
+uriByteString = hush . UB.parseURI UB.laxURIParserOptions . B8.pack . flip (NU.uriToString id) ""
+
+networkUri :: UB.URIRef UB.Absolute -> Maybe NU.URI
+networkUri = NU.parseURI . B8.unpack . UB.serializeURIRef'
+
+{-
+ -uriByteString' :: NU.URI -> UB.URIRef UB.Absolute
+ -uriByteString' NU.URI{..} = UB.URI{..}
+ -    where
+ -        uriScheme = Scheme . B8.pack $ NU.uriScheme
+ -        uriAuthority = do
+ -            NU.URIAuth{..} <- NU.uriAuthority
+ -            let authorityUserInfo = uriUserInfo
+ -                authorityHost = uriRegName
+ -                authorityPort = uriPort
+ -            pure UB.Authority{..}
+ -        uriPath = B8.pack NU.uriPath
+ -        uriQuery =
+ -        uriFragment = pure . B8.pack $ NU.uriFragment
+ -}

@@ -13,30 +13,22 @@ Maintainer  : David Baynard <davidbaynard@gmail.com>
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE DataKinds #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE StandaloneDeriving #-}
-{-# LANGUAGE DeriveLift #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module Servant.Raven.Internal
-  ( uri
-  , ravenDefSettings
+  ( ravenDefSettings
   , Reifies
   , Symbol
+  , URI
   ) where
 
 import "ucam-webauth-types" Network.Protocol.UcamWebauth.Data
 
 import "base" GHC.TypeLits
 
-import "template-haskell" Language.Haskell.TH.Quote
-import "template-haskell" Language.Haskell.TH.Syntax
-import "errors" Control.Error
-
 import "reflection" Data.Reflection
 
-import "servant" Servant.Utils.Links
-
-import "network-uri" Network.URI
+import "servant" Servant.Utils.Links hiding (URI)
 
 -- The protocol
 import "servant-raven" Servant.UcamWebauth.API
@@ -56,13 +48,3 @@ ravenDefSettings
     => SetWAA a
 ravenDefSettings = ucamWebAuthSettings @baseurl @api @e
 
-uri :: QuasiQuoter
-uri = QuasiQuoter
-    { quoteExp   = \r -> let x = parseURI r ?: error "Not a valid URI" in x `seq` [| x |]
-    , quotePat   = const $ error "No quotePat defined for any Network.URI QQ"
-    , quoteType  = const $ error "No quoteType defined for any Network.URI QQ"
-    , quoteDec   = const $ error "No quoteDec defined for any Network.URI QQ"
-    }
-
-deriving instance Lift URIAuth
-deriving instance Lift URI

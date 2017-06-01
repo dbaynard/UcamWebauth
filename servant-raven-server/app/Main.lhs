@@ -62,6 +62,8 @@ import "jose" Crypto.JOSE
 import "warp" Network.Wai.Handler.Warp
 import "wai-extra" Network.Wai.Middleware.RequestLogger
 
+import "uri-bytestring" URI.ByteString.QQ
+
 main :: IO ()
 main = do
         mainWithCookies
