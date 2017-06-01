@@ -71,6 +71,8 @@ module Network.Protocol.UcamWebauth.Data.Internal
   , WAAState(..)
 
   , WAASettings(..)
+  , SetWAA
+  , configWAA
 
   , Base64UBS(..)
   , Base64UBSL(..)
@@ -89,6 +91,7 @@ import "containers" Data.IntMap (IntMap)
 import qualified "containers" Data.IntMap as IntMap
 import "errors" Control.Error
 import "base" Control.Arrow ((&&&))
+import "mtl" Control.Monad.State
 
 -- Character encoding
 
@@ -472,6 +475,56 @@ data WAASettings = MakeWAASettings
     , _applicationUrl :: Text
     , _wlsUrl :: Text
     } deriving (Show, Eq, Ord, Generic, Typeable, Data)
+
+{-|
+  Type synonym for WAASettings settings type.
+-}
+type SetWAA a = State (WAAState a) ()
+
+{-|
+  The default @WAA@ settings. To accept the defaults, use
+
+  > configWAA def
+
+  or
+
+  > configWAA . return $ ()
+
+  To modify settings, use the provided lenses.
+
+  'configWAA' should not be exported. Instead, all functions requiring settings
+  should use this function in a view pattern.
+-}
+configWAA :: SetWAA a -> WAAState a
+configWAA = flip execState MakeWAAState
+        { _wSet = settings
+        , _aReq = request
+        }
+
+    where
+        settings :: WAASettings
+        settings = MakeWAASettings
+            { _authAccepted = [Pwd]
+            , _needReauthentication = Nothing
+            , _syncTimeOut = 40
+            , _validKids = empty
+            , _recentTime = error "You must assign a time to check the issue time of a response is valid."
+            , _applicationUrl = mempty
+            , _wlsUrl = error "You must enter a URL for the authentication server."
+            }
+
+        request :: AuthRequest a
+        request = MakeAuthRequest
+            { _ucamQVer = WLS3
+            , _ucamQUrl = error "You must enter a URL for the application wishing to authenticate the user."
+            , _ucamQDesc = pure "This should be the ASCII description of the application requesting authentication"
+            , _ucamQAauth = empty
+            , _ucamQIact = empty
+            , _ucamQMsg = pure "This should be the reason authentication is requested."
+            , _ucamQParams = empty
+            , _ucamQDate = empty
+            , _ucamQFail = pure YesOnly
+            }
 
 ------------------------------------------------------------------------------
 -- * Text encoding
