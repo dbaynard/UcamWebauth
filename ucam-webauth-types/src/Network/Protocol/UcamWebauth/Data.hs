@@ -64,7 +64,6 @@ module Network.Protocol.UcamWebauth.Data
 
   , WLSVersion(..)
   , displayWLSVersion
-  , textWLSVersion
 
   , AuthType(..)
   , displayAuthType
@@ -84,11 +83,9 @@ module Network.Protocol.UcamWebauth.Data
 
   , YesNo(..)
   , displayYesNo
-  , displayYesNoS
 
   , YesOnly(YesOnly)
   , displayYesOnly
-  , displayYesOnlyS
 
   , KeyID()
 

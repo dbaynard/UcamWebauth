@@ -35,7 +35,7 @@ module Network.Protocol.UcamWebauth.Data.Internal
 
   , WLSVersion(..)
   , displayWLSVersion
-  , textWLSVersion
+  , bsDisplayWLSVersion
 
   , AuthType(..)
   , displayAuthType
@@ -55,11 +55,11 @@ module Network.Protocol.UcamWebauth.Data.Internal
 
   , YesNo(..)
   , displayYesNo
-  , displayYesNoS
+  , bsDisplayYesNo
 
   , YesOnly(YesOnly)
   , displayYesOnly
-  , displayYesOnlyS
+  , bsDisplayYesOnly
 
   , KeyID(..)
 
@@ -128,14 +128,6 @@ data UcamWebauthInfo a = AuthInfo
 
 instance ToJSON a => ToJSON (UcamWebauthInfo a)
 instance FromJSON a => FromJSON (UcamWebauthInfo a)
-
-------------------------------------------------------------------------------
--- ** Type Synonyms
-
-{-|
-  A synonym to abstract much behaviour over a generic string type.
--}
-type StringType = ByteString
 
 ------------------------------------------------------------------------------
 -- ** Request and response
@@ -247,12 +239,11 @@ displayWLSVersion WLS2 = "2"
 displayWLSVersion WLS3 = "3"
 
 {-|
-  Like the 'Show' instance, but typed to 'StringType'.
+  Like the 'Show' instance, but typed to 'ByteString'.
 
-  -- TODO Rename to bsWLSVersion
 -}
-textWLSVersion :: WLSVersion -> StringType
-textWLSVersion = displayWLSVersion
+bsDisplayWLSVersion :: WLSVersion -> ByteString
+bsDisplayWLSVersion = displayWLSVersion
 
 ------------------------------------------------------------------------------
 -- *** Authentication types available
@@ -376,11 +367,9 @@ displayYesNo _ = "no"
 
 {-|
   Monomorphic variant of 'displayYesNo'
-
-  -- TODO Rename to bsDisplayYesNo
 -}
-displayYesNoS :: YesNo -> StringType
-displayYesNoS = displayYesNo
+bsDisplayYesNo :: YesNo -> ByteString
+bsDisplayYesNo = displayYesNo
 
 ------------------------------------------------------------------------------
 -- *** fail yes
@@ -404,11 +393,9 @@ displayYesOnly YesOnly = "yes"
 
 {-|
   Monomorphic variant of 'displayYesOnly'
-
-  -- TODO Rename to bsDisplayYesOnly
 -}
-displayYesOnlyS :: YesOnly -> StringType
-displayYesOnlyS = displayYesOnly
+bsDisplayYesOnly :: YesOnly -> ByteString
+bsDisplayYesOnly = displayYesOnly
 
 ------------------------------------------------------------------------------
 -- *** Keys
