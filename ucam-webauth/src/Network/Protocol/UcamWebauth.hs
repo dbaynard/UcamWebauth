@@ -20,21 +20,28 @@ Key parts of the implementation of the protocol itself.
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 
-module Network.Protocol.UcamWebauth (
-    module Network.Protocol.UcamWebauth
-  , module X
-)   where
+module Network.Protocol.UcamWebauth
+  ( module X
+
+  -- Parser
+  , ucamResponseParser
+
+  , authInfo
+  , maybeAuthInfo
+  , authCode
+
+  , ucamWebauthQuery
+
+  , validateAuthResponse
+  ) where
 
 -- Prelude
-
-import "ucam-webauth-types" Network.Protocol.UcamWebauth.Settings as X
-
-import Network.Protocol.UcamWebauth.Internal as X
+import Network.Protocol.UcamWebauth.Internal
 
 import "ucam-webauth-types" Network.Protocol.UcamWebauth.Data as X
 import "ucam-webauth-types" Network.Protocol.UcamWebauth.Data.Internal
 
-import Network.Protocol.UcamWebauth.Parser as X
+import Network.Protocol.UcamWebauth.Parser
 
 import "base" Data.Coerce
 import "base" Control.Monad.IO.Class
@@ -93,7 +100,11 @@ type LByteString = BSL.ByteString
   If the supplied response is valid and corresponds to the settigns, return a 'UcamWebauthInfo' value.
 
 -}
-authInfo :: (MonadIO m, MonadPlus m, MonadError Text m) => SetWAA a -> SignedAuthResponse 'MaybeValid a -> m (UcamWebauthInfo a)
+authInfo
+    :: (MonadIO m, MonadPlus m, MonadError Text m)
+    => SetWAA a
+    -> SignedAuthResponse 'MaybeValid a
+    -> m (UcamWebauthInfo a)
 authInfo waa = getAuthInfo <=< validateAuthResponse waa
 
 {-|
@@ -103,22 +114,36 @@ authInfo waa = getAuthInfo <=< validateAuthResponse waa
   TODO When the errors returned can be usefully used, ensure this correctly returns a lifted
   'Either b (UcamWebauthInfo a)' response.
 -}
-maybeAuthInfo :: (FromJSON a, MonadIO m, MonadPlus m, MonadError Text m) => SetWAA a -> ByteString -> m (UcamWebauthInfo a)
+maybeAuthInfo
+    :: (FromJSON a, MonadIO m, MonadPlus m, MonadError Text m)
+    => SetWAA a
+    -> ByteString
+    -> m (UcamWebauthInfo a)
 maybeAuthInfo waa = getAuthInfo <=< maybeAuthCode waa
 
 {-|
   A helper function to parse and validate a response from a @WLS@.
 -}
-maybeAuthCode :: (FromJSON a, MonadIO m, MonadPlus m, MonadError Text m) => SetWAA a -> ByteString -> m (SignedAuthResponse 'Valid a)
+maybeAuthCode
+    :: (FromJSON a, MonadIO m, MonadPlus m, MonadError Text m)
+    => SetWAA a
+    -> ByteString
+    -> m (SignedAuthResponse 'Valid a)
 maybeAuthCode waa = validateAuthResponse waa <=< authCode
 
 {-|
   Parse the response from a @WLS@.
 -}
-authCode :: (FromJSON a, MonadPlus m) => ByteString -> m (SignedAuthResponse 'MaybeValid a)
+authCode
+    :: (FromJSON a, MonadPlus m)
+    => ByteString
+    -> m (SignedAuthResponse 'MaybeValid a)
 authCode = liftMaybe . maybeResult . flip feed "" . parse ucamResponseParser
 
 -- | Parse a not-yet-validated 'SignedAuthResponse' from a form response.
+--
+-- The orphan instance is necessary as this requires the parser defined in
+-- this package.
 instance FromJSON a => FromHttpApiData (SignedAuthResponse 'MaybeValid a) where
     parseQueryParam = first T.pack . parseOnly ucamResponseParser . encodeUtf8
 
@@ -128,32 +153,39 @@ instance FromJSON a => FromHttpApiData (SignedAuthResponse 'MaybeValid a) where
 {-|
   Build a request header to send to the @WLS@, using an 'AuthRequest'
 -}
-ucamWebauthQuery :: ToJSON a => SetWAA a
-                             -> Header
+ucamWebauthQuery
+    :: ToJSON a
+    => SetWAA a
+    -> Header
 ucamWebauthQuery (configWAA -> waa) = (hLocation,) . toByteString $ baseUrl waa <> theQuery
+
     where
         baseUrl :: WAAState a -> Builder
         baseUrl = encodeUtf8Builder . view (wSet . wlsUrl)
+
         theQuery :: Builder
         theQuery = renderQueryBuilder True $ strictQs <> textQs <> lazyQs
+
         strictQs :: Query
-        strictQs = toQuery [
-                   ("ver", pure . bsDisplayWLSVersion $ waa ^. aReq . ucamQVer) :: (Text, Maybe ByteString)
-                 , ("desc", encodeUtf8 . decodeASCII' <$> waa ^. aReq . ucamQDesc)
-                 , ("iact", bsDisplayYesNo <$> waa ^. aReq . ucamQIact)
-                 , ("fail", bsDisplayYesOnly <$> waa ^. aReq . ucamQFail)
-                 ]
+        strictQs = toQuery
+            [ ("ver", pure . bsDisplayWLSVersion $ waa ^. aReq . ucamQVer) :: (Text, Maybe ByteString)
+            , ("desc", encodeUtf8 . decodeASCII' <$> waa ^. aReq . ucamQDesc)
+            , ("iact", bsDisplayYesNo <$> waa ^. aReq . ucamQIact)
+            , ("fail", bsDisplayYesOnly <$> waa ^. aReq . ucamQFail)
+            ]
+
         textQs :: Query
-        textQs = toQuery [
-                   ("url" , pure $ waa ^. aReq . ucamQUrl) :: (Text, Maybe Text)
-                 , ("date", unUcamTime . ucamTime <$> waa ^. aReq . ucamQDate)
-                 , ("aauth", T.intercalate "," . fmap displayAuthType <$> waa ^. aReq . ucamQAauth)
-                 , ("msg", waa ^. aReq . ucamQMsg)
-                 ]
+        textQs = toQuery
+            [ ("url" , pure $ waa ^. aReq . ucamQUrl) :: (Text, Maybe Text)
+            , ("date", unUcamTime . ucamTime <$> waa ^. aReq . ucamQDate)
+            , ("aauth", T.intercalate "," . fmap displayAuthType <$> waa ^. aReq . ucamQAauth)
+            , ("msg", waa ^. aReq . ucamQMsg)
+            ]
+
         lazyQs :: Query
-        lazyQs = toQuery [
-                   ("params", unUcamB64L . encodeUcamB64L . A.encode <$> waa ^. aReq . ucamQParams) :: (Text, Maybe LByteString)
-                 ]
+        lazyQs = toQuery
+            [ ("params", unUcamB64L . encodeUcamB64L . A.encode <$> waa ^. aReq . ucamQParams) :: (Text, Maybe LByteString)
+            ]
         toByteString = BSL.toStrict . toLazyByteString
 
 ------------------------------------------------------------------------------
@@ -178,25 +210,26 @@ guardE e boolean = guard boolean <|> throwError e
 
   This is the only way to produce a 'Valid' 'SignedAuthResponse', and therefore an 'AuthInfo'.
 -}
-validateAuthResponse :: forall a m . (MonadIO m, MonadPlus m, MonadError Text m)
-                     => SetWAA a
-                     -> SignedAuthResponse 'MaybeValid a
-                     -> m (SignedAuthResponse 'Valid a)
-validateAuthResponse waa x@SignedAuthResponse{..} = do
+validateAuthResponse
+    :: forall a m . (MonadIO m, MonadPlus m, MonadError Text m)
+    => SetWAA a
+    -> SignedAuthResponse 'MaybeValid a
+    -> m (SignedAuthResponse 'Valid a)
+validateAuthResponse waa sar = do
         guardE "Key invalid" .
-            validateKid waa =<< liftMaybe _ucamAKid
+            validateKid waa =<< liftMaybe (sar ^. ucamAKid)
         guardE "Signature invalid" <=<
-            validateSig $ x
+            validateSig $ sar
         guardE "Issue time invalid" <=<
-            validateIssueTime waa $ _ucamAResponse
+            validateIssueTime waa $ sar ^. ucamAResponse
         guardE "Url does not match transmittion" .
-            validateUrl waa $ _ucamAResponse
+            validateUrl waa $ sar ^. ucamAResponse
         guardE "Authentication type invalid" <=<
-            validateAuthTypes waa $ _ucamAResponse
-        return . makeValid $ x
-        where
-            makeValid :: SignedAuthResponse 'MaybeValid a -> SignedAuthResponse 'Valid a
-            makeValid = coerce
+            validateAuthTypes waa $ sar ^. ucamAResponse
+        return . makeValid $ sar
+    where
+        makeValid :: SignedAuthResponse 'MaybeValid a -> SignedAuthResponse 'Valid a
+        makeValid = coerce
 
 ------------------------------------------------------------------------------
 -- ** Key ID
@@ -213,15 +246,24 @@ validateKid = flip elem . view (wSet . validKids) . configWAA
 {-|
   Validate the signature, getting the key using 'readRSAKeyFile'
 -}
-validateSig :: (MonadPlus m, MonadIO m) => SignedAuthResponse 'MaybeValid a -> m Bool
+validateSig
+    :: (MonadPlus m, MonadIO m)
+    => SignedAuthResponse 'MaybeValid a
+    -> m Bool
 validateSig = validateSigKey readRSAKeyFile 
 
-decodeRSAPubKey :: ByteString -- ^ The data representing a public key as PEM.
-             -> Maybe PublicKey -- ^ @'Just' 'PublicKey'@ if RSA, 'Nothing' otherwise.
+decodeRSAPubKey
+    :: ByteString      -- ^ The data representing a public key as PEM.
+    -> Maybe PublicKey -- ^ @'Just' 'PublicKey'@ if RSA, 'Nothing' otherwise.
 decodeRSAPubKey = hush . f
+
     where
         f :: ByteString -> Either String PublicKey
-        f = getRSAKey . certPubKey . getCertificate <=< decodeSignedCertificate . pemContent <=< headErr "Empty list" <=< pemParseBS
+        f = getRSAKey . certPubKey . getCertificate
+            <=< decodeSignedCertificate . pemContent
+            <=< headErr "Empty list"
+            <=< pemParseBS
+
         getRSAKey :: Alternative f => PubKey -> f PublicKey
         getRSAKey (PubKeyRSA x) = pure x
         getRSAKey _ = empty
@@ -233,23 +275,29 @@ decodeRSAPubKey = hush . f
 
   where @/key/@ should be replaced by the 'KeyID' /e.g./ @pubkey2.crt@
 -}
-readRSAKeyFile :: (MonadIO m, Alternative m) => KeyID
-                                             -> m PublicKey
-readRSAKeyFile key = liftMaybe <=< liftIO . withFile ("static/pubkey" <> (B.unpack . unKeyID) key <> ".crt") ReadMode $ 
-        pure . decodeRSAPubKey <=< B.hGetContents
+readRSAKeyFile
+    :: (MonadIO m, Alternative m)
+    => KeyID
+    -> m PublicKey
+readRSAKeyFile key = let file = "static/pubkey" <> (B.unpack . unKeyID) key <> ".crt" in
+    liftMaybe <=< liftIO . withFile file ReadMode
+    $ pure . decodeRSAPubKey <=< B.hGetContents
 
-validateSigKey :: MonadPlus m
-               => (KeyID -> m PublicKey) -- ^ Get an RSA 'PublicKey' from somewhere, with the possibility of failing.
-               -> SignedAuthResponse 'MaybeValid a
-               -> m Bool -- ^ 'True' for a verified signature, 'False' for a verified invalid signature, and 'mzero' for an inability to validate
-validateSigKey importKey SignedAuthResponse{..} = pure . rsaValidate =<< importKey =<< liftMaybe _ucamAKid
+validateSigKey
+    :: MonadPlus m
+    => (KeyID
+    -> m PublicKey)                     -- ^ Get an RSA 'PublicKey' from somewhere, with the possibility of failing.
+    -> SignedAuthResponse 'MaybeValid a
+    -> m Bool                           -- ^ 'True' for a verified signature, 'False' for a verified invalid signature, and 'mzero' for an inability to validate
+validateSigKey importKey sar =
+        pure . rsaValidate <=< importKey <=< liftMaybe $ sar ^. ucamAKid
     where
         rsaValidate :: PublicKey -> Bool
         rsaValidate key = verify (Just SHA1) key message signature
         message :: ByteString
-        message = _ucamAToSign
+        message = sar ^. ucamAToSign
         signature :: ByteString
-        signature = maybe mempty decodeUcamB64 _ucamASig
+        signature = maybe mempty decodeUcamB64 . view ucamASig $ sar
 
 ------------------------------------------------------------------------------
 -- ** Issue time
@@ -259,8 +307,14 @@ validateSigKey importKey SignedAuthResponse{..} = pure . rsaValidate =<< importK
 
   TODO Uses 'getCurrentTime'. There may be a better implementation.
 -}
-validateIssueTime :: (MonadIO m) => SetWAA a -> AuthResponse a -> m Bool
-validateIssueTime (configWAA -> waa) AuthResponse{..} = (waa ^. wSet . syncTimeOut >) . flip diffUTCTime _ucamAIssue <$> liftIO getCurrentTime
+validateIssueTime
+    :: (MonadIO m)
+    => SetWAA a
+    -> AuthResponse a
+    -> m Bool
+validateIssueTime (configWAA -> waa) ar =
+    (waa ^. wSet . syncTimeOut >) . flip diffUTCTime (ar ^. ucamAIssue)
+    <$> liftIO getCurrentTime
 
 ------------------------------------------------------------------------------
 -- ** Url
@@ -268,8 +322,12 @@ validateIssueTime (configWAA -> waa) AuthResponse{..} = (waa ^. wSet . syncTimeO
 {-|
   Check the url parameter matches that sent in the 'AuthRequest'
 -}
-validateUrl :: SetWAA a -> AuthResponse a -> Bool
-validateUrl (configWAA -> waa) = (== waa ^. aReq . ucamQUrl) . _ucamAUrl
+validateUrl
+    :: SetWAA a
+    -> AuthResponse a
+    -> Bool
+validateUrl (configWAA -> waa) =
+    (== waa ^. aReq . ucamQUrl) . view ucamAUrl
 
 ------------------------------------------------------------------------------
 -- ** Authentication type
@@ -281,17 +339,26 @@ validateUrl (configWAA -> waa) = (== waa ^. aReq . ucamQUrl) . _ucamAUrl
   * If the iact variable is No, only return 'True' if sso contains a value that is acceptable.
   * If the iact variable is unset, return 'True' if there is an acceptable value in either field.
 -}
-validateAuthTypes :: forall a f . (Alternative f) => SetWAA a -> AuthResponse a -> f Bool
-validateAuthTypes (configWAA -> waa) AuthResponse{..} = maybe validateAnyAuth validateSpecificAuth $ waa ^. wSet . needReauthentication
+validateAuthTypes
+    :: forall a f . (Alternative f)
+    => SetWAA a
+    -> AuthResponse a
+    -> f Bool
+validateAuthTypes (configWAA -> waa) ar =
+        maybe validateAnyAuth validateSpecificAuth $ waa ^. wSet . needReauthentication
+
     where
         isAcceptableAuth :: AuthType -> Bool
         isAcceptableAuth = flip elem $ waa ^. wSet . authAccepted
+
         anyAuth :: Maybe AuthType -> Maybe [AuthType] -> Bool
         anyAuth Nothing (Just x) = any isAcceptableAuth x
         anyAuth (Just x) Nothing = isAcceptableAuth x
         anyAuth _ _ = False
+
         validateAnyAuth :: f Bool
-        validateAnyAuth = pure $ anyAuth _ucamAAuth _ucamASso
+        validateAnyAuth = pure $ (ar ^. ucamAAuth) `anyAuth` (ar ^. ucamASso)
+
         validateSpecificAuth :: YesNo -> f Bool
-        validateSpecificAuth Yes = isAcceptableAuth <$> liftMaybe _ucamAAuth
-        validateSpecificAuth _ = any isAcceptableAuth <$> liftMaybe _ucamASso
+        validateSpecificAuth Yes = isAcceptableAuth <$> liftMaybe (ar ^. ucamAAuth)
+        validateSpecificAuth _ = any isAcceptableAuth <$> liftMaybe (ar ^. ucamASso)
