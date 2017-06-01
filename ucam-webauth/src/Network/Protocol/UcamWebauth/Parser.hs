@@ -202,14 +202,6 @@ ucamTimeParser = do
 ucamB64parser :: Parser UcamBase64BS
 ucamB64parser = UcamB64 <$> takeWhile1 (ors [isAlphaNum, inClass "-._"])
 
-{-|
-  Parse 'Yes' or 'No' from ‘yes’ or ‘no’
--}
-yesNoParser :: Parser YesNo
-yesNoParser =
-        ("Y" <|> "y") *> "es" *> pure Yes
-    <|> ("N" <|> "n") *> "o" *> pure No
-
 ------------------------------------------------------------------------------
 -- * Helper functions
 
@@ -219,18 +211,6 @@ yesNoParser =
 -}
 optionMaybe :: Parser a -> Parser (Maybe a)
 optionMaybe = option empty . fmap pure
-
-{-|
-  Combines a list of predicates into a single predicate. /c.f./ 'all', which applies
-  a single predicate to many items in a data structure.
-
-  Simplifies to
-
-  @ands :: ['Char' -> 'Bool'] -> 'Char' -> 'Bool'@
--}
-ands :: (Traversable t, Applicative f)
-    => t (f Bool) -> f Bool
-ands = fmap and . sequenceA
 
 {-|
   Combines a list of predicates into a single predicate. /c.f./ 'any', which applies
@@ -243,32 +223,3 @@ ands = fmap and . sequenceA
 ors :: (Traversable t, Applicative f)
     => t (f Bool) -> f Bool
 ors = fmap or . sequenceA
-
-{-|
-  Produce a predicate on 'Char' values, returning 'True' if none of the characters
-  in the input list match, otherwise 'False'.
-
-  Simplifies to
-
-  @nots :: ['Char'] -> 'Char' -> 'Bool'@
-
-  Opposite of 'oneOf'
--}
-nots :: String -- ^ List of characters, @['Char']@
-     -> Char -> Bool
-nots = ands . fmap (/=)
-
-{-|
-  Produce a predicate on 'Char' values, returning 'True' if at least one of the
-  characters in the input list match, otherwise 'False'.
-
-  Simplifies to
-
-  @oneOf :: ['Char'] -> 'Char' -> 'Bool'@
-
-  Opposite of 'nots'.
--}
-oneOf :: (Traversable t, Eq a)
-    => t a -> a -> Bool
-oneOf = ors . fmap (==)
-
