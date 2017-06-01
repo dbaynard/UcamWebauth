@@ -21,10 +21,10 @@ The functions in this file shadow the names in the "Servant.Raven.Auth" module. 
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE DataKinds #-}
 
-module Servant.Raven.Test {-# WARNING "Do not use this module for production code. It is only for testing." #-} (
-    module Servant.Raven.Test
+module Servant.Raven.Test {-# WARNING "Do not use this module for production code. It is only for testing." #-}
+  ( ravenSettings
   , module X
-)   where
+  ) where
 
 -- Prelude
 import "microlens-mtl" Lens.Micro.Mtl
@@ -32,7 +32,6 @@ import "servant" Servant.Utils.Links
 
 -- The protocol
 import Servant.UcamWebauth.API
-import "ucam-webauth-types" Network.Protocol.UcamWebauth.Settings
 import "ucam-webauth-types" Network.Protocol.UcamWebauth.Data
 
 import Servant.Raven.Internal as X

@@ -48,7 +48,6 @@ library
         , pem
         , text >=0.11 && <2.0
         , time
-        , timerep
         , x509
     if flag(dev)
         ghc-options: -Wall -fwarn-tabs -O0

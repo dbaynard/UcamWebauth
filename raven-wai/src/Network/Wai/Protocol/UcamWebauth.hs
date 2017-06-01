@@ -22,14 +22,11 @@ for 'readRSAKeyFile'.
 {-# LANGUAGE PackageImports #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Network.Wai.Protocol.UcamWebauth (
-    module Network.Wai.Protocol.UcamWebauth
-  , module X
-)   where
+module Network.Wai.Protocol.UcamWebauth
+  ( lookUpWLSResponse
+  ) where
 
 -- Prelude
-import "ucam-webauth" Network.Protocol.UcamWebauth as X
-
 import "base" Control.Monad
 
 import "bytestring" Data.ByteString (ByteString)

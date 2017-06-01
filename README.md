@@ -1,7 +1,7 @@
 ---
 title:  Ucam Webauth  
 author: David Baynard  
-date:   31 May 2017  
+date:   01 Jun 2017  
 fontfamily:   libertine
 csl:    chemical-engineering-science.csl
 link-citations: true
@@ -17,7 +17,14 @@ This repository contains a number of Haskell libraries to interact with this sys
 
 # ucam-webauth
 
-This implements the client authentication protocol.
+This implements data types for the client authentication protocol.
+
+There is an internal module which is *not* recommended for use.
+Its only purpose is to split the core functionality among packages for minimal ghcjs dependencies.
+
+# ucam-webauth
+
+This implements the client authentication protocol; specifically, the validation.
 
 # raven-wai
 

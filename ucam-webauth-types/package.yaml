@@ -16,6 +16,7 @@ dependencies:
 - errors
 - http-types
 - microlens
+- microlens-mtl
 - mtl
 - text >=0.11 && <2.0
 - time
@@ -24,7 +25,7 @@ library:
   source-dirs: src
   exposed-modules:
   - Network.Protocol.UcamWebauth.Data
-  - Network.Protocol.UcamWebauth.Settings
+  - Network.Protocol.UcamWebauth.Data.Internal
   dependencies: []
   when:
   - condition: flag(dev)
