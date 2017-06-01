@@ -3,8 +3,8 @@
 -- see: https://github.com/sol/hpack
 
 name:              ucam-webauth
-version:           0.0.1
-synopsis:          The Ucam-Webauth protocol, used by raven
+version:           0.1.0
+synopsis:          The Ucam-Webauth protocol, used by Raven
 description:       Please see README.md
 category:          Web
 author:            David Baynard
@@ -14,6 +14,10 @@ license:           Apache
 license-file:      LICENSE
 cabal-version:     >= 1.10
 build-type:        Simple
+
+source-repository head
+    type: git
+    location: github.com/dbaynard/UcamWebauth
 
 flag dev
     description: Build for development

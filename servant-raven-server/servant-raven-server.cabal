@@ -3,8 +3,8 @@
 -- see: https://github.com/sol/hpack
 
 name:           servant-raven-server
-version:        0.0.1.0
-synopsis:       Servant server for raven authentication
+version:        0.1.0
+synopsis:       Servant server for Raven authentication
 description:    See README.md
 category:       Web
 author:         David Baynard
@@ -14,6 +14,10 @@ license:        APACHE
 license-file:   LICENSE
 build-type:     Simple
 cabal-version:  >= 1.10
+
+source-repository head
+  type: git
+  location: github.com/dbaynard/UcamWebauth
 
 flag dev
   description: Build for development
