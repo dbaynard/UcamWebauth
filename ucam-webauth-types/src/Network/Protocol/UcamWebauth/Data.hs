@@ -123,6 +123,9 @@ module Network.Protocol.UcamWebauth.Data
   , encodeUcamB64
   , encodeUcamB64L
   , decodeASCII'
+
+  -- Other
+  , (&~)
   ) where
 
 import Network.Protocol.UcamWebauth.Data.Internal
@@ -132,6 +135,7 @@ import "base" Control.Applicative
 
 -- Settings
 import "microlens" Lens.Micro
+import "mtl" Control.Monad.State
 
 -- Character encoding
 import qualified "base64-bytestring" Data.ByteString.Base64.URL as B
@@ -148,6 +152,11 @@ import "base" Data.Char (isAlphaNum, isAscii)
 -- Time
 import "timerep" Data.Time.RFC3339
 import "time" Data.Time
+
+(&~) :: s -> State s a -> s
+(&~) = flip execState
+infixl 1 &~
+{-# INLINE (&~) #-}
 
 ------------------------------------------------------------------------------
 -- * Lenses
