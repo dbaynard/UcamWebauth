@@ -17,13 +17,14 @@ Maintainer  : David Baynard <davidbaynard@gmail.com>
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE DeriveLift #-}
 
-module Servant.Raven.Internal (
-    module Servant.Raven.Internal
+module Servant.Raven.Internal
+  ( uri
+  , ravenDefSettings
   , Reifies
   , Symbol
-)   where
+  ) where
 
-import "ucam-webauth-types" Network.Protocol.UcamWebauth.Settings
+import "ucam-webauth-types" Network.Protocol.UcamWebauth.Data
 
 import "base" GHC.TypeLits
 

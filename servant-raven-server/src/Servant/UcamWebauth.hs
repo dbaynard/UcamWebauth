@@ -36,13 +36,18 @@ for 'readRSAKeyFile'.
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE RecordWildCards #-}
 
-module Servant.UcamWebauth (
-    module Servant.UcamWebauth
-)   where
+module Servant.UcamWebauth
+  ( authenticated
+  , ucamWebAuthToken
+  , ucamWebAuthenticate
+  , ucamWebAuthSettings
+  ) where
 
 import "servant-raven" Servant.UcamWebauth.API
 import "ucam-webauth" Network.Protocol.UcamWebauth
+import "ucam-webauth-types" Network.Protocol.UcamWebauth.Data.Internal
 
+import "base" Control.Applicative
 import "base" Data.Kind
 import "base" Data.Proxy
 import "base" GHC.TypeLits
@@ -147,3 +152,5 @@ ucamWebAuthSettings = do
         uri :: URI
         uri = reflect @baseurl Proxy
 
+liftMaybe :: Alternative f => Maybe a -> f a
+liftMaybe = maybe empty pure
