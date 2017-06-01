@@ -101,6 +101,8 @@ module Network.Protocol.UcamWebauth.Data
   , aReq
 
   , WAASettings()
+  , SetWAA
+
   , authAccepted
   , needReauthentication
   , syncTimeOut

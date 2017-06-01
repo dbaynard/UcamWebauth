@@ -21,6 +21,7 @@ library:
   - Network.Wai.Protocol.Raven.Test
   dependencies:
   - containers
+  - ucam-webauth-types
   when:
   - condition: flag(dev)
     then:
@@ -42,11 +43,12 @@ executables:
     - -rtsopts
     - -with-rtsopts=-N
     dependencies:
-    - raven-wai
+    - aeson
     - errors
     - http-types
     - microlens
     - mtl
+    - raven-wai
     - text >=0.11 && <2.0
     - time
     - wai

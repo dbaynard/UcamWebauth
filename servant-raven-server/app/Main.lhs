@@ -29,6 +29,7 @@ import Servant.UcamWebauth
 import Servant.Raven.Test
 import "servant-raven" Servant.UcamWebauth.API
 import "ucam-webauth" Network.Protocol.UcamWebauth
+import "ucam-webauth-types" Network.Protocol.UcamWebauth.Data
 
 import "base" Control.Applicative
 import "base" Control.Concurrent

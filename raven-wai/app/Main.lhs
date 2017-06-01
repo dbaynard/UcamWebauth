@@ -23,6 +23,8 @@ Maintainer  : David Baynard <davidbaynard@gmail.com>
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
 
 module Main (
     main
@@ -39,6 +41,7 @@ import "microlens" Lens.Micro
 import "microlens-mtl" Lens.Micro.Mtl
 
 -- The protocol
+import "ucam-webauth" Network.Protocol.UcamWebauth
 import Network.Wai.Protocol.UcamWebauth
 import Network.Wai.Protocol.Raven.Test
 
@@ -51,6 +54,7 @@ import "text" Data.Text (Text)
 import qualified "text" Data.Text.IO as T
 import "bytestring" Data.ByteString (ByteString)
 import "bytestring" Data.ByteString.Builder
+import "aeson" Data.Aeson.Types (FromJSON)
 
 -- Warp server
 import "warp" Network.Wai.Handler.Warp
@@ -78,7 +82,7 @@ application time req response = case pathInfo req of
     ["foo", "queryAll"] -> response . responseBuilder
         status200
         [("Content-Type", "text/plain")]
-        =<< displayWLSResponse req 
+        =<< displayWLSResponse @Text req 
     ["foo", "queryR"] -> response $ responseBuilder
         status200
         [("Content-Type", "text/plain")]
@@ -113,11 +117,11 @@ displayWLSQuery = maybe mempty byteString . lookUpWLSResponse
 displayAuthInfo :: Request -> IO Builder
 displayAuthInfo = displayAuthResponse <=< liftMaybe . lookUpWLSResponse
 
-displayWLSResponse :: Request -> IO Builder
-displayWLSResponse = displayAuthResponseFull <=< liftMaybe . lookUpWLSResponse
+displayWLSResponse :: forall a . (FromJSON a, Show a) => Request -> IO Builder
+displayWLSResponse = displayAuthResponseFull @a <=< liftMaybe . lookUpWLSResponse
 
-displayAuthResponseFull :: ByteString -> IO Builder
-displayAuthResponseFull = displaySomethingAuthy . maybeAuthCode mySettings
+displayAuthResponseFull :: forall a . (FromJSON a, Show a) => ByteString -> IO Builder
+displayAuthResponseFull = displaySomethingAuthy . authCode @a
 
 displayAuthResponse :: ByteString -> IO Builder
 displayAuthResponse = displaySomethingAuthy . maybeAuthInfo mySettings
@@ -155,3 +159,9 @@ displaySomethingAuthy = exceptT (const empty . T.putStrLn) (pure . stringUtf8 . 
 
 ```
 
+Helper
+
+```haskell
+liftMaybe :: Alternative f => Maybe a -> f a
+liftMaybe = maybe empty pure
+```

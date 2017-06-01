@@ -15,17 +15,17 @@ It is possible to test applications using the "Network.Wai.Protocol.Raven.Test" 
 {-# LANGUAGE PackageImports #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Network.Wai.Protocol.Raven.Auth (
-    module Network.Wai.Protocol.Raven.Auth
-  , module X
-)   where
+module Network.Wai.Protocol.Raven.Auth
+  ( ravenSettings
+  , ravenDefSettings
+  ) where
 
 import "microlens-mtl" Lens.Micro.Mtl
 
 -- The protocol
-import Network.Wai.Protocol.UcamWebauth
+import Network.Protocol.UcamWebauth.Data
 
-import Network.Wai.Protocol.Raven.Internal as X
+import Network.Wai.Protocol.Raven.Internal
 
 ------------------------------------------------------------------------------
 -- * Raven servers

@@ -5,12 +5,14 @@ Maintainer  : David Baynard <davidbaynard@gmail.com>
 
 -}
 
-module Network.Wai.Protocol.Raven.Internal (
-    module Network.Wai.Protocol.Raven.Internal
-)   where
+{-# LANGUAGE PackageImports #-}
+
+module Network.Wai.Protocol.Raven.Internal
+  ( ravenDefSettings
+  ) where
 
 -- The protocol
-import Network.Wai.Protocol.UcamWebauth
+import "ucam-webauth-types" Network.Protocol.UcamWebauth.Data
 
 {-|
   'WAASettings' for Raven
