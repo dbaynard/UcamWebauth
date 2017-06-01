@@ -21,6 +21,7 @@ dependencies:
 - text
 - time
 - ucam-webauth
+- uri-bytestring
 
 library:
   source-dirs: src
@@ -30,10 +31,10 @@ library:
   - Servant.UcamWebauth
   dependencies:
   - aeson
+  - bytestring
   - network-uri
   - servant
   - servant-raven
-  - template-haskell
   - ucam-webauth-types
   when:
   - condition: flag(dev)
