@@ -1,12 +1,12 @@
-name:                servant-raven-server
-version:             '0.1.0'
-synopsis:            Servant server for Raven authentication
-description:         See README.md
-license:             APACHE
-author:              David Baynard
-maintainer:          davidbaynard@gmail.com
-copyright:           2017 David Baynard
-category:            Web
+name: servant-raven-server
+version: '0.1.0'
+synopsis: Servant server for Raven authentication
+description: See README.md
+license: APACHE
+author: David Baynard
+maintainer: davidbaynard@gmail.com
+copyright: 2017 David Baynard
+category: Web
 git: github.com/dbaynard/UcamWebauth
 
 dependencies:
