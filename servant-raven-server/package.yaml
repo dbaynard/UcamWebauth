@@ -2,7 +2,7 @@ name: servant-raven-server
 version: '0.1.0'
 synopsis: Servant server for Raven authentication
 description: See README.md
-license: APACHE
+license: Apache
 author: David Baynard
 maintainer: davidbaynard@gmail.com
 copyright: 2017 David Baynard

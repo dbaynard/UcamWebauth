@@ -10,7 +10,7 @@ category:       Web
 author:         David Baynard
 maintainer:     davidbaynard@gmail.com
 copyright:      2017 David Baynard
-license:        APACHE
+license:        Apache
 license-file:   LICENSE
 build-type:     Simple
 cabal-version:  >= 1.10
