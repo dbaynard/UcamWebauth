@@ -29,6 +29,7 @@ library
       src
   build-depends:
       base >= 4.7 && < 5
+    , bytestring
     , errors
     , jose
     , microlens-mtl
@@ -42,7 +43,6 @@ library
     , ucam-webauth
     , uri-bytestring
     , aeson
-    , bytestring
     , servant
     , servant-raven
     , ucam-webauth-types
@@ -66,6 +66,7 @@ executable servant-raven-example
       app
   build-depends:
       base >= 4.7 && < 5
+    , bytestring
     , errors
     , jose
     , microlens-mtl
@@ -97,6 +98,7 @@ test-suite test
   ghc-options: -Wall
   build-depends:
       base >= 4.7 && < 5
+    , bytestring
     , errors
     , jose
     , microlens-mtl

@@ -11,6 +11,7 @@ git: github.com/dbaynard/UcamWebauth
 
 dependencies:
 - base >= 4.7 && < 5
+- bytestring
 - errors
 - jose
 - microlens-mtl
@@ -33,7 +34,6 @@ library:
   - URI.Convert
   dependencies:
   - aeson
-  - bytestring
   - servant
   - servant-raven
   - ucam-webauth-types
