@@ -33,6 +33,7 @@ library
     , jose
     , microlens-mtl
     , mtl
+    , network-uri
     , reflection
     , servant-auth-server
     , servant-server
@@ -42,7 +43,6 @@ library
     , uri-bytestring
     , aeson
     , bytestring
-    , network-uri
     , servant
     , servant-raven
     , ucam-webauth-types
@@ -70,6 +70,7 @@ executable servant-raven-example
     , jose
     , microlens-mtl
     , mtl
+    , network-uri
     , reflection
     , servant-auth-server
     , servant-server
@@ -82,6 +83,7 @@ executable servant-raven-example
     , optparse-generic
     , servant-auth
     , servant-raven
+    , servant-raven-server
     , wai-extra
     , warp
     , yaml
@@ -99,6 +101,7 @@ test-suite test
     , jose
     , microlens-mtl
     , mtl
+    , network-uri
     , reflection
     , servant-auth-server
     , servant-server
@@ -106,6 +109,11 @@ test-suite test
     , time
     , ucam-webauth
     , uri-bytestring
-    , servant-raven
+    , servant-raven-server
     , hspec >=2.0.0
+    , generic-arbitrary
+    , QuickCheck
+    , quickcheck-instances
+  other-modules:
+      URI.ConvertSpec
   default-language: Haskell2010
