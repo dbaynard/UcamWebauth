@@ -34,18 +34,12 @@ for 'readRSAKeyFile'.
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE NamedFieldPuns #-}
-{-# LANGUAGE RecordWildCards #-}
 
 module Servant.UcamWebauth
   ( authenticated
   , ucamWebAuthToken
   , ucamWebAuthenticate
   , ucamWebAuthSettings
-  , uriByteString
-  , networkUri
-  , UB.URI
-  -- , uriByteString'
-  -- , networkUri'
   ) where
 
 import "servant-raven" Servant.UcamWebauth.API
@@ -72,13 +66,10 @@ import "servant-server" Servant
 import "servant-auth-server" Servant.Auth.Server
 import "servant-auth-server" Servant.Auth.Server.SetCookieOrphan ()
 import "jose" Crypto.JOSE.JWK (JWK)
+import qualified "uri-bytestring" URI.ByteString as UB
+import URI.Convert hiding (URI)
 
 import "aeson" Data.Aeson.Types hiding ((.=))
-
-import qualified "network-uri" Network.URI as NU
-import qualified "uri-bytestring" URI.ByteString as UB
-
-import qualified "bytestring" Data.ByteString.Char8 as B8
 
 ------------------------------------------------------------------------------
 --
@@ -159,9 +150,10 @@ ucamWebAuthSettings = do
         authLink :: Text
         authLink = authURI . linkURI $ safeLink (Proxy @api) (Proxy @endpoint)
 
+        -- TODO super fragile
         authURI :: URI -> Text
         authURI uri = "" `fromMaybe` do
-            relUri <- hush . UB.parseRelativeRef UB.laxURIParserOptions . B8.pack . show $ uri
+            relUri <- uriByteStringRel uri
             pure . decodeUtf8 . UB.serializeURIRef' $ UB.uriScheme baseUri `UB.toAbsolute` relUri
 
         baseUri :: UB.URI
@@ -169,25 +161,3 @@ ucamWebAuthSettings = do
 
 liftMaybe :: Alternative f => Maybe a -> f a
 liftMaybe = maybe empty pure
-
-uriByteString :: NU.URI -> Maybe (UB.URIRef UB.Absolute)
-uriByteString = hush . UB.parseURI UB.laxURIParserOptions . B8.pack . flip (NU.uriToString id) ""
-
-networkUri :: UB.URIRef UB.Absolute -> Maybe NU.URI
-networkUri = NU.parseURI . B8.unpack . UB.serializeURIRef'
-
-{-
- -uriByteString' :: NU.URI -> UB.URIRef UB.Absolute
- -uriByteString' NU.URI{..} = UB.URI{..}
- -    where
- -        uriScheme = Scheme . B8.pack $ NU.uriScheme
- -        uriAuthority = do
- -            NU.URIAuth{..} <- NU.uriAuthority
- -            let authorityUserInfo = uriUserInfo
- -                authorityHost = uriRegName
- -                authorityPort = uriPort
- -            pure UB.Authority{..}
- -        uriPath = B8.pack NU.uriPath
- -        uriQuery =
- -        uriFragment = pure . B8.pack $ NU.uriFragment
- -}

@@ -11,10 +11,12 @@ git: github.com/dbaynard/UcamWebauth
 
 dependencies:
 - base >= 4.7 && < 5
+- bytestring
 - errors
 - jose
 - microlens-mtl
 - mtl
+- network-uri
 - reflection
 - servant-auth-server
 - servant-server
@@ -29,10 +31,9 @@ library:
   - Servant.Raven.Test
   - Servant.Raven.Auth
   - Servant.UcamWebauth
+  - URI.Convert
   dependencies:
   - aeson
-  - bytestring
-  - network-uri
   - servant
   - servant-raven
   - ucam-webauth-types
@@ -59,6 +60,7 @@ executables:
     - optparse-generic
     - servant-auth
     - servant-raven
+    - servant-raven-server
     - wai-extra
     - warp
     - yaml
@@ -69,8 +71,11 @@ tests:
     source-dirs: test
     ghc-options: -Wall
     dependencies:
-    - servant-raven
+    - servant-raven-server
     - hspec >=2.0.0
+    - generic-arbitrary
+    - QuickCheck
+    - quickcheck-instances
 flags:
   dev:
     description: Build for development

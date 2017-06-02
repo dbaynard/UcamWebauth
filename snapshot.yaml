@@ -25,6 +25,7 @@ packages:
 - diff-parse-0.2.1
 - digestive-functors-0.8.2.0
 - digestive-functors-lucid-0.0.0.4
+- generic-arbitrary-0.1.0
 - friday-0.2.3.1
 - helium-overture-1.0.0
 - hpack-convert-1.0.0
