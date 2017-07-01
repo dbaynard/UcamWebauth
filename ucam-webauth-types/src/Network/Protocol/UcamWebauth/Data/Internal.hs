@@ -93,6 +93,8 @@ import "base" GHC.Generics
 import "base" Control.Applicative
 import "base" Data.String
 import "base" Data.Semigroup
+import "containers" Data.Map.Strict (Map)
+import qualified "containers" Data.Map.Strict as MapS
 import "containers" Data.IntMap (IntMap)
 import qualified "containers" Data.IntMap as IntMap
 import "errors" Control.Error
@@ -480,6 +482,7 @@ data WAASettings = MakeWAASettings
     , _recentTime :: UTCTime
     , _applicationUrl :: Text
     , _wlsUrl :: Text
+    , _importedKeys :: Map KeyID ByteString
     } deriving (Show, Eq, Ord, Generic, Typeable, Data)
 
 {-|
@@ -517,6 +520,7 @@ configWAA = flip execState MakeWAAState
             , _recentTime = error "You must assign a time to check the issue time of a response is valid."
             , _applicationUrl = mempty
             , _wlsUrl = error "You must enter a URL for the authentication server."
+            , _importedKeys = MapS.empty
             }
 
         request :: AuthRequest a

@@ -15,6 +15,10 @@ license-file:   LICENSE
 build-type:     Simple
 cabal-version:  >= 1.10
 
+extra-source-files:
+    ../static/pubkey2.crt
+    ../static/pubkey901.crt
+
 source-repository head
   type: git
   location: github.com/dbaynard/UcamWebauth
@@ -43,6 +47,8 @@ library
     , ucam-webauth
     , uri-bytestring
     , aeson
+    , file-embed
+    , microlens-ghc
     , servant
     , servant-raven
     , ucam-webauth-types

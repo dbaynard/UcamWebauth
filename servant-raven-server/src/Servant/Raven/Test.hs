@@ -20,6 +20,7 @@ The functions in this file shadow the names in the "Servant.Raven.Auth" module. 
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Servant.Raven.Test {-# WARNING "Do not use this module for production code. It is only for testing." #-}
   ( ravenSettings
@@ -28,7 +29,9 @@ module Servant.Raven.Test {-# WARNING "Do not use this module for production cod
 
 -- Prelude
 import "microlens-mtl" Lens.Micro.Mtl
+import "microlens-ghc" Lens.Micro.GHC
 import "servant" Servant.Utils.Links hiding (URI)
+import "file-embed" Data.FileEmbed
 
 -- The protocol
 import Servant.UcamWebauth.API
@@ -56,5 +59,6 @@ ravenSettings
 ravenSettings = do
         ravenDefSettings @baseurl @api @e
         wSet . validKids .= ["901"]
+        wSet . importedKeys . at "901" .= Just $(embedFile "../static/pubkey901.crt")
         wSet . syncTimeOut .= 600
         wSet . wlsUrl .= "https://demo.raven.cam.ac.uk/auth/authenticate.html"

@@ -52,6 +52,9 @@ import "base" Data.Bifunctor
 
 import "mtl" Control.Monad.Except
 
+import "containers" Data.Map.Strict (Map)
+import qualified "containers" Data.Map.Strict as MapS
+
 import "microlens" Lens.Micro
 import "microlens-mtl" Lens.Micro.Mtl
 
@@ -219,7 +222,7 @@ validateAuthResponse waa sar = do
         guardE "Key invalid" .
             validateKid waa =<< liftMaybe (sar ^. ucamAKid)
         guardE "Signature invalid" <=<
-            validateSig $ sar
+            validateSig waa $ sar
         guardE "Issue time invalid" <=<
             validateIssueTime waa $ sar ^. ucamAResponse
         guardE "Url does not match transmittion" .
@@ -248,9 +251,10 @@ validateKid = flip elem . view (wSet . validKids) . configWAA
 -}
 validateSig
     :: (MonadPlus m, MonadIO m)
-    => SignedAuthResponse 'MaybeValid a
+    => SetWAA a
+    -> SignedAuthResponse 'MaybeValid a
     -> m Bool
-validateSig = validateSigKey readRSAKeyFile 
+validateSig (configWAA -> waa) = validateSigKey (readRSAKeyFile $ waa ^. wSet . importedKeys)
 
 decodeRSAPubKey
     :: ByteString      -- ^ The data representing a public key as PEM.
@@ -277,11 +281,14 @@ decodeRSAPubKey = hush . f
 -}
 readRSAKeyFile
     :: (MonadIO m, Alternative m)
-    => KeyID
+    => Map KeyID ByteString
+    -> KeyID
     -> m PublicKey
-readRSAKeyFile key = let file = "static/pubkey" <> (B.unpack . unKeyID) key <> ".crt" in
-    liftMaybe <=< liftIO . withFile file ReadMode
-    $ pure . decodeRSAPubKey <=< B.hGetContents
+readRSAKeyFile keymap key = case key `MapS.lookup` keymap of
+    Just bs -> liftMaybe . decodeRSAPubKey $ bs
+    Nothing -> let file = "static/pubkey" <> (B.unpack . unKeyID) key <> ".crt" in
+        liftMaybe <=< liftIO . withFile file ReadMode
+        $ pure . decodeRSAPubKey <=< B.hGetContents
 
 validateSigKey
     :: MonadPlus m

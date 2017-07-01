@@ -110,6 +110,7 @@ module Network.Protocol.UcamWebauth.Data
   , recentTime
   , applicationUrl
   , wlsUrl
+  , importedKeys
 
   , Base64UBS()
   , Base64UBSL()
@@ -150,6 +151,7 @@ import qualified "bytestring" Data.ByteString.Lazy as BSL
 import "text" Data.Text (Text)
 import qualified "text" Data.Text as T
 import "base" Data.Char (isAlphaNum, isAscii)
+import "containers" Data.Map.Strict (Map)
 
 -- Time
 import "timerep" Data.Time.RFC3339
@@ -463,6 +465,15 @@ applicationUrl f MakeWAASettings{..} = (\_applicationUrl -> MakeWAASettings{_app
 -}
 wlsUrl :: WAASettings `Lens'` Text
 wlsUrl f MakeWAASettings{..} = (\_wlsUrl -> MakeWAASettings{_wlsUrl, ..}) <$> f _wlsUrl
+
+{-|
+  Rather than acquiring the keys from a static directory, it is possible to supply
+  the key data during compilation; these are stored in a map, here.
+
+  Defaults to an empty map.
+-}
+importedKeys :: WAASettings `Lens'` Map KeyID ByteString
+importedKeys f MakeWAASettings{..} = (\_importedKeys -> MakeWAASettings{_importedKeys, ..}) <$> f _importedKeys
 
 ------------------------------------------------------------------------------
 -- * Text encoding
