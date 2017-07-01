@@ -124,5 +124,6 @@ test-suite test
     , QuickCheck
     , quickcheck-instances
   other-modules:
+      Servant.UcamWebauthSpec
       URI.ConvertSpec
   default-language: Haskell2010

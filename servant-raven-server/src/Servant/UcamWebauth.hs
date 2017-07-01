@@ -40,6 +40,7 @@ module Servant.UcamWebauth
   , ucamWebAuthToken
   , ucamWebAuthenticate
   , ucamWebAuthSettings
+  , authURI
   ) where
 
 import "servant-raven" Servant.UcamWebauth.API
