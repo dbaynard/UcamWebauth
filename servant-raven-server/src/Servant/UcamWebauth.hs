@@ -52,10 +52,12 @@ import "base" Data.Proxy
 import "reflection" Data.Reflection
 
 import "errors" Control.Error
+import "microlens" Lens.Micro
 import "microlens-mtl" Lens.Micro.Mtl
 
 import "text" Data.Text (Text)
 import "text" Data.Text.Encoding
+import qualified "bytestring" Data.ByteString.Char8 as B8
 
 import "time" Data.Time
 
@@ -146,16 +148,23 @@ ucamWebAuthSettings = do
         wSet . applicationUrl .= authLink
     where
         authLink :: Text
-        authLink = authURI . linkURI $ safeLink (Proxy @api) (Proxy @endpoint)
-
-        -- TODO super fragile
-        authURI :: URI -> Text
-        authURI uri = "" `fromMaybe` do
-            relUri <- uriByteStringRel uri
-            pure . decodeUtf8 . UB.serializeURIRef' $ UB.uriScheme baseUri `UB.toAbsolute` relUri
+        authLink = authURI baseUri . linkURI $ safeLink (Proxy @api) (Proxy @endpoint)
 
         baseUri :: UB.URI
         baseUri = reflect @baseurl Proxy
+
+-- TODO kinda fragile
+authURI :: UB.URI -> URI -> Text
+authURI = curry $ fromMaybe "" . fmap (decodeUtf8 . UB.serializeURIRef') . authURI'
+
+-- TODO super fragile
+authURI' :: (UB.URI, URI) -> Maybe UB.URI
+authURI' (baseUri, uri) = do
+    relUri <- uriByteStringRel uri
+    let rel = relUri &~ do
+            UB.authorityL .= (baseUri ^. UB.authorityL)
+            UB.pathL %= B8.cons '/'
+    pure $ UB.uriScheme baseUri `UB.toAbsolute` rel
 
 liftMaybe :: Alternative f => Maybe a -> f a
 liftMaybe = maybe empty pure
