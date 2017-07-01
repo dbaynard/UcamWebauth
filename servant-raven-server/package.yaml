@@ -38,6 +38,7 @@ library:
   dependencies:
   - aeson
   - file-embed
+  - microlens
   - microlens-ghc
   - servant
   - servant-raven
