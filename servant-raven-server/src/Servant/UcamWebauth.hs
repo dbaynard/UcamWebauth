@@ -49,7 +49,6 @@ import "ucam-webauth-types" Network.Protocol.UcamWebauth.Data.Internal
 import "base" Control.Applicative
 import "base" Data.Kind
 import "base" Data.Proxy
-import "base" GHC.TypeLits hiding (Text)
 import "reflection" Data.Reflection
 
 import "errors" Control.Error
@@ -57,7 +56,6 @@ import "microlens-mtl" Lens.Micro.Mtl
 
 import "text" Data.Text (Text)
 import "text" Data.Text.Encoding
-import qualified "text" Data.Text as T
 
 import "time" Data.Time
 
@@ -136,11 +134,11 @@ ucamWebAuthToken settings mexpires ky mresponse = let jwtCfg = defaultJWTSetting
 -- This must be reified with a 'Network.URI.URIAuth' value corresponding to
 -- the base url of the api.
 ucamWebAuthSettings
-    :: forall baseurl (api :: Type) (e :: Type) (route :: Symbol) token a endpoint .
+    :: forall baseurl (api :: Type) (e :: Type) a endpoint .
        ( IsElem endpoint api
        , HasLink endpoint
+       , MkLink endpoint ~ Link
        , endpoint ~ Unqueried e
-       , e ~ UcamWebAuthToken route token a
        , Reifies baseurl UB.URI
        )
     => SetWAA a
