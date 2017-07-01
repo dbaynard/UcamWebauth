@@ -45,12 +45,12 @@ import Servant.Raven.Internal as X
   > wlsUrl .= "https://demo.raven.cam.ac.uk/auth/authenticate.html"
 -}
 ravenSettings
-    :: forall baseurl api e (route :: Symbol) token a endpoint .
+    :: forall baseurl api e a endpoint .
        ( Reifies baseurl URI
        , IsElem endpoint api
        , HasLink endpoint
+       , MkLink endpoint ~ Link
        , endpoint ~ Unqueried e
-       , e ~ UcamWebAuthToken route token a
        )
     => SetWAA a
 ravenSettings = do

@@ -39,12 +39,12 @@ import Servant.UcamWebauth
   'WAASettings' for Raven
 -}
 ravenDefSettings
-    :: forall baseurl api e (route :: Symbol) token a endpoint .
+    :: forall baseurl api e a endpoint .
        ( Reifies baseurl URI
        , IsElem endpoint api
        , HasLink endpoint
+       , MkLink endpoint ~ Link
        , endpoint ~ Unqueried e
-       , e ~ UcamWebAuthToken route token a
        )
     => SetWAA a
 ravenDefSettings = ucamWebAuthSettings @baseurl @api @e
