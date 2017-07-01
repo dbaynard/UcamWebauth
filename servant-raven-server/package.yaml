@@ -34,6 +34,8 @@ library:
   - URI.Convert
   dependencies:
   - aeson
+  - file-embed
+  - microlens-ghc
   - servant
   - servant-raven
   - ucam-webauth-types

@@ -43,6 +43,8 @@ library
     , ucam-webauth
     , uri-bytestring
     , aeson
+    , file-embed
+    , microlens-ghc
     , servant
     , servant-raven
     , ucam-webauth-types

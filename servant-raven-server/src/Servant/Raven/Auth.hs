@@ -20,15 +20,17 @@ It is possible to test applications using the "Servant.Raven.Test" module, inste
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Servant.Raven.Auth
   ( ravenSettings
   , module X
   ) where
 
-
 import "microlens-mtl" Lens.Micro.Mtl
+import "microlens-ghc" Lens.Micro.GHC
 import "servant" Servant.Utils.Links hiding (URI)
+import "file-embed" Data.FileEmbed
 
 -- The protocol
 import Servant.UcamWebauth.API
@@ -56,4 +58,5 @@ ravenSettings
 ravenSettings = do
         ravenDefSettings @baseurl @api @e
         wSet . validKids .= ["2"]
+        wSet . importedKeys . at "2" .= Just $(embedFile "static/pubkey2.crt")
         wSet . wlsUrl .= "https://raven.cam.ac.uk/auth/authenticate.html"
