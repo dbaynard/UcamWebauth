@@ -58,5 +58,5 @@ ravenSettings
 ravenSettings = do
         ravenDefSettings @baseurl @api @e
         wSet . validKids .= ["2"]
-        wSet . importedKeys . at "2" .= Just $(embedFile "static/pubkey2.crt")
+        wSet . importedKeys . at "2" .= Just $(embedFile "../static/pubkey2.crt")
         wSet . wlsUrl .= "https://raven.cam.ac.uk/auth/authenticate.html"

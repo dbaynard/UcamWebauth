@@ -25,6 +25,9 @@ dependencies:
 - ucam-webauth
 - uri-bytestring
 
+extra-source-files:
+- ../static/*.crt
+
 library:
   source-dirs: src
   exposed-modules:

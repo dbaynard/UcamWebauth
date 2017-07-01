@@ -59,6 +59,6 @@ ravenSettings
 ravenSettings = do
         ravenDefSettings @baseurl @api @e
         wSet . validKids .= ["901"]
-        wSet . importedKeys . at "901" .= Just $(embedFile "static/pubkey901.crt")
+        wSet . importedKeys . at "901" .= Just $(embedFile "../static/pubkey901.crt")
         wSet . syncTimeOut .= 600
         wSet . wlsUrl .= "https://demo.raven.cam.ac.uk/auth/authenticate.html"
