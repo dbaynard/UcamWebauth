@@ -127,8 +127,6 @@ module Network.Protocol.UcamWebauth.Data
   , encodeUcamB64L
   , decodeASCII'
 
-  -- Other
-  , (&~)
   ) where
 
 import Network.Protocol.UcamWebauth.Data.Internal
@@ -156,11 +154,6 @@ import "containers" Data.Map.Strict (Map)
 -- Time
 import "timerep" Data.Time.RFC3339
 import "time" Data.Time
-
-(&~) :: s -> State s a -> s
-(&~) = flip execState
-infixl 1 &~
-{-# INLINE (&~) #-}
 
 ------------------------------------------------------------------------------
 -- * Lenses
