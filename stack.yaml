@@ -1,9 +1,7 @@
 # For more information, see: http://docs.haskellstack.org/en/stable/yaml_configuration.html
 
 # Specifies the GHC version and set of packages available (e.g., lts-3.5, nightly-2015-09-21, ghc-7.10.2)
-resolver:
-  name: default-snapshot
-  location: snapshot.yaml
+resolver: https://gist.github.com/dbaynard/9693107a883a6282f52f22785d0072e2/raw/999b2c7022d73bc2d08bc6cf65fab9840d6a98bc
 
 # Local packages, usually specified by relative directory name
 packages:
@@ -12,13 +10,10 @@ packages:
 - 'servant-raven-server'
 - 'ucam-webauth'
 - 'ucam-webauth-types'
-- location:
-    git: https://@github.com/dbaynard/time-qq
-    commit: 058c4773a7351cdac18dcb50d5543304590affe0
-  extra-dep: true
 
 # Packages to be pulled from upstream that are not in the resolver (e.g., acme-missiles-0.3)
-extra-deps: []
+extra-deps:
+- jose-0.5.0.5
 
 # Override default flag values for local packages and extra-deps
 flags: {}
@@ -48,7 +43,7 @@ extra-package-dbs: []
 # GHC options
 ghc-options:
   happy: -pgmL ""
-  "*": -pgmL markdown-unlit
+  "$everything": -pgmL markdown-unlit
 
 # Allow newer packages than cabal bounds suggest?
 allow-newer: true
