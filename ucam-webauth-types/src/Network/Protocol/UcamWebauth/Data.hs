@@ -1,5 +1,6 @@
 {-# LANGUAGE PackageImports #-}
 {-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE DataKinds #-}
@@ -11,6 +12,9 @@
 {-# LANGUAGE OverloadedLists #-}
 {-# LANGUAGE NumDecimals #-}
 {-# LANGUAGE PatternSynonyms #-}
+{-# LANGUAGE TupleSections #-}
+{-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 {-|
 Module      : Network.Protocol.UcamWebauth.Data
@@ -28,6 +32,8 @@ module Network.Protocol.UcamWebauth.Data
   , approveParams
 
   -- $request
+  , ucamWebauthQuery
+
   , AuthRequest()
   , ucamQVer
   , ucamQUrl
@@ -133,10 +139,11 @@ import Network.Protocol.UcamWebauth.Data.Internal
 
 -- Prelude
 import "base" Control.Applicative
+import "base" Data.Semigroup
 
 -- Settings
 import "microlens" Lens.Micro
-import "mtl" Control.Monad.State
+import "microlens-mtl" Lens.Micro.Mtl
 
 -- Character encoding
 import qualified "base64-bytestring" Data.ByteString.Base64.URL as B
@@ -146,14 +153,22 @@ import "bytestring" Data.ByteString (ByteString)
 import qualified "bytestring" Data.ByteString.Char8 as B
 import qualified "bytestring" Data.ByteString.Lazy.Char8 as BL
 import qualified "bytestring" Data.ByteString.Lazy as BSL
+import "bytestring" Data.ByteString.Builder
 import "text" Data.Text (Text)
+import "text" Data.Text.Encoding
 import qualified "text" Data.Text as T
 import "base" Data.Char (isAlphaNum, isAscii)
 import "containers" Data.Map.Strict (Map)
 
+import "aeson" Data.Aeson.Types (ToJSON)
+import qualified "aeson" Data.Aeson as A (encode)
+
 -- Time
 import "timerep" Data.Time.RFC3339
 import "time" Data.Time
+
+-- Network
+import "http-types" Network.HTTP.Types
 
 ------------------------------------------------------------------------------
 -- * Lenses
@@ -190,6 +205,47 @@ approveLife f AuthInfo{..} = (\_approveLife -> AuthInfo{_approveLife, ..}) <$> f
 -}
 approveParams :: UcamWebauthInfo a `Lens'` Maybe a
 approveParams f AuthInfo{..} = (\_approveParams -> AuthInfo{_approveParams, ..}) <$> f _approveParams
+
+------------------------------------------------------------------------------
+-- * The request
+
+{-|
+  Build a request header to send to the @WLS@, using an 'AuthRequest'
+-}
+ucamWebauthQuery
+    :: ToJSON a
+    => SetWAA a
+    -> Header
+ucamWebauthQuery (configWAA -> waa) = (hLocation,) . toByteString $ baseUrl waa <> theQuery
+
+    where
+        baseUrl :: WAAState a -> Builder
+        baseUrl = encodeUtf8Builder . view (wSet . wlsUrl)
+
+        theQuery :: Builder
+        theQuery = renderQueryBuilder True $ strictQs <> textQs <> lazyQs
+
+        strictQs :: Query
+        strictQs = toQuery @[(Text, Maybe ByteString)]
+            [ ("ver", pure . bsDisplayWLSVersion $ waa ^. aReq . ucamQVer)
+            , ("desc", encodeUtf8 . decodeASCII' <$> waa ^. aReq . ucamQDesc)
+            , ("iact", bsDisplayYesNo <$> waa ^. aReq . ucamQIact)
+            , ("fail", bsDisplayYesOnly <$> waa ^. aReq . ucamQFail)
+            ]
+
+        textQs :: Query
+        textQs = toQuery @[(Text, Maybe Text)]
+            [ ("url" , pure $ waa ^. aReq . ucamQUrl)
+            , ("date", unUcamTime . ucamTime <$> waa ^. aReq . ucamQDate)
+            , ("aauth", T.intercalate "," . fmap displayAuthType <$> waa ^. aReq . ucamQAauth)
+            , ("msg", waa ^. aReq . ucamQMsg)
+            ]
+
+        lazyQs :: Query
+        lazyQs = toQuery @[(Text, Maybe BSL.ByteString)]
+            [ ("params", unUcamB64L . encodeUcamB64L . A.encode <$> waa ^. aReq . ucamQParams)
+            ]
+        toByteString = BSL.toStrict . toLazyByteString
 
 ------------------------------------------------------------------------------
 -- ** 'AuthRequest'

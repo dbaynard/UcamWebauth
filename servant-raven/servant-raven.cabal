@@ -1,4 +1,4 @@
--- This file has been generated from package.yaml by hpack version 0.17.0.
+-- This file has been generated from package.yaml by hpack version 0.18.1.
 --
 -- see: https://github.com/sol/hpack
 
@@ -31,13 +31,28 @@ library
       base >= 4.7 && < 5
     , servant
     , ucam-webauth-types
+    , bytestring
+    , errors
+    , file-embed
+    , microlens
+    , microlens-ghc
+    , microlens-mtl
+    , network-uri
+    , reflection
+    , text
+    , uri-bytestring
   if flag(dev)
     ghc-options: -Wall -fwarn-tabs -O0
   else
     ghc-options: -Wall -fwarn-tabs -O2
   exposed-modules:
       Servant.UcamWebauth.API
+      Servant.UcamWebauth.Settings
+      Servant.Raven.Test
+      Servant.Raven.Auth
+      URI.Convert
   other-modules:
+      Servant.Raven.Internal
       Paths_servant_raven
   default-language: Haskell2010
 
@@ -53,4 +68,6 @@ test-suite test
     , ucam-webauth-types
     , servant-raven
     , hspec >=2.0.0
+  other-modules:
+      URI.ConvertSpec
   default-language: Haskell2010

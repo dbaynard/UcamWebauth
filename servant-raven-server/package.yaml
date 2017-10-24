@@ -31,15 +31,10 @@ extra-source-files:
 library:
   source-dirs: src
   exposed-modules:
-  - Servant.Raven.Test
-  - Servant.Raven.Auth
   - Servant.UcamWebauth
-  - URI.Convert
   dependencies:
   - aeson
-  - file-embed
   - microlens
-  - microlens-ghc
   - servant
   - servant-raven
   - ucam-webauth-types

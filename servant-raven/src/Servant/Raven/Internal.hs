@@ -29,11 +29,11 @@ import "base" GHC.TypeLits
 import "reflection" Data.Reflection
 
 import "servant" Servant.Utils.Links hiding (URI)
-import URI.Convert
+import "this" URI.Convert
 
 -- The protocol
-import "servant-raven" Servant.UcamWebauth.API
-import Servant.UcamWebauth
+import "this" Servant.UcamWebauth.API
+import "this" Servant.UcamWebauth.Settings
 
 {-|
   'WAASettings' for Raven

@@ -30,8 +30,6 @@ module Network.Protocol.UcamWebauth
   , maybeAuthInfo
   , authCode
 
-  , ucamWebauthQuery
-
   , validateAuthResponse
   ) where
 
@@ -66,26 +64,20 @@ import "base" System.IO (withFile, IOMode(..))
 import "attoparsec" Data.Attoparsec.ByteString.Char8 hiding (count, take)
 
 -- HTTP protocol
-import "http-types" Network.HTTP.Types
 import "http-api-data" Web.HttpApiData
 
 -- Character encoding
 import "bytestring" Data.ByteString (ByteString)
-import qualified "bytestring" Data.ByteString.Lazy as BSL
 import "text" Data.Text (Text)
 import "text" Data.Text.Encoding hiding (decodeASCII)
 import qualified "text" Data.Text as T
 import qualified "bytestring" Data.ByteString.Char8 as B
 
--- ByteString building
-import "bytestring" Data.ByteString.Builder
-
 -- Time
 import "time" Data.Time (diffUTCTime, getCurrentTime)
 
 -- JSON (Aeson)
-import "aeson" Data.Aeson (ToJSON, FromJSON)
-import qualified "aeson" Data.Aeson as A
+import "aeson" Data.Aeson (FromJSON)
 
 -- Crypto
 import "cryptonite" Crypto.PubKey.RSA.Types
@@ -93,8 +85,6 @@ import "cryptonite" Crypto.PubKey.RSA.PKCS15
 import "cryptonite" Crypto.Hash.Algorithms
 import "x509" Data.X509
 import "pem" Data.PEM
-
-type LByteString = BSL.ByteString
 
 ------------------------------------------------------------------------------
 -- * Top level functions
@@ -149,47 +139,6 @@ authCode = liftMaybe . maybeResult . flip feed "" . parse ucamResponseParser
 -- this package.
 instance FromJSON a => FromHttpApiData (SignedAuthResponse 'MaybeValid a) where
     parseQueryParam = first T.pack . parseOnly ucamResponseParser . encodeUtf8
-
-------------------------------------------------------------------------------
--- * Printing
-
-{-|
-  Build a request header to send to the @WLS@, using an 'AuthRequest'
--}
-ucamWebauthQuery
-    :: ToJSON a
-    => SetWAA a
-    -> Header
-ucamWebauthQuery (configWAA -> waa) = (hLocation,) . toByteString $ baseUrl waa <> theQuery
-
-    where
-        baseUrl :: WAAState a -> Builder
-        baseUrl = encodeUtf8Builder . view (wSet . wlsUrl)
-
-        theQuery :: Builder
-        theQuery = renderQueryBuilder True $ strictQs <> textQs <> lazyQs
-
-        strictQs :: Query
-        strictQs = toQuery
-            [ ("ver", pure . bsDisplayWLSVersion $ waa ^. aReq . ucamQVer) :: (Text, Maybe ByteString)
-            , ("desc", encodeUtf8 . decodeASCII' <$> waa ^. aReq . ucamQDesc)
-            , ("iact", bsDisplayYesNo <$> waa ^. aReq . ucamQIact)
-            , ("fail", bsDisplayYesOnly <$> waa ^. aReq . ucamQFail)
-            ]
-
-        textQs :: Query
-        textQs = toQuery
-            [ ("url" , pure $ waa ^. aReq . ucamQUrl) :: (Text, Maybe Text)
-            , ("date", unUcamTime . ucamTime <$> waa ^. aReq . ucamQDate)
-            , ("aauth", T.intercalate "," . fmap displayAuthType <$> waa ^. aReq . ucamQAauth)
-            , ("msg", waa ^. aReq . ucamQMsg)
-            ]
-
-        lazyQs :: Query
-        lazyQs = toQuery
-            [ ("params", unUcamB64L . encodeUcamB64L . A.encode <$> waa ^. aReq . ucamQParams) :: (Text, Maybe LByteString)
-            ]
-        toByteString = BSL.toStrict . toLazyByteString
 
 ------------------------------------------------------------------------------
 -- * Validation

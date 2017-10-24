@@ -25,8 +25,8 @@ abstract: |
 
 module Main where
 
-import Servant.UcamWebauth
-import Servant.Raven.Test
+import "servant-raven-server" Servant.UcamWebauth
+import "servant-raven" Servant.Raven.Test
 import "servant-raven" Servant.UcamWebauth.API
 import "ucam-webauth" Network.Protocol.UcamWebauth
 
