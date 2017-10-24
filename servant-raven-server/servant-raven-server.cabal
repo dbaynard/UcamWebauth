@@ -1,4 +1,4 @@
--- This file has been generated from package.yaml by hpack version 0.17.0.
+-- This file has been generated from package.yaml by hpack version 0.18.1.
 --
 -- see: https://github.com/sol/hpack
 
@@ -61,7 +61,6 @@ library
       Servant.Raven.Test
       Servant.Raven.Auth
       Servant.UcamWebauth
-      URI.Convert
   other-modules:
       Servant.Raven.Internal
       Paths_servant_raven_server
@@ -125,5 +124,4 @@ test-suite test
     , quickcheck-instances
   other-modules:
       Servant.UcamWebauthSpec
-      URI.ConvertSpec
   default-language: Haskell2010

@@ -43,32 +43,19 @@ module Servant.UcamWebauth
   , authURI
   ) where
 
-import "servant-raven" Servant.UcamWebauth.API
+import "servant-raven" Servant.UcamWebauth.Settings
 import "ucam-webauth" Network.Protocol.UcamWebauth
 import "ucam-webauth-types" Network.Protocol.UcamWebauth.Data.Internal
 
 import "base" Control.Applicative
-import "base" Data.Kind
-import "base" Data.Proxy
-import "reflection" Data.Reflection
-
 import "errors" Control.Error
-import "microlens" Lens.Micro
-import "microlens-mtl" Lens.Micro.Mtl
-
-import "text" Data.Text (Text)
-import "text" Data.Text.Encoding
-import qualified "bytestring" Data.ByteString.Char8 as B8
 
 import "time" Data.Time
 
-import "servant" Servant.Utils.Links
 import "servant-server" Servant
 import "servant-auth-server" Servant.Auth.Server
 import "servant-auth-server" Servant.Auth.Server.SetCookieOrphan ()
 import "jose" Crypto.JOSE.JWK (JWK)
-import qualified "uri-bytestring" URI.ByteString as UB
-import URI.Convert hiding (URI)
 
 import "aeson" Data.Aeson.Types hiding ((.=))
 
@@ -130,42 +117,6 @@ ucamWebAuthToken settings mexpires ky mresponse = let jwtCfg = defaultJWTSetting
         Handler . bimapExceptT trans B64UL . ExceptT $ makeJWT uwi jwtCfg mexpires
     where
         trans _ = err401 { errBody = "Token error" }
-
--- | The default settings for UcamWebauth should generate the application
--- link from the api type.
---
--- This must be reified with a 'Network.URI.URIAuth' value corresponding to
--- the base url of the api.
-ucamWebAuthSettings
-    :: forall baseurl (api :: Type) (e :: Type) a endpoint .
-       ( IsElem endpoint api
-       , HasLink endpoint
-       , MkLink endpoint ~ Link
-       , endpoint ~ Unqueried e
-       , Reifies baseurl UB.URI
-       )
-    => SetWAA a
-ucamWebAuthSettings = do
-        wSet . applicationUrl .= authLink
-    where
-        authLink :: Text
-        authLink = authURI baseUri . linkURI $ safeLink (Proxy @api) (Proxy @endpoint)
-
-        baseUri :: UB.URI
-        baseUri = reflect @baseurl Proxy
-
--- TODO kinda fragile
-authURI :: UB.URI -> URI -> Text
-authURI = curry $ fromMaybe "" . fmap (decodeUtf8 . UB.serializeURIRef') . authURI'
-
--- TODO super fragile
-authURI' :: (UB.URI, URI) -> Maybe UB.URI
-authURI' (baseUri, uri) = do
-    relUri <- uriByteStringRel uri
-    let rel = relUri &~ do
-            UB.authorityL .= (baseUri ^. UB.authorityL)
-            UB.pathL %= B8.cons '/'
-    pure $ UB.uriScheme baseUri `UB.toAbsolute` rel
 
 liftMaybe :: Alternative f => Maybe a -> f a
 liftMaybe = maybe empty pure

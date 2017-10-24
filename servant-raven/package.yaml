@@ -18,7 +18,17 @@ library:
   source-dirs: src
   exposed-modules:
   - Servant.UcamWebauth.API
-  dependencies: []
+  - Servant.UcamWebauth.Settings
+  - URI.Convert
+  dependencies:
+  - bytestring
+  - errors
+  - microlens
+  - microlens-mtl
+  - network-uri
+  - reflection
+  - text
+  - uri-bytestring
   when:
   - condition: flag(dev)
     then:
