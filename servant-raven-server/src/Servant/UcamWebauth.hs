@@ -112,11 +112,11 @@ ucamWebAuthToken
        , ToJWT tok
        )
     => (UcamWebauthInfo a -> Handler tok)
-    -> SetWAA a
     -> (Maybe UTCTime, JWK)
+    -> SetWAA a
     -> Maybe (SignedAuthResponse 'MaybeValid a)
     -> Handler Base64UBSL
-ucamWebAuthToken toToken settings (mexpires, ky) mresponse = let jwtCfg = defaultJWTSettings ky in do
+ucamWebAuthToken toToken (mexpires, ky) settings mresponse = let jwtCfg = defaultJWTSettings ky in do
         uwi <- ucamWebAuthenticate settings mresponse
         tok <- toToken uwi
         Handler . bimapExceptT trans B64UL . ExceptT $ makeJWT tok jwtCfg mexpires
