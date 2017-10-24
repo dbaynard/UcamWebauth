@@ -33,7 +33,9 @@ library
     , ucam-webauth-types
     , bytestring
     , errors
+    , file-embed
     , microlens
+    , microlens-ghc
     , microlens-mtl
     , network-uri
     , reflection
@@ -46,8 +48,11 @@ library
   exposed-modules:
       Servant.UcamWebauth.API
       Servant.UcamWebauth.Settings
+      Servant.Raven.Test
+      Servant.Raven.Auth
       URI.Convert
   other-modules:
+      Servant.Raven.Internal
       Paths_servant_raven
   default-language: Haskell2010
 

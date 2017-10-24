@@ -1,17 +1,17 @@
 {-|
-Module      : Servant.Raven.Test
-Description : Test Raven authentication
+Module      : Servant.Raven.Auth 
+Description : Authenticate with Raven
 Maintainer  : David Baynard <davidbaynard@gmail.com>
 
-Test Raven authentication using the test server.
+Authenticate with Raven, using the University of Cambridge protocol as implemented
+in the "Servant.UcamWebauth" module.
 
-__Do Not__ use for real implementations, as the server’s private key is available.
+<https://raven.cam.ac.uk/project/>
 
-https://raven.cam.ac.uk/project/test-demo/
-
-The functions in this file shadow the names in the "Servant.Raven.Auth" module. This is deliberate.
+It is possible to test applications using the "Servant.Raven.Test" module, instead.
 
 -}
+
 {-# LANGUAGE PackageImports #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
@@ -22,30 +22,29 @@ The functions in this file shadow the names in the "Servant.Raven.Auth" module. 
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-module Servant.Raven.Test {-# WARNING "Do not use this module for production code. It is only for testing." #-}
+module Servant.Raven.Auth
   ( ravenSettings
   , module X
   ) where
 
--- Prelude
 import "microlens-mtl" Lens.Micro.Mtl
 import "microlens-ghc" Lens.Micro.GHC
 import "servant" Servant.Utils.Links hiding (URI)
 import "file-embed" Data.FileEmbed
 
 -- The protocol
-import Servant.UcamWebauth.API
+import "this" Servant.UcamWebauth.API
 import "ucam-webauth-types" Network.Protocol.UcamWebauth.Data
 
-import Servant.Raven.Internal as X
+import "this" Servant.Raven.Internal as X
 
 ------------------------------------------------------------------------------
 -- * Raven servers
 
 {-|
-  The Raven Demo settings
+  The Raven settings
 
-  > wlsUrl .= "https://demo.raven.cam.ac.uk/auth/authenticate.html"
+  > wlsUrl .= "https://raven.cam.ac.uk/auth/authenticate.html"
 -}
 ravenSettings
     :: forall baseurl api e a endpoint .
@@ -58,7 +57,6 @@ ravenSettings
     => SetWAA a
 ravenSettings = do
         ravenDefSettings @baseurl @api @e
-        wSet . validKids .= ["901"]
-        wSet . importedKeys . at "901" .= Just $(embedFile "../static/pubkey901.crt")
-        wSet . syncTimeOut .= 600
-        wSet . wlsUrl .= "https://demo.raven.cam.ac.uk/auth/authenticate.html"
+        wSet . validKids .= ["2"]
+        wSet . importedKeys . at "2" .= Just $(embedFile "../static/pubkey2.crt")
+        wSet . wlsUrl .= "https://raven.cam.ac.uk/auth/authenticate.html"

@@ -19,11 +19,15 @@ library:
   exposed-modules:
   - Servant.UcamWebauth.API
   - Servant.UcamWebauth.Settings
+  - Servant.Raven.Test
+  - Servant.Raven.Auth
   - URI.Convert
   dependencies:
   - bytestring
   - errors
+  - file-embed
   - microlens
+  - microlens-ghc
   - microlens-mtl
   - network-uri
   - reflection
