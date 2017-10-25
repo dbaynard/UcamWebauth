@@ -530,10 +530,10 @@ importedKeys f MakeWAASettings{..} = (\_importedKeys -> MakeWAASettings{_importe
 {-|
   Convert to the protocol’s version of base64
 -}
-convertB64Ucam :: Base64UBS -> UcamBase64BS
+convertB64Ucam :: Base64UBS tag -> UcamBase64BS
 convertB64Ucam = UcamB64 . B.map camEncodeFilter . unB64U
 
-convertB64UcamL :: Base64UBSL -> UcamBase64BSL
+convertB64UcamL :: Base64UBSL tag -> UcamBase64BSL
 convertB64UcamL = UcamB64L . BL.map camEncodeFilter . unB64UL
 
 camEncodeFilter :: Char -> Char
@@ -544,10 +544,10 @@ camEncodeFilter x = x
 {-|
   Convert from the protocol’s version of base64
 -}
-convertUcamB64 :: UcamBase64BS -> Base64UBS
+convertUcamB64 :: UcamBase64BS -> Base64UBS tag
 convertUcamB64 = B64U . B.map camDecodeFilter . unUcamB64
 
-convertUcamB64L :: UcamBase64BSL -> Base64UBSL
+convertUcamB64L :: UcamBase64BSL -> Base64UBSL tag
 convertUcamB64L = B64UL . BL.map camDecodeFilter . unUcamB64L
 
 camDecodeFilter :: Char -> Char

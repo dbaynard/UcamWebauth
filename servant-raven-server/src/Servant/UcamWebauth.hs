@@ -65,11 +65,11 @@ import "aeson" Data.Aeson.Types hiding ((.=))
 
 -- | Base 64 (URL) encoded 'ByteString's should be serializable as 'OctetStream's.
 -- They are already serializable as 'JSON' thanks to the ToJson instance.
-instance MimeRender OctetStream Base64UBSL where
+instance MimeRender OctetStream (Base64UBSL tag) where
     mimeRender _ = unB64UL
 
 -- TODO Make safe
-instance MimeUnrender OctetStream Base64UBSL where
+instance MimeUnrender OctetStream (Base64UBSL tag) where
     mimeUnrender _ = pure . B64UL
 
 -- | UcamWebauthInfo can be converted directly to a JWT.
@@ -115,7 +115,7 @@ ucamWebAuthToken
     -> (Maybe UTCTime, JWK)
     -> SetWAA a
     -> Maybe (SignedAuthResponse 'MaybeValid a)
-    -> Handler Base64UBSL
+    -> Handler (Base64UBSL tok)
 ucamWebAuthToken toToken (mexpires, ky) settings mresponse = let jwtCfg = defaultJWTSettings ky in do
         uwi <- ucamWebAuthenticate settings mresponse
         tok <- toToken uwi
