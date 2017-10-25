@@ -25,7 +25,7 @@ abstract: |
 
 module Main where
 
-import "servant-raven-server" Servant.UcamWebauth
+import Servant.UcamWebauth
 import "servant-raven" Servant.Raven.Test
 import "servant-raven" Servant.UcamWebauth.API
 import "ucam-webauth" Network.Protocol.UcamWebauth
@@ -160,7 +160,7 @@ type Unprotected
 unprotected :: CookieSettings -> JWTSettings -> Server Unprotected
 unprotected cs jwts = checkCreds cs jwts :<|> serveDirectoryFileServer "example/static"
 
-type Raven a = UcamWebAuthToken "authenticate" Base64UBSL a
+type Raven a = UcamWebAuthToken "authenticate" (Base64UBSL (UcamWebauthInfo a)) a
 
 type API auths a
     = Auth auths User :> Protected
@@ -170,7 +170,7 @@ type API auths a
 server :: ToJSON a => SetWAA a -> CookieSettings -> JWTSettings -> JWK -> Server (API auths a)
 server rs cs jwts ky =
         authenticated (return . (\(User user) -> user))
-    :<|> ucamWebAuthToken rs Nothing ky
+    :<|> ucamWebAuthToken pure (Nothing, ky) rs
     :<|> unprotected cs jwts
 
 -- Auths may be '[JWT] or '[Cookie] or even both.

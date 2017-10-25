@@ -65,11 +65,11 @@ import "aeson" Data.Aeson.Types hiding ((.=))
 
 -- | Base 64 (URL) encoded 'ByteString's should be serializable as 'OctetStream's.
 -- They are already serializable as 'JSON' thanks to the ToJson instance.
-instance MimeRender OctetStream Base64UBSL where
+instance MimeRender OctetStream (Base64UBSL tag) where
     mimeRender _ = unB64UL
 
 -- TODO Make safe
-instance MimeUnrender OctetStream Base64UBSL where
+instance MimeUnrender OctetStream (Base64UBSL tag) where
     mimeUnrender _ = pure . B64UL
 
 -- | UcamWebauthInfo can be converted directly to a JWT.
@@ -103,18 +103,23 @@ ucamWebAuthenticate settings mresponse = do
         needToAuthenticate = noteT err303 {errHeaders = [ucamWebauthQuery settings]}
         authError = withExceptT . const $ err401 { errBody = "Authentication error" }
 
--- | Here, if a GET request is made with a valid WLS-Response query parameter, return the
--- 'UcamWebauthInfo a' as a log in token.
+-- | Here, if a GET request is made with a valid WLS-Response query parameter, convert the
+-- 'UcamWebauthInfo a' to the token type using the supplied function and then return the log in token.
+-- Supply 'pure' to use 'UcamWebauthInfo a' as a token.
 ucamWebAuthToken
-    :: forall a. ToJSON a
-    => SetWAA a
-    -> Maybe UTCTime
-    -> JWK
+    :: forall a tok .
+       ( ToJSON a
+       , ToJWT tok
+       )
+    => (UcamWebauthInfo a -> Handler tok)
+    -> (Maybe UTCTime, JWK)
+    -> SetWAA a
     -> Maybe (SignedAuthResponse 'MaybeValid a)
-    -> Handler Base64UBSL
-ucamWebAuthToken settings mexpires ky mresponse = let jwtCfg = defaultJWTSettings ky in do
+    -> Handler (Base64UBSL tok)
+ucamWebAuthToken toToken (mexpires, ky) settings mresponse = let jwtCfg = defaultJWTSettings ky in do
         uwi <- ucamWebAuthenticate settings mresponse
-        Handler . bimapExceptT trans B64UL . ExceptT $ makeJWT uwi jwtCfg mexpires
+        tok <- toToken uwi
+        Handler . bimapExceptT trans B64UL . ExceptT $ makeJWT tok jwtCfg mexpires
     where
         trans _ = err401 { errBody = "Token error" }
 

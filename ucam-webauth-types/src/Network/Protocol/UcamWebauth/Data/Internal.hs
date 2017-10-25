@@ -542,25 +542,25 @@ configWAA = flip execState MakeWAAState
 {-|
   Ensure Base 64 URL text is not confused with other 'ByteString's
 -}
-newtype Base64UBS = B64U { unB64U :: ByteString }
+newtype Base64UBS (tag :: k) = B64U { unB64U :: ByteString }
     deriving (Show, Read, Eq, Ord, Semigroup, Monoid, IsString, Generic, Typeable, Data)
 
-instance FromJSON Base64UBS where
+instance FromJSON (Base64UBS tag) where
     parseJSON = withObject "Base 64 URL ByteString" $ \v -> B64U . encodeUtf8
         <$> v .: "Base 64U ByteString"
 
-instance ToJSON Base64UBS where
+instance ToJSON (Base64UBS tag) where
     toJSON = toJSON . decodeUtf8 . unB64U
     toEncoding = toEncoding . decodeUtf8 . unB64U
 
-newtype Base64UBSL = B64UL { unB64UL :: BSL.ByteString }
+newtype Base64UBSL (tag :: k) = B64UL { unB64UL :: BSL.ByteString }
     deriving (Show, Read, Eq, Ord, Semigroup, Monoid, IsString, Generic, Typeable, Data)
 
-instance FromJSON Base64UBSL where
+instance FromJSON (Base64UBSL tag) where
     parseJSON = withObject "Base 64 URL ByteString" $ \v -> B64UL . TL.encodeUtf8
         <$> v .: "Base 64U ByteString"
 
-instance ToJSON Base64UBSL where
+instance ToJSON (Base64UBSL tag) where
     toJSON = toJSON . TL.decodeUtf8 . unB64UL
     toEncoding = toEncoding . TL.decodeUtf8 . unB64UL
 
