@@ -25,7 +25,7 @@ abstract: |
 
 module Main where
 
-import "servant-raven-server" Servant.UcamWebauth
+import Servant.UcamWebauth
 import "servant-raven" Servant.Raven.Test
 import "servant-raven" Servant.UcamWebauth.API
 import "ucam-webauth" Network.Protocol.UcamWebauth
@@ -160,7 +160,7 @@ type Unprotected
 unprotected :: CookieSettings -> JWTSettings -> Server Unprotected
 unprotected cs jwts = checkCreds cs jwts :<|> serveDirectoryFileServer "example/static"
 
-type Raven a = UcamWebAuthToken "authenticate" Base64UBSL a
+type Raven a = UcamWebAuthToken "authenticate" (Base64UBSL (UcamWebauthInfo a)) a
 
 type API auths a
     = Auth auths User :> Protected
