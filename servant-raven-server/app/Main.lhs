@@ -160,7 +160,7 @@ type Unprotected
 unprotected :: CookieSettings -> JWTSettings -> Server Unprotected
 unprotected cs jwts = checkCreds cs jwts :<|> serveDirectoryFileServer "example/static"
 
-type Raven a = UcamWebAuthToken "authenticate" (Base64UBSL (UcamWebauthInfo a)) a
+type Raven a = UcamWebAuthToken '[OctetStream] "authenticate" (Base64UBSL (UcamWebauthInfo a)) a
 
 type API auths a
     = Auth auths User :> Protected
