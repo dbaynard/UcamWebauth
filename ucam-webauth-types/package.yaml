@@ -26,6 +26,7 @@ dependencies:
 library:
   source-dirs: src
   exposed-modules:
+  - Data.ByteString.B64
   - Network.Protocol.UcamWebauth.Data
   - Network.Protocol.UcamWebauth.Data.Internal
   dependencies: []

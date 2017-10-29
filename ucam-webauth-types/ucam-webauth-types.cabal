@@ -1,4 +1,4 @@
--- This file has been generated from package.yaml by hpack version 0.17.0.
+-- This file has been generated from package.yaml by hpack version 0.18.1.
 --
 -- see: https://github.com/sol/hpack
 
@@ -46,6 +46,7 @@ library
   else
     ghc-options: -Wall -fwarn-tabs -O2
   exposed-modules:
+      Data.ByteString.B64
       Network.Protocol.UcamWebauth.Data
       Network.Protocol.UcamWebauth.Data.Internal
   other-modules:

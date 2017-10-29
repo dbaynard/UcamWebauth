@@ -19,6 +19,7 @@ module Network.Protocol.UcamWebauth.Parser
   ) where
 
 -- Prelude
+import "ucam-webauth-types" Data.ByteString.B64
 import "ucam-webauth-types" Network.Protocol.UcamWebauth.Data
 import "ucam-webauth-types" Network.Protocol.UcamWebauth.Data.Internal
 
