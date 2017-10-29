@@ -31,7 +31,6 @@ for 'readRSAKeyFile'.
 {-# LANGUAGE TypeInType #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE AllowAmbiguousTypes #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE NamedFieldPuns #-}
 
@@ -62,15 +61,6 @@ import "aeson" Data.Aeson.Types hiding ((.=))
 ------------------------------------------------------------------------------
 --
 -- * Top level functions
-
--- | Base 64 (URL) encoded 'ByteString's should be serializable as 'OctetStream's.
--- They are already serializable as 'JSON' thanks to the ToJson instance.
-instance MimeRender OctetStream (Base64UBSL tag) where
-    mimeRender _ = unB64UL
-
--- TODO Make safe
-instance MimeUnrender OctetStream (Base64UBSL tag) where
-    mimeUnrender _ = pure . B64UL
 
 -- | UcamWebauthInfo can be converted directly to a JWT.
 instance ToJSON a => ToJWT (UcamWebauthInfo a)

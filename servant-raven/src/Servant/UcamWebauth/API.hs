@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE PackageImports #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE TypeOperators #-}
@@ -9,6 +10,7 @@
 {-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 
 module Servant.UcamWebauth.API (
     module Servant.UcamWebauth.API
@@ -18,6 +20,15 @@ import "ucam-webauth-types" Network.Protocol.UcamWebauth.Data
 import "ucam-webauth-types" Network.Protocol.UcamWebauth.Data.Internal
 
 import "servant" Servant.API
+
+-- | Base 64 (URL) encoded 'ByteString's should be serializable as 'OctetStream's.
+-- They are already serializable as 'JSON' thanks to the ToJson instance.
+instance MimeRender OctetStream (Base64UBSL tag) where
+    mimeRender _ = unB64UL
+
+-- TODO Make safe
+instance MimeUnrender OctetStream (Base64UBSL tag) where
+    mimeUnrender _ = pure . B64UL
 
 -- | Remove the query parameters from a type for easier safe-link making
 -- TODO Make injective?
@@ -32,8 +43,8 @@ type instance Unqueried (UcamWebAuthenticate route a) = route :> Get '[JSON] (Uc
 
 -- | A bifunctional endpoint for authentication, which both delegates and
 -- responds to the Web Login Service (WLS).
-type UcamWebAuthToken route token a
-    = route :> QueryParam "WLS-Response" (SignedAuthResponse 'MaybeValid a) :> Get '[OctetStream] token
+type UcamWebAuthToken typs route token a
+    = route :> QueryParam "WLS-Response" (SignedAuthResponse 'MaybeValid a) :> Get typs token
 
-type instance Unqueried (UcamWebAuthToken route token a) = route :> Get '[OctetStream] token
+type instance Unqueried (UcamWebAuthToken typs route token a) = route :> Get typs token
 
