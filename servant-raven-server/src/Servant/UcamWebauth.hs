@@ -44,6 +44,7 @@ module Servant.UcamWebauth
 
 import "servant-raven" Servant.UcamWebauth.Settings
 import "ucam-webauth" Network.Protocol.UcamWebauth
+import "ucam-webauth-types" Data.ByteString.B64
 import "ucam-webauth-types" Network.Protocol.UcamWebauth.Data.Internal
 
 import "base" Control.Applicative

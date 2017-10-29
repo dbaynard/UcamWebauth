@@ -135,7 +135,8 @@ module Network.Protocol.UcamWebauth.Data
 
   ) where
 
-import Network.Protocol.UcamWebauth.Data.Internal
+import "this" Network.Protocol.UcamWebauth.Data.Internal
+import "this" Data.ByteString.B64
 
 -- Prelude
 import "base" Control.Applicative
