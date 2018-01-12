@@ -36,6 +36,7 @@ for 'readRSAKeyFile'.
 
 module Servant.UcamWebauth
   ( authenticated
+  , ucamWebAuthCookie
   , ucamWebAuthToken
   , ucamWebAuthenticate
   , ucamWebAuthSettings
@@ -48,6 +49,7 @@ import "ucam-webauth-types" Data.ByteString.B64
 import "ucam-webauth-types" Network.Protocol.UcamWebauth.Data.Internal
 
 import "base" Control.Applicative
+import "base" Control.Monad.IO.Class
 import "errors" Control.Error
 
 import "time" Data.Time
@@ -113,6 +115,30 @@ ucamWebAuthToken toToken (mexpires, ky) settings mresponse = let jwtCfg = defaul
         Handler . bimapExceptT trans B64UL . ExceptT $ makeJWT tok jwtCfg mexpires
     where
         trans _ = err401 { errBody = "Token error" }
+
+-- | Here, if a request is made with a valid WLS-Response query parameter, convert the
+-- 'UcamWebauthInfo a' to the token type using the supplied function and then set the log in token
+-- as a cookie. Supply 'pure' to use 'UcamWebauthInfo a' as a token.
+ucamWebAuthCookie
+    :: forall a tok .
+       ( ToJSON a
+       , ToJWT tok
+       )
+    => (UcamWebauthInfo a -> Handler tok)
+    -> JWK
+    -> SetWAA a
+    -> Maybe (SignedAuthResponse 'MaybeValid a)
+    -> Handler (Cookied tok)
+ucamWebAuthCookie toToken ky settings mresponse = let jwtCfg = defaultJWTSettings ky in do
+        uwi <- ucamWebAuthenticate settings mresponse
+        tok <- toToken uwi
+        mApplyCookies <- liftIO $ acceptLogin cookieSettings jwtCfg tok
+        Handler . failWith trans . fmap ($ tok) $ mApplyCookies
+    where
+        trans = err401 { errBody = "Token error" }
+        cookieSettings = defaultCookieSettings
+
+type Cookied a = Headers '[Header "Set-Cookie" SetCookie, Header "Set-Cookie" SetCookie] a
 
 liftMaybe :: Alternative f => Maybe a -> f a
 liftMaybe = maybe empty pure
