@@ -1,6 +1,8 @@
--- This file has been generated from package.yaml by hpack version 0.17.0.
+-- This file has been generated from package.yaml by hpack version 0.20.0.
 --
 -- see: https://github.com/sol/hpack
+--
+-- hash: a35e020174ec4207564ef9b0c0a4dca2adb62bba4453c6a8a1aaf9fe51c864f1
 
 name:           raven-wai
 version:        0.1.0
@@ -29,12 +31,12 @@ library
       src
   build-depends:
       base >=4 && <5
-    , ucam-webauth
     , bytestring >=0.9 && <0.11
-    , microlens-mtl
-    , wai
     , containers
+    , microlens-mtl
+    , ucam-webauth
     , ucam-webauth-types
+    , wai
   if flag(dev)
     ghc-options: -Wall -fwarn-tabs -O0
   else
@@ -54,21 +56,22 @@ executable raven-wai-example
       app
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      base >=4 && <5
-    , ucam-webauth
+      aeson
+    , base >=4 && <5
     , bytestring >=0.9 && <0.11
-    , microlens-mtl
-    , wai
-    , aeson
     , errors
     , http-types
     , microlens
+    , microlens-mtl
     , mtl
     , raven-wai
     , text >=0.11 && <2.0
     , time
+    , ucam-webauth
     , wai
     , warp >=3.2.0
+  other-modules:
+      Paths_raven_wai
   default-language: Haskell2010
 
 test-suite test
@@ -79,10 +82,12 @@ test-suite test
   ghc-options: -Wall
   build-depends:
       base >=4 && <5
-    , ucam-webauth
     , bytestring >=0.9 && <0.11
-    , microlens-mtl
-    , wai
-    , raven-wai
     , hspec >=2.0.0
+    , microlens-mtl
+    , raven-wai
+    , ucam-webauth
+    , wai
+  other-modules:
+      Paths_raven_wai
   default-language: Haskell2010

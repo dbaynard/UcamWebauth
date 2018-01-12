@@ -1,6 +1,8 @@
--- This file has been generated from package.yaml by hpack version 0.18.1.
+-- This file has been generated from package.yaml by hpack version 0.20.0.
 --
 -- see: https://github.com/sol/hpack
+--
+-- hash: 7727dda2b90199e29dfca5fbb7bac5728ba0175f4548791ad448a4225e7e9802
 
 name:           servant-raven-server
 version:        0.1.0
@@ -32,25 +34,25 @@ library
   hs-source-dirs:
       src
   build-depends:
-      base >= 4.7 && < 5
+      aeson
+    , base >=4.7 && <5
     , bytestring
     , errors
     , jose
+    , microlens
     , microlens-mtl
     , mtl
     , network-uri
     , reflection
+    , servant
     , servant-auth-server
+    , servant-raven
     , servant-server
     , text
     , time
     , ucam-webauth
-    , uri-bytestring
-    , aeson
-    , microlens
-    , servant
-    , servant-raven
     , ucam-webauth-types
+    , uri-bytestring
   if flag(dev)
     ghc-options: -Wall -fwarn-tabs -O0
   else
@@ -66,29 +68,30 @@ executable servant-raven-example
   hs-source-dirs:
       app
   build-depends:
-      base >= 4.7 && < 5
+      base >=4.7 && <5
     , bytestring
     , errors
     , jose
+    , microlens
     , microlens-mtl
     , mtl
     , network-uri
+    , optparse-generic
     , reflection
+    , servant-auth
     , servant-auth-server
+    , servant-raven
+    , servant-raven-server
     , servant-server
     , text
     , time
     , ucam-webauth
     , uri-bytestring
-    , bytestring
-    , microlens
-    , optparse-generic
-    , servant-auth
-    , servant-raven
-    , servant-raven-server
     , wai-extra
     , warp
     , yaml
+  other-modules:
+      Paths_servant_raven_server
   default-language: Haskell2010
 
 test-suite test
@@ -98,25 +101,26 @@ test-suite test
       test
   ghc-options: -Wall
   build-depends:
-      base >= 4.7 && < 5
+      QuickCheck
+    , base >=4.7 && <5
     , bytestring
     , errors
+    , generic-arbitrary
+    , hspec >=2.0.0
     , jose
     , microlens-mtl
     , mtl
     , network-uri
+    , quickcheck-instances
     , reflection
     , servant-auth-server
+    , servant-raven-server
     , servant-server
     , text
     , time
     , ucam-webauth
     , uri-bytestring
-    , servant-raven-server
-    , hspec >=2.0.0
-    , generic-arbitrary
-    , QuickCheck
-    , quickcheck-instances
   other-modules:
       Servant.UcamWebauthSpec
+      Paths_servant_raven_server
   default-language: Haskell2010

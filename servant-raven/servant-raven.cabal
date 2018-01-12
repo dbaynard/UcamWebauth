@@ -1,6 +1,8 @@
--- This file has been generated from package.yaml by hpack version 0.18.1.
+-- This file has been generated from package.yaml by hpack version 0.20.0.
 --
 -- see: https://github.com/sol/hpack
+--
+-- hash: c92fb06528b3a5698f71e1bc6b28e1f0e06d6415c119ad37a1a23dd83a984152
 
 name:           servant-raven
 version:        0.1.0
@@ -28,9 +30,7 @@ library
   hs-source-dirs:
       src
   build-depends:
-      base >= 4.7 && < 5
-    , servant
-    , ucam-webauth-types
+      base >=4.7 && <5
     , bytestring
     , errors
     , file-embed
@@ -39,7 +39,9 @@ library
     , microlens-mtl
     , network-uri
     , reflection
+    , servant
     , text
+    , ucam-webauth-types
     , uri-bytestring
   if flag(dev)
     ghc-options: -Wall -fwarn-tabs -O0
@@ -63,11 +65,12 @@ test-suite test
       test
   ghc-options: -Wall
   build-depends:
-      base >= 4.7 && < 5
-    , servant
-    , ucam-webauth-types
-    , servant-raven
+      base >=4.7 && <5
     , hspec >=2.0.0
+    , servant
+    , servant-raven
+    , ucam-webauth-types
   other-modules:
       URI.ConvertSpec
+      Paths_servant_raven
   default-language: Haskell2010
