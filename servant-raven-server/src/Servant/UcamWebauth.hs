@@ -41,8 +41,10 @@ module Servant.UcamWebauth
   , ucamWebAuthenticate
   , ucamWebAuthSettings
   , authURI
+  , Cookied
   ) where
 
+import "servant-raven" Servant.UcamWebauth.API
 import "servant-raven" Servant.UcamWebauth.Settings
 import "ucam-webauth" Network.Protocol.UcamWebauth
 import "ucam-webauth-types" Data.ByteString.B64
@@ -138,8 +140,6 @@ ucamWebAuthCookie (toTok, fromTok) ky settings mresponse = let jwtCfg = defaultJ
     where
         trans = err401 { errBody = "Token error" }
         cookieSettings = defaultCookieSettings
-
-type Cookied a = Headers '[Header "Set-Cookie" SetCookie, Header "Set-Cookie" SetCookie] a
 
 liftMaybe :: Alternative f => Maybe a -> f a
 liftMaybe = maybe empty pure

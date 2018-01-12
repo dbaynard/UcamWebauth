@@ -24,6 +24,7 @@ library:
   - URI.Convert
   dependencies:
   - bytestring
+  - cookie
   - errors
   - file-embed
   - microlens

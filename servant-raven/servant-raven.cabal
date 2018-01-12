@@ -1,8 +1,8 @@
--- This file has been generated from package.yaml by hpack version 0.20.0.
+-- This file has been generated from package.yaml by hpack version 0.21.2.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: c92fb06528b3a5698f71e1bc6b28e1f0e06d6415c119ad37a1a23dd83a984152
+-- hash: 76fab7e347c55b7d7582611aee27bd5a0c210ef13347c780de5da95687aeb8d5
 
 name:           servant-raven
 version:        0.1.0
@@ -32,6 +32,7 @@ library
   build-depends:
       base >=4.7 && <5
     , bytestring
+    , cookie
     , errors
     , file-embed
     , microlens
