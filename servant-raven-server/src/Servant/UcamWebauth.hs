@@ -120,20 +120,21 @@ ucamWebAuthToken toToken (mexpires, ky) settings mresponse = let jwtCfg = defaul
 -- 'UcamWebauthInfo a' to the token type using the supplied function and then set the log in token
 -- as a cookie. Supply 'pure' to use 'UcamWebauthInfo a' as a token.
 ucamWebAuthCookie
-    :: forall a tok .
+    :: forall a tok out .
        ( ToJSON a
        , ToJWT tok
        )
-    => (UcamWebauthInfo a -> Handler tok)
+    => (UcamWebauthInfo a -> Handler tok, tok -> Handler out)
     -> JWK
     -> SetWAA a
     -> Maybe (SignedAuthResponse 'MaybeValid a)
-    -> Handler (Cookied tok)
-ucamWebAuthCookie toToken ky settings mresponse = let jwtCfg = defaultJWTSettings ky in do
+    -> Handler (Cookied out)
+ucamWebAuthCookie (toTok, fromTok) ky settings mresponse = let jwtCfg = defaultJWTSettings ky in do
         uwi <- ucamWebAuthenticate settings mresponse
-        tok <- toToken uwi
+        tok <- toTok uwi
         mApplyCookies <- liftIO $ acceptLogin cookieSettings jwtCfg tok
-        Handler . failWith trans . fmap ($ tok) $ mApplyCookies
+        out <- fromTok tok
+        Handler . failWith trans . fmap ($ out) $ mApplyCookies
     where
         trans = err401 { errBody = "Token error" }
         cookieSettings = defaultCookieSettings
