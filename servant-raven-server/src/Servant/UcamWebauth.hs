@@ -42,6 +42,7 @@ module Servant.UcamWebauth
   , ucamWebAuthSettings
   , authURI
   , Cookied
+  , servantMkJWT
   ) where
 
 import "servant-raven" Servant.UcamWebauth.API
@@ -111,12 +112,10 @@ ucamWebAuthToken
     -> SetWAA a
     -> Maybe (SignedAuthResponse 'MaybeValid a)
     -> Handler (Base64UBSL tok)
-ucamWebAuthToken toToken (mexpires, ky) settings mresponse = let jwtCfg = defaultJWTSettings ky in do
+ucamWebAuthToken toToken jwkSet settings mresponse = do
         uwi <- ucamWebAuthenticate settings mresponse
         tok <- toToken uwi
-        Handler . bimapExceptT trans B64UL . ExceptT $ makeJWT tok jwtCfg mexpires
-    where
-        trans _ = err401 { errBody = "Token error" }
+        servantMkJWT jwkSet tok
 
 -- | Here, if a request is made with a valid WLS-Response query parameter, convert the
 -- 'UcamWebauthInfo a' to the token type using the supplied function and then set the log in token
@@ -143,3 +142,10 @@ ucamWebAuthCookie (toTok, fromTok) ky settings mresponse = let jwtCfg = defaultJ
 
 liftMaybe :: Alternative f => Maybe a -> f a
 liftMaybe = maybe empty pure
+
+
+servantMkJWT :: ToJWT tok => (Maybe UTCTime, JWK) -> tok -> Handler (Base64UBSL tok)
+servantMkJWT (mexpires, ky) tok = Handler . bimapExceptT trans B64UL . ExceptT $ makeJWT tok jwtCfg mexpires
+    where
+        trans _ = err401 { errBody = "Token error" }
+        jwtCfg = defaultJWTSettings ky
