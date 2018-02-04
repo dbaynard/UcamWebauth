@@ -1,8 +1,8 @@
--- This file has been generated from package.yaml by hpack version 0.20.0.
+-- This file has been generated from package.yaml by hpack version 0.21.2.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 8e74d36f3a3d6d28e4099e4dd5548f624a8df9d6a4784d5fc97852d0ef9e5ad3
+-- hash: 92e167a39a89f6a9194735a6303237926013e29bd11dbe40ed5d6b7bef410eb8
 
 name:           ucam-webauth-types
 version:        0.1.0
@@ -34,6 +34,7 @@ library
     , base >=4 && <5
     , base64-bytestring
     , bytestring >=0.9 && <0.11
+    , case-insensitive
     , containers
     , errors
     , http-types
@@ -66,6 +67,7 @@ test-suite test
     , base >=4 && <5
     , base64-bytestring
     , bytestring >=0.9 && <0.11
+    , case-insensitive
     , containers
     , errors
     , hspec >=2.0.0

@@ -117,7 +117,7 @@ module Network.Protocol.UcamWebauth.Data
   , applicationUrl
   , wlsUrl
   , importedKeys
-  , requestOrigin
+  , ucamWebauthHeader
 
   , Base64UBS()
   , Base64UBSL()
@@ -162,6 +162,7 @@ import "text" Data.Text.Encoding
 import qualified "text" Data.Text as T
 import "base" Data.Char (isAlphaNum, isAscii)
 import "containers" Data.Map.Strict (Map)
+import qualified "case-insensitive" Data.CaseInsensitive as CI (mk)
 
 import "aeson" Data.Aeson.Types (ToJSON)
 import qualified "aeson" Data.Aeson as A (encode)
@@ -221,15 +222,15 @@ ucamWebauthQuery
     -> [Header]
 ucamWebauthQuery (configWAA -> waa) = catMaybes
         [ location
-        , origin
+        , ucamHeader
         ]
 
     where
         location :: Maybe Header
         location = pure . (hLocation,) . toByteString $ baseUrl waa <> theQuery
 
-        origin :: Maybe Header
-        origin = ("Origin",) . encodeUtf8 <$> waa ^. wSet . requestOrigin
+        ucamHeader :: Maybe Header
+        ucamHeader = (, "1") . CI.mk <$> waa ^. wSet . ucamWebauthHeader
 
         baseUrl :: WAAState a -> Builder
         baseUrl = encodeUtf8Builder . view (wSet . wlsUrl)
@@ -537,14 +538,14 @@ importedKeys :: WAASettings `Lens'` Map KeyID ByteString
 importedKeys f MakeWAASettings{..} = (\_importedKeys -> MakeWAASettings{_importedKeys, ..}) <$> f _importedKeys
 
 {-|
-  We may need to pass the Origin header to the Ucam-Webauth server.
-  The value is contained here.
+  We may need to pass a custom header to identify the redirect to a javascript client.
+  The header name is contained here (the value is set to '1').
 
-  Default is empty, which should correspond to no header.
+  Default is empty, which should be implemented to correspond to no header.
 
 -}
-requestOrigin :: WAASettings `Lens'` Maybe Text
-requestOrigin f MakeWAASettings{..} = (\_requestOrigin -> MakeWAASettings{_requestOrigin, ..}) <$> f _requestOrigin
+ucamWebauthHeader :: WAASettings `Lens'` Maybe ByteString
+ucamWebauthHeader f MakeWAASettings{..} = (\_ucamWebauthHeader -> MakeWAASettings{_ucamWebauthHeader, ..}) <$> f _ucamWebauthHeader
 
 ------------------------------------------------------------------------------
 -- * Text encoding
