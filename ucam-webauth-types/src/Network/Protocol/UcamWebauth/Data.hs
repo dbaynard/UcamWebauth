@@ -117,6 +117,7 @@ module Network.Protocol.UcamWebauth.Data
   , applicationUrl
   , wlsUrl
   , importedKeys
+  , requestOrigin
 
   , Base64UBS()
   , Base64UBSL()
@@ -141,6 +142,7 @@ import "this" Data.ByteString.B64
 -- Prelude
 import "base" Control.Applicative
 import "base" Data.Semigroup
+import "base" Data.Maybe (catMaybes)
 
 -- Settings
 import "microlens" Lens.Micro
@@ -216,10 +218,19 @@ approveParams f AuthInfo{..} = (\_approveParams -> AuthInfo{_approveParams, ..})
 ucamWebauthQuery
     :: ToJSON a
     => SetWAA a
-    -> Header
-ucamWebauthQuery (configWAA -> waa) = (hLocation,) . toByteString $ baseUrl waa <> theQuery
+    -> [Header]
+ucamWebauthQuery (configWAA -> waa) = catMaybes
+        [ location
+        , origin
+        ]
 
     where
+        location :: Maybe Header
+        location = pure . (hLocation,) . toByteString $ baseUrl waa <> theQuery
+
+        origin :: Maybe Header
+        origin = ("Origin",) . encodeUtf8 <$> waa ^. wSet . requestOrigin
+
         baseUrl :: WAAState a -> Builder
         baseUrl = encodeUtf8Builder . view (wSet . wlsUrl)
 
@@ -524,6 +535,16 @@ wlsUrl f MakeWAASettings{..} = (\_wlsUrl -> MakeWAASettings{_wlsUrl, ..}) <$> f 
 -}
 importedKeys :: WAASettings `Lens'` Map KeyID ByteString
 importedKeys f MakeWAASettings{..} = (\_importedKeys -> MakeWAASettings{_importedKeys, ..}) <$> f _importedKeys
+
+{-|
+  We may need to pass the Origin header to the Ucam-Webauth server.
+  The value is contained here.
+
+  Default is empty, which should correspond to no header.
+
+-}
+requestOrigin :: WAASettings `Lens'` Maybe Text
+requestOrigin f MakeWAASettings{..} = (\_requestOrigin -> MakeWAASettings{_requestOrigin, ..}) <$> f _requestOrigin
 
 ------------------------------------------------------------------------------
 -- * Text encoding

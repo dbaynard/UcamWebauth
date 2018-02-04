@@ -96,7 +96,7 @@ ucamWebAuthenticate settings mresponse = do
         response <- Handler . needToAuthenticate . liftMaybe $ mresponse
         Handler . authError . authInfo settings $ response
     where
-        needToAuthenticate = noteT err303 {errHeaders = [ucamWebauthQuery settings]}
+        needToAuthenticate = noteT err303 {errHeaders = ucamWebauthQuery settings}
         authError = withExceptT . const $ err401 { errBody = "Authentication error" }
 
 -- | Here, if a GET request is made with a valid WLS-Response query parameter, convert the

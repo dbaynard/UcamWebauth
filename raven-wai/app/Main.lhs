@@ -99,7 +99,7 @@ application time req response = case pathInfo req of
 ```haskell
     ["foo", "authenticate"] -> response $ responseBuilder
         seeOther303
-        [("Content-Type", "text/plain"), ucamWebauthQuery settings]
+        (("Content-Type", "text/plain") : ucamWebauthQuery settings)
         mempty
     _ -> response $ responseBuilder
         status200

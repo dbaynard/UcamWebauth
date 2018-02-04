@@ -476,6 +476,7 @@ data WAASettings = MakeWAASettings
     , _applicationUrl :: Text
     , _wlsUrl :: Text
     , _importedKeys :: Map KeyID ByteString
+    , _requestOrigin :: Maybe Text
     } deriving (Show, Eq, Ord, Generic, Typeable, Data)
 
 {-|
@@ -514,6 +515,7 @@ configWAA = flip execState MakeWAAState
             , _applicationUrl = mempty
             , _wlsUrl = error "You must enter a URL for the authentication server."
             , _importedKeys = MapS.empty
+            , _requestOrigin = empty
             }
 
         request :: AuthRequest a
