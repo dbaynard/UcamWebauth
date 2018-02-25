@@ -1,7 +1,7 @@
 # For more information, see: http://docs.haskellstack.org/en/stable/yaml_configuration.html
 
 # Specifies the GHC version and set of packages available (e.g., lts-3.5, nightly-2015-09-21, ghc-7.10.2)
-resolver: https://gist.github.com/dbaynard/9693107a883a6282f52f22785d0072e2/raw/f1d4ea41a1c06c10c5d57d6c312996332e37896c
+resolver: https://gist.github.com/dbaynard/9693107a883a6282f52f22785d0072e2/raw/0d442fb0e6918bb5bde06ac59565709ccf726170
 
 # Local packages, usually specified by relative directory name
 packages:
