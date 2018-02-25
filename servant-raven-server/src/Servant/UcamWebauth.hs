@@ -49,11 +49,10 @@ import "servant-raven" Servant.UcamWebauth.API
 import "servant-raven" Servant.UcamWebauth.Settings
 import "ucam-webauth" Network.Protocol.UcamWebauth
 import "ucam-webauth-types" Data.ByteString.B64
-import "ucam-webauth-types" Network.Protocol.UcamWebauth.Data.Internal
 
-import "base" Control.Applicative
 import "base" Control.Monad.IO.Class
 import "errors" Control.Error
+import qualified "unliftio" UnliftIO.Exception as UIO
 
 import "time" Data.Time
 
@@ -75,10 +74,10 @@ instance FromJSON a => FromJWT (UcamWebauthInfo a)
 
 -- | Wrap the provided handler function with authentication.
 authenticated
-    :: ThrowAll (Handler protected)
-    => (a -> Handler protected)
+    :: ThrowAll (handler protected)
+    => (a -> handler protected)
     -> AuthResult a
-    -> Handler protected
+    -> handler protected
 authenticated f (Authenticated user) = f user
 authenticated _ _ = throwAll err401
 
@@ -88,30 +87,34 @@ authenticated _ _ = throwAll err401
 -- parse that parameter to a 'UcamWebauthInfo a', and then return that
 -- parameter or throw a 401 error.
 ucamWebAuthenticate
-    :: forall a. ToJSON a
+    :: forall a m .
+       ( ToJSON a
+       , MonadIO m
+       )
     => SetWAA a
     -> Maybe (MaybeValidResponse a)
-    -> Handler (UcamWebauthInfo a)
+    -> m (UcamWebauthInfo a)
 ucamWebAuthenticate settings mresponse = do
-        response <- Handler . needToAuthenticate . liftMaybe $ mresponse
-        Handler . authError . authInfo settings $ response
+        response <- UIO.fromEither . needToAuthenticate $ mresponse
+        UIO.fromEitherIO . runExceptT . authError . authInfo settings $ response
     where
-        needToAuthenticate = noteT err303 {errHeaders = ucamWebauthQuery settings}
+        needToAuthenticate = note err303 {errHeaders = ucamWebauthQuery settings}
         authError = withExceptT . const $ err401 { errBody = "Authentication error" }
 
 -- | Here, if a GET request is made with a valid WLS-Response query parameter, convert the
 -- 'UcamWebauthInfo a' to the token type using the supplied function and then return the log in token.
 -- Supply 'pure' to use 'UcamWebauthInfo a' as a token.
 ucamWebAuthToken
-    :: forall a tok .
+    :: forall a m tok .
        ( ToJSON a
        , ToJWT tok
+       , MonadIO m
        )
-    => (UcamWebauthInfo a -> Handler tok)
+    => (UcamWebauthInfo a -> m tok)
     -> (Maybe UTCTime, JWK)
     -> SetWAA a
     -> Maybe (MaybeValidResponse a)
-    -> Handler (Base64UBSL tok)
+    -> m (Base64UBSL tok)
 ucamWebAuthToken toToken jwkSet settings mresponse = do
         uwi <- ucamWebAuthenticate settings mresponse
         tok <- toToken uwi
@@ -121,31 +124,33 @@ ucamWebAuthToken toToken jwkSet settings mresponse = do
 -- 'UcamWebauthInfo a' to the token type using the supplied function and then set the log in token
 -- as a cookie. Supply 'pure' to use 'UcamWebauthInfo a' as a token.
 ucamWebAuthCookie
-    :: forall a tok out .
+    :: forall a m tok out .
        ( ToJSON a
        , ToJWT tok
+       , MonadIO m
        )
-    => (UcamWebauthInfo a -> Handler tok, tok -> Handler out)
+    => (UcamWebauthInfo a -> m tok, tok -> m out)
     -> JWK
     -> SetWAA a
     -> Maybe (MaybeValidResponse a)
-    -> Handler (Cookied out)
+    -> m (Cookied out)
 ucamWebAuthCookie (toTok, fromTok) ky settings mresponse = let jwtCfg = defaultJWTSettings ky in do
         uwi <- ucamWebAuthenticate settings mresponse
         tok <- toTok uwi
         mApplyCookies <- liftIO $ acceptLogin cookieSettings jwtCfg tok
         out <- fromTok tok
-        Handler . failWith trans . fmap ($ out) $ mApplyCookies
+        UIO.fromEither . note trans . fmap ($ out) $ mApplyCookies
     where
         trans = err401 { errBody = "Token error" }
         cookieSettings = defaultCookieSettings
 
-liftMaybe :: Alternative f => Maybe a -> f a
-liftMaybe = maybe empty pure
-
-
-servantMkJWT :: ToJWT tok => (Maybe UTCTime, JWK) -> tok -> Handler (Base64UBSL tok)
-servantMkJWT (mexpires, ky) tok = Handler . bimapExceptT trans B64UL . ExceptT $ makeJWT tok jwtCfg mexpires
+servantMkJWT
+  :: ( ToJWT tok
+     , MonadIO m
+     )
+  => (Maybe UTCTime, JWK) -> tok -> m (Base64UBSL tok)
+servantMkJWT (mexpires, ky) tok = UIO.fromEitherIO . runExceptT .
+  bimapExceptT trans B64UL . ExceptT $ makeJWT tok jwtCfg mexpires
     where
         trans _ = err401 { errBody = "Token error" }
         jwtCfg = defaultJWTSettings ky
