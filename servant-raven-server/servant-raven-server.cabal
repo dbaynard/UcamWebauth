@@ -1,8 +1,8 @@
--- This file has been generated from package.yaml by hpack version 0.20.0.
+-- This file has been generated from package.yaml by hpack version 0.21.2.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 7727dda2b90199e29dfca5fbb7bac5728ba0175f4548791ad448a4225e7e9802
+-- hash: 2a23b8a34b0d2155ebaebfb0a7a6a7795be4313270e107cefdb029045bbd7552
 
 name:           servant-raven-server
 version:        0.1.0
@@ -52,6 +52,7 @@ library
     , time
     , ucam-webauth
     , ucam-webauth-types
+    , unliftio
     , uri-bytestring
   if flag(dev)
     ghc-options: -Wall -fwarn-tabs -O0
@@ -86,6 +87,7 @@ executable servant-raven-example
     , text
     , time
     , ucam-webauth
+    , unliftio
     , uri-bytestring
     , wai-extra
     , warp
@@ -119,6 +121,7 @@ test-suite test
     , text
     , time
     , ucam-webauth
+    , unliftio
     , uri-bytestring
   other-modules:
       Servant.UcamWebauthSpec

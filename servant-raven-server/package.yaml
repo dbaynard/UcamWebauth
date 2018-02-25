@@ -23,6 +23,7 @@ dependencies:
 - text
 - time
 - ucam-webauth
+- unliftio
 - uri-bytestring
 
 extra-source-files:
