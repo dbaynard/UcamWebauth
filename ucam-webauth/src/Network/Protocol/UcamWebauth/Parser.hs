@@ -60,7 +60,7 @@ import qualified "aeson" Data.Aeson as A
 
   As a reminder, the 'MaybeValid' symbol indicates the response has not yet been verified.
 -}
-ucamResponseParser :: forall a . FromJSON a => Parser (SignedAuthResponse 'MaybeValid a)
+ucamResponseParser :: forall a . FromJSON a => Parser (MaybeValidResponse a)
 ucamResponseParser = do
         (_ucamAToSign, _ucamAResponse@AuthResponse{..}) <- noBang . match $ ucamAuthResponseParser
         (_ucamAKid, _ucamASig) <- parseKidSig _ucamAStatus

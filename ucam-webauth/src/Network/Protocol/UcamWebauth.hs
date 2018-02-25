@@ -96,7 +96,7 @@ import "pem" Data.PEM
 authInfo
     :: (MonadIO m, MonadPlus m, MonadError Text m)
     => SetWAA a
-    -> SignedAuthResponse 'MaybeValid a
+    -> MaybeValidResponse a
     -> m (UcamWebauthInfo a)
 authInfo waa = getAuthInfo <=< validateAuthResponse waa
 
@@ -121,7 +121,7 @@ maybeAuthCode
     :: (FromJSON a, MonadIO m, MonadPlus m, MonadError Text m)
     => SetWAA a
     -> ByteString
-    -> m (SignedAuthResponse 'Valid a)
+    -> m (ValidResponse a)
 maybeAuthCode waa = validateAuthResponse waa <=< authCode
 
 {-|
@@ -130,14 +130,14 @@ maybeAuthCode waa = validateAuthResponse waa <=< authCode
 authCode
     :: (FromJSON a, MonadPlus m)
     => ByteString
-    -> m (SignedAuthResponse 'MaybeValid a)
+    -> m (MaybeValidResponse a)
 authCode = liftMaybe . maybeResult . flip feed "" . parse ucamResponseParser
 
 -- | Parse a not-yet-validated 'SignedAuthResponse' from a form response.
 --
 -- The orphan instance is necessary as this requires the parser defined in
 -- this package.
-instance FromJSON a => FromHttpApiData (SignedAuthResponse 'MaybeValid a) where
+instance FromJSON a => FromHttpApiData (MaybeValidResponse a) where
     parseQueryParam = first T.pack . parseOnly ucamResponseParser . encodeUtf8
 
 ------------------------------------------------------------------------------
@@ -165,8 +165,8 @@ guardE e boolean = guard boolean <|> throwError e
 validateAuthResponse
     :: forall a m . (MonadIO m, MonadPlus m, MonadError Text m)
     => SetWAA a
-    -> SignedAuthResponse 'MaybeValid a
-    -> m (SignedAuthResponse 'Valid a)
+    -> MaybeValidResponse a
+    -> m (ValidResponse a)
 validateAuthResponse waa sar = do
         guardE "Key invalid" .
             validateKid waa =<< liftMaybe (sar ^. ucamAKid)
@@ -180,7 +180,7 @@ validateAuthResponse waa sar = do
             validateAuthTypes waa $ sar ^. ucamAResponse
         return . makeValid $ sar
     where
-        makeValid :: SignedAuthResponse 'MaybeValid a -> SignedAuthResponse 'Valid a
+        makeValid :: MaybeValidResponse a -> ValidResponse a
         makeValid = coerce
 
 ------------------------------------------------------------------------------
@@ -201,7 +201,7 @@ validateKid = flip elem . view (wSet . validKids) . configWAA
 validateSig
     :: (MonadPlus m, MonadIO m)
     => SetWAA a
-    -> SignedAuthResponse 'MaybeValid a
+    -> MaybeValidResponse a
     -> m Bool
 validateSig (configWAA -> waa) = validateSigKey (readRSAKeyFile $ waa ^. wSet . importedKeys)
 
@@ -243,7 +243,7 @@ validateSigKey
     :: MonadPlus m
     => (KeyID
     -> m PublicKey)                     -- ^ Get an RSA 'PublicKey' from somewhere, with the possibility of failing.
-    -> SignedAuthResponse 'MaybeValid a
+    -> MaybeValidResponse a
     -> m Bool                           -- ^ 'True' for a verified signature, 'False' for a verified invalid signature, and 'mzero' for an inability to validate
 validateSigKey importKey sar =
         pure . rsaValidate <=< importKey <=< liftMaybe $ sar ^. ucamAKid

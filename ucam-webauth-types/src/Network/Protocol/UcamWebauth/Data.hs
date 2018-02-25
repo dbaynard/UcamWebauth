@@ -45,7 +45,10 @@ module Network.Protocol.UcamWebauth.Data
   , ucamQDate
   , ucamQFail
 
+  -- $SignedAuthResponse
   , SignedAuthResponse()
+  , MaybeValidResponse
+  , ValidResponse
   , ucamAResponse
   , ucamAToSign
   , ucamAKid
@@ -328,6 +331,14 @@ ucamQFail f MakeAuthRequest{..} = (\_ucamQFail -> MakeAuthRequest{_ucamQFail, ..
 --------------------------------------------------
 -- ** 'SignedAuthResponse'
 --------------------------------------------------
+
+{- $SignedAuthResponse
+  It is helpful to have type synonyms for valid or otherwise 'SignedAuthRepsonse's.
+ -}
+
+type MaybeValidResponse a = SignedAuthResponse 'MaybeValid a
+
+type ValidResponse a = SignedAuthResponse 'Valid a
 
 {-|
   The bit of the response that is signed

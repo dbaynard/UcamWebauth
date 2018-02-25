@@ -47,14 +47,14 @@ type instance Unqueried (UcamWebAuthenticate route a) = route :> Get '[JSON] (Uc
 -- | A bifunctional endpoint for authentication, which both delegates and
 -- responds to the Web Login Service (WLS).
 type UcamWebAuthToken typs route token a
-    = route :> QueryParam "WLS-Response" (SignedAuthResponse 'MaybeValid a) :> Get typs token
+    = route :> QueryParam "WLS-Response" (MaybeValidResponse a) :> Get typs token
 
 type instance Unqueried (UcamWebAuthToken typs route token a) = route :> Get typs token
 
 -- | A bifunctional endpoint for authentication, which both delegates and
 -- responds to the Web Login Service (WLS).
 type UcamWebAuthCookie verb typs route token a
-    = route :> QueryParam "WLS-Response" (SignedAuthResponse 'MaybeValid a) :> verb typs (Cookied token)
+    = route :> QueryParam "WLS-Response" (MaybeValidResponse a) :> verb typs (Cookied token)
 
 type instance Unqueried (UcamWebAuthCookie verb typs route token a) = route :> verb typs (Cookied token)
 

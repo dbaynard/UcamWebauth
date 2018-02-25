@@ -90,7 +90,7 @@ authenticated _ _ = throwAll err401
 ucamWebAuthenticate
     :: forall a. ToJSON a
     => SetWAA a
-    -> Maybe (SignedAuthResponse 'MaybeValid a)
+    -> Maybe (MaybeValidResponse a)
     -> Handler (UcamWebauthInfo a)
 ucamWebAuthenticate settings mresponse = do
         response <- Handler . needToAuthenticate . liftMaybe $ mresponse
@@ -110,7 +110,7 @@ ucamWebAuthToken
     => (UcamWebauthInfo a -> Handler tok)
     -> (Maybe UTCTime, JWK)
     -> SetWAA a
-    -> Maybe (SignedAuthResponse 'MaybeValid a)
+    -> Maybe (MaybeValidResponse a)
     -> Handler (Base64UBSL tok)
 ucamWebAuthToken toToken jwkSet settings mresponse = do
         uwi <- ucamWebAuthenticate settings mresponse
@@ -128,7 +128,7 @@ ucamWebAuthCookie
     => (UcamWebauthInfo a -> Handler tok, tok -> Handler out)
     -> JWK
     -> SetWAA a
-    -> Maybe (SignedAuthResponse 'MaybeValid a)
+    -> Maybe (MaybeValidResponse a)
     -> Handler (Cookied out)
 ucamWebAuthCookie (toTok, fromTok) ky settings mresponse = let jwtCfg = defaultJWTSettings ky in do
         uwi <- ucamWebAuthenticate settings mresponse
