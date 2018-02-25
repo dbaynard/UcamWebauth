@@ -17,6 +17,9 @@ See the "Servant.Raven.Auth" module for a specific implementation, and
 It is necessary to store the relevant public keys, as described in the documentation
 for 'readRSAKeyFile'.
 
+This module provides functions which operate in any 'MonadIO' servant handler, as opposed to just 'Handler'.
+They work best with handlers for which 'UnliftIO' (from "unliftio-core") is implemented.
+
 -}
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
@@ -87,13 +90,13 @@ authenticated _ _ = throwAll err401
 -- parse that parameter to a 'UcamWebauthInfo a', and then return that
 -- parameter or throw a 401 error.
 ucamWebAuthenticate
-    :: forall a m .
+    :: forall a handler .
        ( ToJSON a
-       , MonadIO m
+       , MonadIO handler
        )
     => SetWAA a
     -> Maybe (MaybeValidResponse a)
-    -> m (UcamWebauthInfo a)
+    -> handler (UcamWebauthInfo a)
 ucamWebAuthenticate settings mresponse = do
         response <- UIO.fromEither . needToAuthenticate $ mresponse
         UIO.fromEitherIO . runExceptT . authError . authInfo settings $ response
@@ -105,16 +108,16 @@ ucamWebAuthenticate settings mresponse = do
 -- 'UcamWebauthInfo a' to the token type using the supplied function and then return the log in token.
 -- Supply 'pure' to use 'UcamWebauthInfo a' as a token.
 ucamWebAuthToken
-    :: forall a m tok .
+    :: forall a handler tok .
        ( ToJSON a
        , ToJWT tok
-       , MonadIO m
+       , MonadIO handler
        )
-    => (UcamWebauthInfo a -> m tok)
+    => (UcamWebauthInfo a -> handler tok)
     -> (Maybe UTCTime, JWK)
     -> SetWAA a
     -> Maybe (MaybeValidResponse a)
-    -> m (Base64UBSL tok)
+    -> handler (Base64UBSL tok)
 ucamWebAuthToken toToken jwkSet settings mresponse = do
         uwi <- ucamWebAuthenticate settings mresponse
         tok <- toToken uwi
@@ -124,16 +127,16 @@ ucamWebAuthToken toToken jwkSet settings mresponse = do
 -- 'UcamWebauthInfo a' to the token type using the supplied function and then set the log in token
 -- as a cookie. Supply 'pure' to use 'UcamWebauthInfo a' as a token.
 ucamWebAuthCookie
-    :: forall a m tok out .
+    :: forall a handler tok out .
        ( ToJSON a
        , ToJWT tok
-       , MonadIO m
+       , MonadIO handler
        )
-    => (UcamWebauthInfo a -> m tok, tok -> m out)
+    => (UcamWebauthInfo a -> handler tok, tok -> handler out)
     -> JWK
     -> SetWAA a
     -> Maybe (MaybeValidResponse a)
-    -> m (Cookied out)
+    -> handler (Cookied out)
 ucamWebAuthCookie (toTok, fromTok) ky settings mresponse = let jwtCfg = defaultJWTSettings ky in do
         uwi <- ucamWebAuthenticate settings mresponse
         tok <- toTok uwi
@@ -146,9 +149,9 @@ ucamWebAuthCookie (toTok, fromTok) ky settings mresponse = let jwtCfg = defaultJ
 
 servantMkJWT
   :: ( ToJWT tok
-     , MonadIO m
+     , MonadIO handler
      )
-  => (Maybe UTCTime, JWK) -> tok -> m (Base64UBSL tok)
+  => (Maybe UTCTime, JWK) -> tok -> handler (Base64UBSL tok)
 servantMkJWT (mexpires, ky) tok = UIO.fromEitherIO . runExceptT .
   bimapExceptT trans B64UL . ExceptT $ makeJWT tok jwtCfg mexpires
     where
