@@ -78,10 +78,10 @@ ucamResponseParser = do
             _ucamAUrl <- noBang . urlWrapText $ betweenBangs
             _ucamAPrincipal <- parsePrincipal _ucamAStatus
             _ucamAPtags <- parsePtags _ucamAVer
-            _ucamAAuth <- noBang . optionMaybe $ authTypeParser
+            _ucamAAuth <- maybeBang $ authTypeParser
             _ucamASso <- parseSso _ucamAStatus _ucamAAuth
-            _ucamALife <- noBang . optionMaybe . fmap timePeriodFromSeconds $ decimal
-            _ucamAParams <- A.decodeStrict . B.decodeLenient <$> betweenBangs
+            _ucamALife <- maybeBang . fmap timePeriodFromSeconds $ decimal
+            _ucamAParams <- A.decodeStrict . B.decodeLenient <$> betweenBangs <|> pure empty
             pure AuthResponse{..}
 
         noBang :: Parser b -> Parser b
