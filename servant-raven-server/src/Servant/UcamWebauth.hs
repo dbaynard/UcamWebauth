@@ -39,10 +39,10 @@ They work best with handlers for which 'UnliftIO' (from "unliftio-core") is impl
 
 module Servant.UcamWebauth
   ( authenticated
-  , ucamWebAuthCookie
-  , ucamWebAuthToken
-  , ucamWebAuthenticate
-  , ucamWebAuthSettings
+  , ucamWebauthCookie
+  , ucamWebauthToken
+  , ucamWebauthAuthenticate
+  , ucamWebauthSettings
   , authURI
   , Cookied
   , servantMkJWT
@@ -89,7 +89,7 @@ authenticated _ _ = throwAll err401
 -- If a GET request is made with the WLS-Response query parameter, try to
 -- parse that parameter to a 'UcamWebauthInfo a', and then return that
 -- parameter or throw a 401 error.
-ucamWebAuthenticate
+ucamWebauthAuthenticate
     :: forall a handler .
        ( ToJSON a
        , MonadIO handler
@@ -97,7 +97,7 @@ ucamWebAuthenticate
     => SetWAA a
     -> Maybe (MaybeValidResponse a)
     -> handler (UcamWebauthInfo a)
-ucamWebAuthenticate settings mresponse = do
+ucamWebauthAuthenticate settings mresponse = do
         response <- UIO.fromEither . needToAuthenticate $ mresponse
         UIO.fromEitherIO . runExceptT . authError . authInfo settings $ response
     where
@@ -107,7 +107,7 @@ ucamWebAuthenticate settings mresponse = do
 -- | Here, if a GET request is made with a valid WLS-Response query parameter, convert the
 -- 'UcamWebauthInfo a' to the token type using the supplied function and then return the log in token.
 -- Supply 'pure' to use 'UcamWebauthInfo a' as a token.
-ucamWebAuthToken
+ucamWebauthToken
     :: forall a handler tok .
        ( ToJSON a
        , ToJWT tok
@@ -118,15 +118,15 @@ ucamWebAuthToken
     -> SetWAA a
     -> Maybe (MaybeValidResponse a)
     -> handler (Base64UBSL tok)
-ucamWebAuthToken toToken jwkSet settings mresponse = do
-        uwi <- ucamWebAuthenticate settings mresponse
+ucamWebauthToken toToken jwkSet settings mresponse = do
+        uwi <- ucamWebauthAuthenticate settings mresponse
         tok <- toToken uwi
         servantMkJWT jwkSet tok
 
 -- | Here, if a request is made with a valid WLS-Response query parameter, convert the
 -- 'UcamWebauthInfo a' to the token type using the supplied function and then set the log in token
 -- as a cookie. Supply 'pure' to use 'UcamWebauthInfo a' as a token.
-ucamWebAuthCookie
+ucamWebauthCookie
     :: forall a handler tok out .
        ( ToJSON a
        , ToJWT tok
@@ -137,8 +137,8 @@ ucamWebAuthCookie
     -> SetWAA a
     -> Maybe (MaybeValidResponse a)
     -> handler (Cookied out)
-ucamWebAuthCookie (toTok, fromTok) ky settings mresponse = let jwtCfg = defaultJWTSettings ky in do
-        uwi <- ucamWebAuthenticate settings mresponse
+ucamWebauthCookie (toTok, fromTok) ky settings mresponse = let jwtCfg = defaultJWTSettings ky in do
+        uwi <- ucamWebauthAuthenticate settings mresponse
         tok <- toTok uwi
         mApplyCookies <- liftIO $ acceptLogin cookieSettings jwtCfg tok
         out <- fromTok tok

@@ -21,7 +21,7 @@ This module generates the settings for the University of Cambridge’s Ucam-Weba
 {-# LANGUAGE TypeFamilies #-}
 
 module Servant.UcamWebauth.Settings
-  ( ucamWebAuthSettings
+  ( ucamWebauthSettings
   , authURI
   ) where
 
@@ -55,7 +55,7 @@ import "microlens" Lens.Micro
 --
 -- This must be reified with a 'Network.URI.URIAuth' value corresponding to
 -- the base url of the api.
-ucamWebAuthSettings
+ucamWebauthSettings
     :: forall baseurl (api :: Type) (e :: Type) a endpoint .
        ( IsElem endpoint api
        , HasLink endpoint
@@ -64,7 +64,7 @@ ucamWebAuthSettings
        , Reifies baseurl UB.URI
        )
     => SetWAA a
-ucamWebAuthSettings = do
+ucamWebauthSettings = do
         wSet . applicationUrl .= authLink
     where
         authLink :: Text

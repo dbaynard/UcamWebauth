@@ -47,5 +47,5 @@ ravenDefSettings
        , endpoint ~ Unqueried e
        )
     => SetWAA a
-ravenDefSettings = ucamWebAuthSettings @baseurl @api @e
+ravenDefSettings = ucamWebauthSettings @baseurl @api @e
 

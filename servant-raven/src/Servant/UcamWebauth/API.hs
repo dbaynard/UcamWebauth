@@ -39,24 +39,24 @@ type family Unqueried a = p
 
 -- | A bifunctional endpoint for authentication, which both delegates and
 -- responds to the Web Login Service (WLS).
-type UcamWebAuthenticate route a
-    = UcamWebAuthToken '[JSON] route (UcamWebauthInfo a) a
+type UcamWebauthAuthenticate route a
+    = UcamWebauthToken '[JSON] route (UcamWebauthInfo a) a
 
-type instance Unqueried (UcamWebAuthenticate route a) = route :> Get '[JSON] (UcamWebauthInfo a)
+type instance Unqueried (UcamWebauthAuthenticate route a) = route :> Get '[JSON] (UcamWebauthInfo a)
 
 -- | A bifunctional endpoint for authentication, which both delegates and
 -- responds to the Web Login Service (WLS).
-type UcamWebAuthToken typs route token a
+type UcamWebauthToken typs route token a
     = route :> QueryParam "WLS-Response" (MaybeValidResponse a) :> Get typs token
 
-type instance Unqueried (UcamWebAuthToken typs route token a) = route :> Get typs token
+type instance Unqueried (UcamWebauthToken typs route token a) = route :> Get typs token
 
 -- | A bifunctional endpoint for authentication, which both delegates and
 -- responds to the Web Login Service (WLS).
-type UcamWebAuthCookie verb typs route token a
+type UcamWebauthCookie verb typs route token a
     = route :> QueryParam "WLS-Response" (MaybeValidResponse a) :> verb typs (Cookied token)
 
-type instance Unqueried (UcamWebAuthCookie verb typs route token a) = route :> verb typs (Cookied token)
+type instance Unqueried (UcamWebauthCookie verb typs route token a) = route :> verb typs (Cookied token)
 
 -- | Wrap an output in a pair of cookies (for authentication with XSRF
 -- protection)
