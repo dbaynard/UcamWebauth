@@ -27,7 +27,7 @@ dependencies:
 - uri-bytestring
 
 extra-source-files:
-- ../static/*.crt
+- static/*.crt
 
 library:
   source-dirs: src

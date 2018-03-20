@@ -8,6 +8,9 @@ maintainer: davidbaynard@gmail.com
 copyright: 2017 David Baynard
 category: Web
 git: github.com/dbaynard/UcamWebauth
+extra-source-files:
+- static/*.crt
+
 
 dependencies:
 - base >= 4.7 && < 5
