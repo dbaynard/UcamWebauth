@@ -100,7 +100,6 @@ import "mtl" Control.Monad.State
 
 import "bytestring" Data.ByteString (ByteString)
 import "text" Data.Text (Text)
-import qualified "bytestring" Data.ByteString.Char8 as B
 import "base" Data.Char (toLower)
 
 import "this" Data.ByteString.B64
@@ -442,11 +441,8 @@ bsDisplayYesOnly = displayYesOnly
   Do not export constructors
 -}
 newtype KeyID = KeyID { unKeyID :: ByteString }
-    deriving stock (Read, Eq, Ord, Generic, Typeable, Data)
-    deriving newtype (IsString, Monoid, Semigroup)
-
-instance Show KeyID where
-    show = B.unpack . unKeyID
+    deriving stock (Eq, Ord, Generic, Typeable, Data)
+    deriving newtype (Show, Read, IsString, Monoid, Semigroup)
 
 ------------------------------------------------------------------------------
 -- *** Time
@@ -458,15 +454,15 @@ instance Show KeyID where
   Do not export constructor or accessor.
 -}
 newtype UcamTime = UcamTime { unUcamTime :: Text }
-    deriving stock (Show, Read, Eq, Ord, Generic, Typeable, Data)
-    deriving newtype (IsString, Monoid, Semigroup)
+    deriving stock (Eq, Ord, Generic, Typeable, Data)
+    deriving newtype (Show, Read, IsString, Monoid, Semigroup)
 
 {-|
   'DiffTime' with 'ToJSON' and 'FromJSON' instances.
 -}
 newtype TimePeriod = TimePeriod { timePeriod :: DiffTime }
-    deriving stock (Show, Eq, Ord, Generic, Typeable, Data)
-    deriving newtype (Num)
+    deriving stock (Eq, Ord, Generic, Typeable, Data)
+    deriving newtype (Show, Num)
 
 secondsFromTimePeriod :: TimePeriod -> Integer
 secondsFromTimePeriod = (`div` 1e12) . diffTimeToPicoseconds . timePeriod

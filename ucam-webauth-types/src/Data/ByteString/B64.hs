@@ -41,8 +41,8 @@ import "aeson" Data.Aeson.Types
   Ensure Base 64 URL text is not confused with other 'ByteString's
 -}
 newtype Base64UBS (tag :: k) = B64U { unB64U :: ByteString }
-    deriving stock (Show, Read, Eq, Ord, Generic, Typeable, Data)
-    deriving newtype (IsString, Monoid, Semigroup)
+    deriving stock (Eq, Ord, Generic, Typeable, Data)
+    deriving newtype (Show, Read, IsString, Monoid, Semigroup)
 
 instance FromJSON (Base64UBS tag) where
     parseJSON = withObject "Base 64 URL ByteString" $ \v -> B64U . encodeUtf8
@@ -53,8 +53,8 @@ instance ToJSON (Base64UBS tag) where
     toEncoding = toEncoding . decodeUtf8 . unB64U
 
 newtype Base64UBSL (tag :: k) = B64UL { unB64UL :: BSL.ByteString }
-    deriving stock (Show, Read, Eq, Ord, Generic, Typeable, Data)
-    deriving newtype (IsString, Monoid, Semigroup)
+    deriving stock (Eq, Ord, Generic, Typeable, Data)
+    deriving newtype (Show, Read, IsString, Monoid, Semigroup)
 
 instance FromJSON (Base64UBSL tag) where
     parseJSON = withObject "Base 64 URL ByteString" $ \v -> B64UL . TL.encodeUtf8
@@ -68,16 +68,16 @@ instance ToJSON (Base64UBSL tag) where
   Ensure Base 64 URL text modified to fit the Ucam-Webauth protocol is not confused with other 'ByteString's
 -}
 newtype UcamBase64BS = UcamB64 { unUcamB64 :: ByteString }
-    deriving stock (Show, Read, Eq, Ord, Generic, Typeable, Data)
-    deriving newtype (IsString, Monoid, Semigroup)
+    deriving stock (Eq, Ord, Generic, Typeable, Data)
+    deriving newtype (Show, Read, IsString, Monoid, Semigroup)
 
 newtype UcamBase64BSL = UcamB64L { unUcamB64L :: BSL.ByteString }
-    deriving stock (Show, Read, Eq, Ord, Generic, Typeable, Data)
-    deriving newtype (IsString, Monoid, Semigroup)
+    deriving stock (Eq, Ord, Generic, Typeable, Data)
+    deriving newtype (Show, Read, IsString, Monoid, Semigroup)
 
 {-|
   Ensure ASCII text is not confused with other 'ByteString's
 -}
 newtype ASCII = ASCII { unASCII :: Text }
-    deriving stock (Show, Read, Eq, Ord, Generic, Typeable, Data)
-    deriving newtype (IsString, Monoid, Semigroup)
+    deriving stock (Eq, Ord, Generic, Typeable, Data)
+    deriving newtype (Show, Read, IsString, Monoid, Semigroup)
