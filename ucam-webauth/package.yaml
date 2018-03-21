@@ -54,8 +54,11 @@ tests:
     - test
     ghc-options: -Wall
     dependencies:
+    - QuickCheck
+    - generic-arbitrary
     - here
     - hspec >=2.0.0
+    - quickcheck-instances
     - time-qq
 
 flags:

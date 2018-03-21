@@ -35,6 +35,7 @@ module UcamWebauth
 
 -- Prelude
 import "this" UcamWebauth.Internal
+import "this" UcamWebauth.WLS
 
 import "ucam-webauth-types" UcamWebauth.Data as X
 import "ucam-webauth-types" UcamWebauth.Data.Internal
@@ -77,7 +78,7 @@ import qualified "bytestring" Data.ByteString.Char8 as B
 import "time" Data.Time (diffUTCTime, getCurrentTime)
 
 -- JSON (Aeson)
-import "aeson" Data.Aeson (FromJSON)
+import "aeson" Data.Aeson.Types (FromJSON, ToJSON)
 
 -- Crypto
 import "cryptonite" Crypto.PubKey.RSA.Types
@@ -139,6 +140,9 @@ authCode = liftMaybe . maybeResult . flip feed "" . parse ucamResponseParser
 -- this package.
 instance FromJSON a => FromHttpApiData (MaybeValidResponse a) where
     parseQueryParam = first T.pack . parseOnly ucamResponseParser . encodeUtf8
+
+instance ToJSON a => ToHttpApiData (MaybeValidResponse a) where
+    toUrlPiece = wlsEncode
 
 ------------------------------------------------------------------------------
 -- * Validation
