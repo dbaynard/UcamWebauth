@@ -45,6 +45,7 @@ library:
       - -Wall
       - -fwarn-tabs
       - -O2
+
 tests:
   test:
     main: Spec.hs
@@ -53,8 +54,10 @@ tests:
     - test
     ghc-options: -Wall
     dependencies:
-    - ucam-webauth
+    - here
     - hspec >=2.0.0
+    - time-qq
+
 flags:
   dev:
     description: Build for development
