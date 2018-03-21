@@ -50,7 +50,7 @@ module Servant.UcamWebauth
 
 import "servant-raven" Servant.UcamWebauth.API
 import "servant-raven" Servant.UcamWebauth.Settings
-import "ucam-webauth" Network.Protocol.UcamWebauth
+import "ucam-webauth" UcamWebauth
 import "ucam-webauth-types" Data.ByteString.B64
 
 import "base" Control.Monad.IO.Class

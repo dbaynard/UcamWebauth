@@ -12,7 +12,7 @@ module Network.Wai.Protocol.Raven.Internal
   ) where
 
 -- The protocol
-import "ucam-webauth-types" Network.Protocol.UcamWebauth.Data
+import "ucam-webauth-types" UcamWebauth.Data
 
 {-|
   'WAASettings' for Raven

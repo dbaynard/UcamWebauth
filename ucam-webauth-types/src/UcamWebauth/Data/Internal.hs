@@ -14,7 +14,7 @@
 {-# LANGUAGE PatternSynonyms #-}
 
 {-|
-Module      : Network.Protocol.UcamWebauth.Internal
+Module      : UcamWebauth.Internal
 Description : Internal use for Ucam Webauth data types
 Maintainer  : David Baynard <davidbaynard@gmail.com>
 
@@ -26,7 +26,7 @@ Versions will not reflect changes to the API of this module.
 
 -}
 
-module Network.Protocol.UcamWebauth.Data.Internal
+module UcamWebauth.Data.Internal
   ( UcamWebauthInfo(..)
 
   , AuthRequest(..)

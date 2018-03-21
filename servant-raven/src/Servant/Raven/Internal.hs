@@ -22,7 +22,7 @@ module Servant.Raven.Internal
   , URI
   ) where
 
-import "ucam-webauth-types" Network.Protocol.UcamWebauth.Data
+import "ucam-webauth-types" UcamWebauth.Data
 
 import "base" GHC.TypeLits
 

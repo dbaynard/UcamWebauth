@@ -27,7 +27,7 @@ module Servant.UcamWebauth.Settings
 
 import "this" Servant.UcamWebauth.API
 
-import "ucam-webauth-types" Network.Protocol.UcamWebauth.Data
+import "ucam-webauth-types" UcamWebauth.Data
 
 import "base" Data.Kind
 import "base" Data.Proxy

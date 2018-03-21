@@ -23,7 +23,7 @@ module Network.Wai.Protocol.Raven.Auth
 import "microlens-mtl" Lens.Micro.Mtl
 
 -- The protocol
-import Network.Protocol.UcamWebauth.Data
+import UcamWebauth.Data
 
 import Network.Wai.Protocol.Raven.Internal
 

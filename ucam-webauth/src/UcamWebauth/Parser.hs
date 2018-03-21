@@ -8,20 +8,20 @@
 {-# LANGUAGE ApplicativeDo #-}
 
 {-|
-Module      : Network.Protocol.UcamWebauth.Parser
+Module      : UcamWebauth.Parser
 Description : Parsers for the UCam-Webauth protocol
 Maintainer  : David Baynard <davidbaynard@gmail.com>
 
 -}
 
-module Network.Protocol.UcamWebauth.Parser
+module UcamWebauth.Parser
   ( ucamResponseParser
   ) where
 
 -- Prelude
 import "ucam-webauth-types" Data.ByteString.B64
-import "ucam-webauth-types" Network.Protocol.UcamWebauth.Data
-import "ucam-webauth-types" Network.Protocol.UcamWebauth.Data.Internal
+import "ucam-webauth-types" UcamWebauth.Data
+import "ucam-webauth-types" UcamWebauth.Data.Internal
 
 import "base" Control.Applicative
 import "base" Control.Arrow ((***))

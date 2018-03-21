@@ -35,7 +35,7 @@ import "file-embed" Data.FileEmbed
 
 -- The protocol
 import "this" Servant.UcamWebauth.API
-import "ucam-webauth-types" Network.Protocol.UcamWebauth.Data
+import "ucam-webauth-types" UcamWebauth.Data
 
 import "this" Servant.Raven.Internal as X
 

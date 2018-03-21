@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 7ebf42001bacd98c70927d16d75b18d14aa2c8fe4645964dd7a56ab3a1bf235f
+-- hash: 3475f15574b189d922f90fcc808fefdab324476b96b3566c28f1d7d44bc96a27
 
 name:              ucam-webauth
 version:           0.1.0
@@ -30,10 +30,10 @@ library
     hs-source-dirs:
           src
     exposed-modules:
-          Network.Protocol.UcamWebauth
+          UcamWebauth
     other-modules:
-          Network.Protocol.UcamWebauth.Internal
-          Network.Protocol.UcamWebauth.Parser
+          UcamWebauth.Internal
+          UcamWebauth.Parser
           Paths_ucam_webauth
     default-language: Haskell2010
     build-depends:
@@ -73,8 +73,8 @@ test-suite test
         , ucam-webauth
         , ucam-webauth-types
     other-modules:
-          Network.Protocol.UcamWebauth
-          Network.Protocol.UcamWebauth.Internal
-          Network.Protocol.UcamWebauth.Parser
+          UcamWebauth
+          UcamWebauth.Internal
+          UcamWebauth.Parser
           Paths_ucam_webauth
     default-language: Haskell2010

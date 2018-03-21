@@ -28,7 +28,7 @@ module Main where
 import Servant.UcamWebauth
 import "servant-raven" Servant.Raven.Test
 import "servant-raven" Servant.UcamWebauth.API
-import "ucam-webauth" Network.Protocol.UcamWebauth
+import "ucam-webauth" UcamWebauth
 
 import "base" Control.Applicative
 import "base" Control.Concurrent

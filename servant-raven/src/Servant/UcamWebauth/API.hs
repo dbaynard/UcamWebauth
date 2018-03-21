@@ -17,8 +17,8 @@ module Servant.UcamWebauth.API (
 )   where
 
 import "ucam-webauth-types" Data.ByteString.B64
-import "ucam-webauth-types" Network.Protocol.UcamWebauth.Data
-import "ucam-webauth-types" Network.Protocol.UcamWebauth.Data.Internal
+import "ucam-webauth-types" UcamWebauth.Data
+import "ucam-webauth-types" UcamWebauth.Data.Internal
 
 import "servant" Servant.API
 

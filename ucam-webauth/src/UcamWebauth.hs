@@ -1,5 +1,5 @@
 {-|
-Module      : Network.Protocol.UcamWebauth
+Module      : UcamWebauth
 Description : The Ucam-Webauth protocol, from the University of Cambridge
 Maintainer  : David Baynard <davidbaynard@gmail.com>
 
@@ -20,7 +20,7 @@ Key parts of the implementation of the protocol itself.
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 
-module Network.Protocol.UcamWebauth
+module UcamWebauth
   ( module X
 
   -- Parser
@@ -34,12 +34,12 @@ module Network.Protocol.UcamWebauth
   ) where
 
 -- Prelude
-import "this" Network.Protocol.UcamWebauth.Internal
+import "this" UcamWebauth.Internal
 
-import "ucam-webauth-types" Network.Protocol.UcamWebauth.Data as X
-import "ucam-webauth-types" Network.Protocol.UcamWebauth.Data.Internal
+import "ucam-webauth-types" UcamWebauth.Data as X
+import "ucam-webauth-types" UcamWebauth.Data.Internal
 
-import "this" Network.Protocol.UcamWebauth.Parser
+import "this" UcamWebauth.Parser
 
 import "base" Data.Coerce
 import "base" Control.Monad.IO.Class
