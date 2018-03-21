@@ -48,7 +48,9 @@ library:
 tests:
   test:
     main: Spec.hs
-    source-dirs: test
+    source-dirs:
+    - src
+    - test
     ghc-options: -Wall
     dependencies:
     - ucam-webauth

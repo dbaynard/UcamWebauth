@@ -34,12 +34,12 @@ module Network.Protocol.UcamWebauth
   ) where
 
 -- Prelude
-import Network.Protocol.UcamWebauth.Internal
+import "this" Network.Protocol.UcamWebauth.Internal
 
 import "ucam-webauth-types" Network.Protocol.UcamWebauth.Data as X
 import "ucam-webauth-types" Network.Protocol.UcamWebauth.Data.Internal
 
-import Network.Protocol.UcamWebauth.Parser
+import "this" Network.Protocol.UcamWebauth.Parser
 
 import "base" Data.Coerce
 import "base" Control.Monad.IO.Class

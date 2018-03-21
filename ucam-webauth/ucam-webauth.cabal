@@ -1,8 +1,8 @@
--- This file has been generated from package.yaml by hpack version 0.20.0.
+-- This file has been generated from package.yaml by hpack version 0.27.0.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 18f549822d431e9bd3204c7feb8cca829db9c42f6e39539cfcf9d5f52ae7b10c
+-- hash: 822e23203406bf65144e464a4e29e224e1d176f928e7ebdc78faaf674c510b09
 
 name:              ucam-webauth
 version:           0.1.0
@@ -64,6 +64,7 @@ test-suite test
     type: exitcode-stdio-1.0
     main-is: Spec.hs
     hs-source-dirs:
+          src
           test
     ghc-options: -Wall
     build-depends:
@@ -72,7 +73,8 @@ test-suite test
         , ucam-webauth
         , ucam-webauth-types
     other-modules:
-          Localhost
-          TestSuite
+          Network.Protocol.UcamWebauth
+          Network.Protocol.UcamWebauth.Internal
+          Network.Protocol.UcamWebauth.Parser
           Paths_ucam_webauth
     default-language: Haskell2010
