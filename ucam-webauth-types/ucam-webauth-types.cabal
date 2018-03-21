@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 17f1fae9dbd994a29482318f053d4aa217e4f5b367162d07b1a59f99d0e77d66
+-- hash: 030a9ac7789b59da7cd625499061a40f7dbcfcf595df0ab4721a9956acc5e5e5
 
 name:           ucam-webauth-types
 version:        0.1.0
@@ -31,7 +31,7 @@ library
       src
   build-depends:
       aeson >=1.2
-    , base >=4 && <5
+    , base >=4.10.0.0 && <5
     , base64-bytestring
     , bytestring >=0.9 && <0.11
     , case-insensitive
@@ -64,7 +64,7 @@ test-suite test
   ghc-options: -Wall
   build-depends:
       aeson >=1.2
-    , base >=4 && <5
+    , base >=4.10.0.0 && <5
     , base64-bytestring
     , bytestring >=0.9 && <0.11
     , case-insensitive
