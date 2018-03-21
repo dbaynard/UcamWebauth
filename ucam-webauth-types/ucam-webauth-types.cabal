@@ -1,8 +1,8 @@
--- This file has been generated from package.yaml by hpack version 0.21.2.
+-- This file has been generated from package.yaml by hpack version 0.27.0.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 92e167a39a89f6a9194735a6303237926013e29bd11dbe40ed5d6b7bef410eb8
+-- hash: db2aee3fc03cd3148bfb273554cdab4b94d4fed25f5fca90441271f86955574f
 
 name:           ucam-webauth-types
 version:        0.1.0
@@ -24,7 +24,7 @@ source-repository head
 flag dev
   description: Build for development
   manual: False
-  default: False
+  default: True
 
 library
   hs-source-dirs:

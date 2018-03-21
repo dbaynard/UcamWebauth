@@ -1,8 +1,8 @@
--- This file has been generated from package.yaml by hpack version 0.20.0.
+-- This file has been generated from package.yaml by hpack version 0.27.0.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: a35e020174ec4207564ef9b0c0a4dca2adb62bba4453c6a8a1aaf9fe51c864f1
+-- hash: e33ad488e260457267b40edf5f8b59638465e338dbc3446ba5f39ee5818cf968
 
 name:           raven-wai
 version:        0.1.0
@@ -24,7 +24,7 @@ source-repository head
 flag dev
   description: Build for development
   manual: False
-  default: False
+  default: True
 
 library
   hs-source-dirs:

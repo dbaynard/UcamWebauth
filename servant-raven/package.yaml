@@ -62,4 +62,4 @@ flags:
   dev:
     description: Build for development
     manual: false
-    default: false
+    default: true

@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 822e23203406bf65144e464a4e29e224e1d176f928e7ebdc78faaf674c510b09
+-- hash: 7ebf42001bacd98c70927d16d75b18d14aa2c8fe4645964dd7a56ab3a1bf235f
 
 name:              ucam-webauth
 version:           0.1.0
@@ -24,7 +24,7 @@ source-repository head
 flag dev
     description: Build for development
     manual: False
-    default: False
+    default: True
 
 library
     hs-source-dirs:

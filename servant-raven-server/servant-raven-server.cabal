@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 23a31eb5572aa4a23b2c0585a6abf8351155282b8f0a99d23480eee9cc1a8646
+-- hash: 93ffb64218afd8cbfe552e45c5bf7f1135d5091a5d96d1b2d42cee9ae6306180
 
 name:           servant-raven-server
 version:        0.1.0
@@ -28,7 +28,7 @@ source-repository head
 flag dev
   description: Build for development
   manual: False
-  default: False
+  default: True
 
 library
   hs-source-dirs:
