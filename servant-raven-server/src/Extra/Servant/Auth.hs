@@ -11,7 +11,8 @@
   #-}
 
 module Extra.Servant.Auth
-  ( authenticated
+  ( WithAuthenticated
+  , authenticated
   , authenticatedProxied
   , throwAll'
   , throwAllProxied
@@ -19,10 +20,11 @@ module Extra.Servant.Auth
 
 import           "base"                Control.Monad.IO.Class
 import           "base"                Data.Kind
-import           "servant-auth-server" Servant.Auth.Server
 import           "servant-server"      Servant
+import           "servant-auth-server" Servant.Auth.Server
 import qualified "unliftio"            UnliftIO.Exception as UIO
 
+-- | Constraints for authenticated endpoints
 type WithAuthenticated (api :: Type) (m :: Type -> Type) =
   ( HasServer api '[]
   , ThrowAll (Server api)
@@ -47,12 +49,14 @@ authenticatedProxied
   -> ServerT api m
 authenticatedProxied _ = authenticated @api @m
 
+-- | Throw an error throughout an api.
 throwAll'
   :: forall api m . WithAuthenticated api m
   => ServantErr
   -> ServerT api m
 throwAll' = hoistServer @api @_ @m Proxy (UIO.fromEitherIO . runHandler) . throwAll @(Server api)
 
+-- | Throw an error throughout an api.
 throwAllProxied
   :: forall api m . WithAuthenticated api m
   => Proxy api
