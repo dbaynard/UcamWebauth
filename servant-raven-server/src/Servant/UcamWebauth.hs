@@ -14,8 +14,12 @@ as in the link below. The protocol is a handshake between the
 See the "Servant.Raven.Auth" module for a specific implementation, and
 "Servant.Raven.Example" for an example.
 
-It is necessary to store the relevant public keys, as described in the documentation
-for 'readRSAKeyFile'.
+It is necessary to store the relevant public keys.
+These are provided as PEM self-signed certificates in the ‘static’ directory, named
+
+@pubkey\//key/.crt@
+
+where @/key/@ should be replaced by the 'KeyID' /e.g./ @pubkey2.crt@
 
 This module provides functions which operate in any 'MonadIO' servant handler, as opposed to just 'Handler'.
 They work best with handlers for which 'UnliftIO' (from "unliftio-core") is implemented.
@@ -40,20 +44,34 @@ They work best with handlers for which 'UnliftIO' (from "unliftio-core") is impl
 {-# LANGUAGE RankNTypes #-}
 
 module Servant.UcamWebauth
-  ( ucamWebauthCookie
+  (
+  -- * Handlers
+  -- $handlers
+    ucamWebauthCookie
   , ucamWebauthToken
+  -- ** Helpers
   , ucamWebauthAuthenticate
-  , ucamWebauthSettings
-  , authURI
-  , Cookied
   , servantMkJWT
-  -- Authentication arguments
+
+  -- * Configuration
+  -- ** Authentication arguments
   , AuthenticationArgs
-  , authenticationArgs
   , authJWK
   , authTokCreate
   , authWAASettings
   , authExpires
+  , authenticationArgs
+
+  -- * Reexports
+  -- ** Endpoints
+  , UcamWebauthCookie
+  , UcamWebauthToken
+  -- ** Wrappers
+  , Cookied
+  , Base64UBSL
+  -- ** Settings
+  , ucamWebauthSettings
+  , authURI
   ) where
 
 import "servant-raven" Servant.UcamWebauth.API
@@ -97,22 +115,31 @@ data AuthenticationArgs handler tok a = AuthenticationArgs
   , _authWAASettings :: SetWAA a
   }
 
+-- | The 'JWK'.
 authJWK :: AuthenticationArgs handler tok a `Lens'` JWK
 authJWK f AuthenticationArgs{..} = (\_authJWK -> AuthenticationArgs{_authJWK, ..}) <$> f _authJWK
 {-# INLINE authJWK #-}
 
+-- | The token expiry time, to be passed to the "servant-auth" machinery.
 authExpires :: AuthenticationArgs handler tok a `Lens'` Maybe UTCTime
 authExpires f AuthenticationArgs{..} = (\_authExpires -> AuthenticationArgs{_authExpires, ..}) <$> f _authExpires
 {-# INLINE authExpires #-}
 
+-- | A function to create a token from the 'UcamWebauthInfo a' recovered
+-- from the WLS-Response.
 authTokCreate :: AuthenticationArgs handler tok a `Lens'` (UcamWebauthInfo a -> handler tok)
 authTokCreate f AuthenticationArgs{..} = (\_authTokCreate -> AuthenticationArgs{_authTokCreate, ..}) <$> f _authTokCreate
 {-# INLINE authTokCreate #-}
 
+-- | Settings for the WAA.
 authWAASettings :: AuthenticationArgs handler tok a `Lens'` SetWAA a
 authWAASettings f AuthenticationArgs{..} = (\_authWAASettings -> AuthenticationArgs{_authWAASettings, ..}) <$> f _authWAASettings
 {-# INLINE authWAASettings #-}
 
+-- | Produce a default configuration.
+--
+-- > authenticationArgs ky $ do
+-- >   authWAASettings .= setWAA
 authenticationArgs
     :: forall handler a aas .
       ( Applicative handler
@@ -130,6 +157,14 @@ authenticationArgs _authJWK = (&~) AuthenticationArgs{..}
 --------------------------------------------------
 -- * Handler functions
 --------------------------------------------------
+
+-- $handlers
+--
+-- If a GET request is made with no query parameters, redirect (303) to the authentication server.
+--
+-- If a GET request is made with the WLS-Response query parameter, try to
+-- parse that parameter to a 'UcamWebauthInfo a', and then use that
+-- parameter or throw a 401 error.
 
 -- | Here, if a GET request is made with a valid WLS-Response query parameter, convert the
 -- 'UcamWebauthInfo a' to the token type using the supplied function and then return the log in token.
@@ -168,10 +203,7 @@ ucamWebauthCookie AuthenticationArgs{..} mresponse = do
         cookieSettings = defaultCookieSettings
         jwtCfg = defaultJWTSettings _authJWK
 
--- | If a GET request is made with no query parameters, redirect (303) to the authentication server.
---
--- If a GET request is made with the WLS-Response query parameter, try to
--- parse that parameter to a 'UcamWebauthInfo a', and then return that
+-- | Try to parse the WLS-Response to a 'UcamWebauthInfo a', and then return that
 -- parameter or throw a 401 error.
 ucamWebauthAuthenticate
     :: forall a handler .
@@ -188,6 +220,7 @@ ucamWebauthAuthenticate settings mresponse = do
         needToAuthenticate = note err303 {errHeaders = ucamWebauthQuery settings}
         authError = withExceptT . const $ err401 { errBody = "Authentication error" }
 
+-- | Wrap the base64 encoded 'JWT' with the type it represents.
 servantMkJWT
   :: ( ToJWT tok
      , MonadIO handler

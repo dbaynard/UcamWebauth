@@ -21,9 +21,16 @@ Use 'UcamWebauthCookie' or 'UcamWebauthToken' for defaults.
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
-module Servant.UcamWebauth.API (
-    module Servant.UcamWebauth.API
-)   where
+module Servant.UcamWebauth.API
+  ( UcamWebauthCookie
+  , UcamWebauthToken
+  -- * Helpers
+  , UcamWebauthEndpoint
+  , UcamWebauthAuthenticate
+  , WLSResponse
+  -- * Wrappers
+  , Cookied
+  ) where
 
 import "base" Data.Kind
 
@@ -36,11 +43,13 @@ import "servant-auth" Servant.Auth
 import "cookie" Web.Cookie
 
 -- | Base 64 (URL) encoded 'ByteString's should be serializable as 'OctetStream's.
--- They are already serializable as 'JSON' thanks to the ToJson instance.
+-- They are already serializable as 'JSON' thanks to the 'ToJson' instance.
 instance MimeRender OctetStream (Base64UBSL tag) where
     mimeRender _ = unB64UL
 
 -- TODO Make safe
+-- | Base 64 (URL) encoded 'ByteString's should be serializable as 'OctetStream's.
+-- They are already deserializable from 'JSON' thanks to the 'FromJSON' instance.
 instance MimeUnrender OctetStream (Base64UBSL tag) where
     mimeUnrender _ = pure . B64UL
 
@@ -60,7 +69,7 @@ type UcamWebauthAuthenticate auth param endpoint
     = WLSResponse param :> auth `UcamWebauthEndpoint` endpoint
 
 -- | A bifunctional endpoint for authentication, which both delegates and
--- responds to the Web Login Service (WLS) using JWTs, returning `token` as
+-- responds to the Web Login Service (WLS) using JWTs, returning 'token' as
 -- JSON.
 type UcamWebauthToken param token
     = UcamWebauthAuthenticate JWT param (Get '[JSON] token)
