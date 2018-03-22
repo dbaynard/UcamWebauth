@@ -28,9 +28,9 @@ spec :: Spec
 spec = do
   describe "UcamWebauth" $ do
     it "should parse example response" $ do
-      parseQueryParam @(MaybeValidResponse ()) exampleResponseText `shouldBe` Right exampleResponse
+      parseQueryParam @(MaybeValidResponse Text) exampleResponseText `shouldBe` Right exampleResponse
     it "should produce example response" $ do
-      toQueryParam @(MaybeValidResponse ()) exampleResponse `shouldBe` exampleResponseText
+      toQueryParam @(MaybeValidResponse Text) exampleResponse `shouldBe` exampleResponseText
     prop "should serialize with HttpApiData correctly" $ \(mvr :: MaybeValidResponse ()) ->
       (parseQueryParam . toQueryParam) mvr === Right mvr
 
@@ -70,7 +70,7 @@ instance Arbitrary TimePeriod where
   arbitrary = genericArbitrary
   shrink = genericShrink
 
-exampleResponse :: MaybeValidResponse ()
+exampleResponse :: MaybeValidResponse Text
 exampleResponse = SignedAuthResponse
   { _ucamAResponse = AuthResponse
     { _ucamAVer       = WLS3
@@ -84,7 +84,7 @@ exampleResponse = SignedAuthResponse
     , _ucamAAuth      = Nothing
     , _ucamASso       = Just [Pwd]
     , _ucamALife      = Just (timePeriodFromSeconds 30380)
-    , _ucamAParams    = Nothing
+    , _ucamAParams    = Just "This is 100% of the data! And it’s really quite cool"
     }
   , _ucamAToSign = "3!200!!20170515T172311Z!oANAuhC9fZmMlZUPIm53y5vn!http://localhost:3000/foo/query!test0244!current!!pwd!30380!IlRoaXMgaXMgMTAwJSBvZiB0aGUgZGF0YSEgQW5kIGl04oCZcyByZWFsbHkgcXVpdGUgY29vbCI_"
   , _ucamAKid      = Just "901"
