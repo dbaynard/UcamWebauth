@@ -18,7 +18,8 @@ This is useful for test suite and more.
   #-}
 
 module UcamWebauth.WLS
-  ( module UcamWebauth.WLS
+  ( wlsEncode
+  , wlsEncodeSign
   ) where
 
 import           "aeson"              Data.Aeson (ToJSON)
@@ -34,25 +35,37 @@ import           "microlens"          Lens.Micro
 import           "ucam-webauth-types" UcamWebauth.Data as X
 import           "ucam-webauth-types" UcamWebauth.Data.Internal
 
-wlsEncode :: ToJSON a => MaybeValidResponse a -> Text
-wlsEncode r = decodeUtf8 . BSL.toStrict . B.toLazyByteString . mconcat . intersperse "!" $
-    [ response ^. ucamAVer       . to displayWLSVersion
-    , response ^. ucamAStatus    . to (B.stringUtf8 . show . fromEnum)
-    , response ^. ucamAMsg       . mTextEncoded
-    , response ^. ucamAIssue     . encoded (unUcamTime . ucamTime)
-    , response ^. ucamAId        . textEncoded
-    , response ^. ucamAUrl       . textEncoded
-    , response ^. ucamAPrincipal . mTextEncoded
-    , response ^. ucamAPtags     . to (maybe "" $ mconcat . intersperse "," . fmap displayPtag)
-    , response ^. ucamAAuth      . to (maybe "" displayAuthType)
-    , response ^. ucamASso       . to (maybe "" $ mconcat . intersperse "," . fmap displayAuthType)
-    , response ^. ucamALife      . to (maybe "" $ B.stringUtf8 . show . secondsFromTimePeriod)
-    , response ^. ucamAParams    . to (maybe "" $ B.lazyByteString . unUcamB64L . encodeUcamB64L . A.encode)
-    , r        ^. ucamAKid       . to (maybe "" $ B.byteString . unKeyID)
-    , r        ^. ucamASig       . to (maybe "" $ B.byteString . unUcamB64)
+wlsEncode :: ToJSON a => AuthResponse a -> Text
+wlsEncode = textBuilder . wlsEncode'
+
+wlsEncodeSign :: ToJSON a => MaybeValidResponse a -> Text
+wlsEncodeSign = textBuilder . wlsEncodeSign'
+
+textBuilder :: B.Builder -> Text
+textBuilder = decodeUtf8 . BSL.toStrict . B.toLazyByteString
+
+wlsEncode' :: ToJSON a => AuthResponse a -> B.Builder
+wlsEncode' r = mconcat . intersperse "!" $
+    [ r ^. ucamAVer       . to displayWLSVersion
+    , r ^. ucamAStatus    . to (B.stringUtf8 . show . fromEnum)
+    , r ^. ucamAMsg       . mTextEncoded
+    , r ^. ucamAIssue     . encoded (unUcamTime . ucamTime)
+    , r ^. ucamAId        . textEncoded
+    , r ^. ucamAUrl       . textEncoded
+    , r ^. ucamAPrincipal . mTextEncoded
+    , r ^. ucamAPtags     . to (maybe "" $ mconcat . intersperse "," . fmap displayPtag)
+    , r ^. ucamAAuth      . to (maybe "" displayAuthType)
+    , r ^. ucamASso       . to (maybe "" $ mconcat . intersperse "," . fmap displayAuthType)
+    , r ^. ucamALife      . to (maybe "" $ B.stringUtf8 . show . secondsFromTimePeriod)
+    , r ^. ucamAParams    . to (maybe "" $ B.lazyByteString . unUcamB64L . encodeUcamB64L . A.encode)
     ]
-  where
-    response = r ^. ucamAResponse
+
+wlsEncodeSign' :: ToJSON a => MaybeValidResponse a -> B.Builder
+wlsEncodeSign' r = mconcat . intersperse "!" $
+    [ r ^. ucamAResponse . to wlsEncode'
+    , r ^. ucamAKid      . to (maybe "" $ B.byteString . unKeyID)
+    , r ^. ucamASig      . to (maybe "" $ B.byteString . unUcamB64)
+    ]
 
 -- orBlank :: Getting r a B.Builder -> Getting r (Maybe a) B.Builder
 -- orBlank g bcrb a = _

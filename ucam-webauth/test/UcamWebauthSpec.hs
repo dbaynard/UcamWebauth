@@ -1,6 +1,7 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE
     PackageImports
+  , AllowAmbiguousTypes
   , OverloadedStrings
   , QuasiQuotes
   , ScopedTypeVariables
@@ -12,6 +13,7 @@
 module UcamWebauthSpec (spec) where
 
 import "ucam-webauth-types"   Data.ByteString.B64
+import "base"                 Data.Semigroup
 import "here"                 Data.String.Here
 import "text"                 Data.Text (Text)
 import "time-qq"              Data.Time.QQ as Q
@@ -28,11 +30,27 @@ spec :: Spec
 spec = do
   describe "UcamWebauth" $ do
     it "should parse example response" $ do
-      parseQueryParam @(MaybeValidResponse Text) exampleResponseText `shouldBe` Right exampleResponse
+      parseQueryParam @(AuthResponse Text) exampleResponseText `shouldBe` Right exampleResponse
+    it "should parse example signed response" $ do
+      parseQueryParam @(MaybeValidResponse Text) exampleSignedResponseText `shouldBe` Right exampleSignedResponse
     it "should produce example response" $ do
-      toQueryParam @(MaybeValidResponse Text) exampleResponse `shouldBe` exampleResponseText
-    prop "should serialize with HttpApiData correctly" $ \(mvr :: MaybeValidResponse ()) ->
-      (parseQueryParam . toQueryParam) mvr === Right mvr
+      toQueryParam @(AuthResponse Text) exampleResponse `shouldBe` exampleResponseText
+    it "should produce example signed response" $ do
+      toQueryParam @(MaybeValidResponse Text) exampleSignedResponse `shouldBe` exampleSignedResponseText
+    prop_HttpApiData @(AuthResponse Text)
+    prop_HttpApiData @(MaybeValidResponse Text)
+
+prop_HttpApiData
+  :: forall a .
+    ( Arbitrary a
+    , Eq a
+    , Show a
+    , ToHttpApiData a
+    , FromHttpApiData a
+    )
+  => Spec
+prop_HttpApiData = prop "should serialize with HttpApiData correctly" $ \(h :: a) ->
+  (parseQueryParam . toQueryParam) h === Right h
 
 instance Arbitrary a => Arbitrary (MaybeValidResponse a) where
   arbitrary = genericArbitrary
@@ -47,12 +65,10 @@ instance Arbitrary KeyID where
   shrink = genericShrink
 
 instance Arbitrary WLSVersion where
-  arbitrary = genericArbitrary
-  shrink = genericShrink
+  arbitrary = pure WLS3
 
 instance Arbitrary StatusCode where
-  arbitrary = genericArbitrary
-  shrink = genericShrink
+  arbitrary = pure Ok200
 
 instance Arbitrary UcamBase64BS where
   arbitrary = genericArbitrary
@@ -70,8 +86,8 @@ instance Arbitrary TimePeriod where
   arbitrary = genericArbitrary
   shrink = genericShrink
 
-exampleResponse :: MaybeValidResponse Text
-exampleResponse = SignedAuthResponse
+exampleSignedResponse :: MaybeValidResponse Text
+exampleSignedResponse = SignedAuthResponse
   { _ucamAResponse = AuthResponse
     { _ucamAVer       = WLS3
     , _ucamAStatus    = Ok200
@@ -95,7 +111,28 @@ exampleResponse = SignedAuthResponse
     )
   }
 
+exampleResponse :: AuthResponse Text
+exampleResponse = AuthResponse
+  { _ucamAVer       = WLS3
+  , _ucamAStatus    = Ok200
+  , _ucamAMsg       = Nothing
+  , _ucamAIssue     = [utcIso8601ms| 2017-05-15T17:23:11 |]
+  , _ucamAId        = "oANAuhC9fZmMlZUPIm53y5vn"
+  , _ucamAUrl       = "http://localhost:3000/foo/query"
+  , _ucamAPrincipal = Just "test0244"
+  , _ucamAPtags     = Just [Current]
+  , _ucamAAuth      = Nothing
+  , _ucamASso       = Just [Pwd]
+  , _ucamALife      = Just (timePeriodFromSeconds 30380)
+  , _ucamAParams    = Just "This is 100% of the data! And it’s really quite cool"
+  }
+
+exampleSignedResponseText :: Text
+exampleSignedResponseText = exampleResponseText <> [here|
+  !901!RzC9KZWALCSeK0n9885X4zzemHizuj8K.NOpt.n1hfRCTE2ZBgvJ-fBvT-PaL80cSFGpyCJgt9LvM4-peJzcidoKC6zhBEvG0QnlqWTLsphbIA0JmBRiOoeqyLYRVGwDEdLdacdsQRM.u7bik.enhbuN1-aIQCOdB5MutxtYiu4_
+|]
+
 exampleResponseText :: Text
 exampleResponseText = [here|
-  3!200!!20170515T172311Z!oANAuhC9fZmMlZUPIm53y5vn!http://localhost:3000/foo/query!test0244!current!!pwd!30380!IlRoaXMgaXMgMTAwJSBvZiB0aGUgZGF0YSEgQW5kIGl04oCZcyByZWFsbHkgcXVpdGUgY29vbCI_!901!RzC9KZWALCSeK0n9885X4zzemHizuj8K.NOpt.n1hfRCTE2ZBgvJ-fBvT-PaL80cSFGpyCJgt9LvM4-peJzcidoKC6zhBEvG0QnlqWTLsphbIA0JmBRiOoeqyLYRVGwDEdLdacdsQRM.u7bik.enhbuN1-aIQCOdB5MutxtYiu4_
+  3!200!!20170515T172311Z!oANAuhC9fZmMlZUPIm53y5vn!http://localhost:3000/foo/query!test0244!current!!pwd!30380!IlRoaXMgaXMgMTAwJSBvZiB0aGUgZGF0YSEgQW5kIGl04oCZcyByZWFsbHkgcXVpdGUgY29vbCI_
 |]

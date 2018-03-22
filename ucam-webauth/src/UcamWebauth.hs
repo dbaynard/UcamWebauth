@@ -142,6 +142,12 @@ instance FromJSON a => FromHttpApiData (MaybeValidResponse a) where
     parseQueryParam = first T.pack . parseOnly ucamResponseParser . encodeUtf8
 
 instance ToJSON a => ToHttpApiData (MaybeValidResponse a) where
+    toUrlPiece = wlsEncodeSign
+
+instance FromJSON a => FromHttpApiData (AuthResponse a) where
+    parseQueryParam = first T.pack . parseOnly ucamAuthResponseParser . encodeUtf8
+
+instance ToJSON a => ToHttpApiData (AuthResponse a) where
     toUrlPiece = wlsEncode
 
 ------------------------------------------------------------------------------
