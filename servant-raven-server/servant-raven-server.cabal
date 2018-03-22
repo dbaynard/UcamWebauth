@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 93ffb64218afd8cbfe552e45c5bf7f1135d5091a5d96d1b2d42cee9ae6306180
+-- hash: 71d9c6f8d45224d9f0f44b33183f32a3cf0e99a98ca427b7d27bca3adae7e8ae
 
 name:           servant-raven-server
 version:        0.1.0
@@ -59,6 +59,7 @@ library
   else
     ghc-options: -Wall -fwarn-tabs -O2
   exposed-modules:
+      Extra.Servant.Auth
       Servant.UcamWebauth
   other-modules:
       Paths_servant_raven_server

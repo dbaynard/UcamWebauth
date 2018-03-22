@@ -25,6 +25,7 @@ abstract: |
 
 module Main where
 
+import Extra.Servant.Auth
 import Servant.UcamWebauth
 import "servant-raven" Servant.Raven.Test
 import "servant-raven" Servant.UcamWebauth.API
@@ -174,7 +175,7 @@ type API auths a
 
 server :: ToJSON a => SetWAA a -> CookieSettings -> JWTSettings -> JWK -> Server (API auths a)
 server rs cs jwts ky =
-        authenticated (return . (\(User user) -> user))
+        authenticated @Protected (pure . (\(User user) -> user))
     :<|> ucamWebauthToken pure (Nothing, ky) rs
     :<|> unprotected cs jwts
 

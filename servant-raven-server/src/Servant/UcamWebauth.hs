@@ -38,8 +38,7 @@ They work best with handlers for which 'UnliftIO' (from "unliftio-core") is impl
 {-# LANGUAGE NamedFieldPuns #-}
 
 module Servant.UcamWebauth
-  ( authenticated
-  , ucamWebauthCookie
+  ( ucamWebauthCookie
   , ucamWebauthToken
   , ucamWebauthAuthenticate
   , ucamWebauthSettings
@@ -74,15 +73,6 @@ import "aeson" Data.Aeson.Types hiding ((.=))
 instance ToJSON a => ToJWT (UcamWebauthInfo a)
 -- | UcamWebauthInfo can be converted directly from a JWT.
 instance FromJSON a => FromJWT (UcamWebauthInfo a)
-
--- | Wrap the provided handler function with authentication.
-authenticated
-    :: ThrowAll (handler protected)
-    => (a -> handler protected)
-    -> AuthResult a
-    -> handler protected
-authenticated f (Authenticated user) = f user
-authenticated _ _ = throwAll err401
 
 -- | If a GET request is made with no query parameters, redirect (303) to the authentication server.
 --
