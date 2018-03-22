@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 69de7fb1d40693b3ae70a10ca47c4fe64e59036b673341816b2e19c441437ad9
+-- hash: e0672c65505f70ae15fe7a41b134681507b07703cd12cce49c895961cae649e3
 
 name:           servant-raven
 version:        0.1.0
@@ -45,6 +45,7 @@ library
     , network-uri
     , reflection
     , servant
+    , servant-auth
     , text
     , ucam-webauth-types
     , uri-bytestring

@@ -19,13 +19,13 @@ This module generates the settings for the University of Cambridge’s Ucam-Weba
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE ConstraintKinds #-}
 
 module Servant.UcamWebauth.Settings
-  ( ucamWebauthSettings
+  ( UcamWebauthConstraint
+  , ucamWebauthSettings
   , authURI
   ) where
-
-import "this" Servant.UcamWebauth.API
 
 import "ucam-webauth-types" UcamWebauth.Data
 
@@ -49,6 +49,12 @@ import "microlens" Lens.Micro
  -import "aeson" Data.Aeson.Types hiding ((.=))
  -}
 
+type UcamWebauthConstraint baseurl api endpoint a =
+  ( IsElem endpoint api
+  , HasLink endpoint
+  , MkLink endpoint ~ (Maybe (MaybeValidResponse a) -> Link)
+  , Reifies baseurl UB.URI
+  )
 
 -- | The default settings for UcamWebauth should generate the application
 -- link from the api type.
@@ -56,19 +62,15 @@ import "microlens" Lens.Micro
 -- This must be reified with a 'Network.URI.URIAuth' value corresponding to
 -- the base url of the api.
 ucamWebauthSettings
-    :: forall baseurl (api :: Type) (e :: Type) a endpoint .
-       ( IsElem endpoint api
-       , HasLink endpoint
-       , MkLink endpoint ~ Link
-       , endpoint ~ Unqueried e
-       , Reifies baseurl UB.URI
-       )
+    :: forall baseurl (api :: Type) endpoint a .
+      ( UcamWebauthConstraint baseurl api endpoint a
+      )
     => SetWAA a
 ucamWebauthSettings = do
         wSet . applicationUrl .= authLink
     where
         authLink :: Text
-        authLink = authURI baseUri . linkURI $ safeLink (Proxy @api) (Proxy @endpoint)
+        authLink = authURI baseUri . linkURI $ safeLink (Proxy @api) (Proxy @endpoint) Nothing
 
         baseUri :: UB.URI
         baseUri = reflect @baseurl Proxy

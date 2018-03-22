@@ -1,3 +1,12 @@
+{-|
+Module      : Servant.UcamWebauth.API
+Description : API for UcamWebauth endpoints
+Maintainer  : David Baynard <davidbaynard@gmail.com>
+
+Use 'UcamWebauthCookie' or 'UcamWebauthToken' for defaults.
+
+ -}
+
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE PackageImports #-}
 {-# LANGUAGE DataKinds #-}
@@ -16,11 +25,13 @@ module Servant.UcamWebauth.API (
     module Servant.UcamWebauth.API
 )   where
 
+import "base" Data.Kind
+
 import "ucam-webauth-types" Data.ByteString.B64
 import "ucam-webauth-types" UcamWebauth.Data
-import "ucam-webauth-types" UcamWebauth.Data.Internal
 
 import "servant" Servant.API
+import "servant-auth" Servant.Auth
 
 import "cookie" Web.Cookie
 
@@ -33,30 +44,38 @@ instance MimeRender OctetStream (Base64UBSL tag) where
 instance MimeUnrender OctetStream (Base64UBSL tag) where
     mimeUnrender _ = pure . B64UL
 
--- | Remove the query parameters from a type for easier safe-link making
--- TODO Make injective?
-type family Unqueried a = p
+-- | Transform a given endpoint to be valid for UcamWebauth.
+-- This is not injective, as it is possible to supply a 'Cookied' endpoint.
+-- Don’t.
+type family UcamWebauthEndpoint
+    (auth     :: Type)
+    (endpoint :: Type)
+    :: Type where
+  UcamWebauthEndpoint Cookie (Verb method statusCode contentTypes a) = Verb method statusCode contentTypes (Cookied a)
+  UcamWebauthEndpoint JWT     endpoint                               = endpoint
+infixr 4 `UcamWebauthEndpoint`
 
 -- | A bifunctional endpoint for authentication, which both delegates and
 -- responds to the Web Login Service (WLS).
-type UcamWebauthAuthenticate route a
-    = UcamWebauthToken '[JSON] route (UcamWebauthInfo a) a
-
-type instance Unqueried (UcamWebauthAuthenticate route a) = route :> Get '[JSON] (UcamWebauthInfo a)
+type UcamWebauthAuthenticate auth param endpoint
+    = WLSResponse param :> auth `UcamWebauthEndpoint` endpoint
 
 -- | A bifunctional endpoint for authentication, which both delegates and
--- responds to the Web Login Service (WLS).
-type UcamWebauthToken typs route token a
-    = route :> QueryParam "WLS-Response" (MaybeValidResponse a) :> Get typs token
-
-type instance Unqueried (UcamWebauthToken typs route token a) = route :> Get typs token
+-- responds to the Web Login Service (WLS) using JWTs, returning `token` as
+-- JSON.
+type UcamWebauthToken param token
+    = UcamWebauthAuthenticate JWT param (Get '[JSON] token)
 
 -- | A bifunctional endpoint for authentication, which both delegates and
--- responds to the Web Login Service (WLS).
-type UcamWebauthCookie verb typs route token a
-    = route :> QueryParam "WLS-Response" (MaybeValidResponse a) :> verb typs (Cookied token)
+-- responds to the Web Login Service (WLS) using Cookies, returning
+-- nothing.
+type UcamWebauthCookie param
+    = UcamWebauthAuthenticate Cookie param (Get '[PlainText] NoContent)
 
-type instance Unqueried (UcamWebauthCookie verb typs route token a) = route :> verb typs (Cookied token)
+-- | The WLS response as a query parameter, with the supplied parameter to
+-- send with the request and receive with the response.
+type WLSResponse param
+    = QueryParam "WLS-Response" (MaybeValidResponse param)
 
 -- | Wrap an output in a pair of cookies (for authentication with XSRF
 -- protection)

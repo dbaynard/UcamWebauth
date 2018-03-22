@@ -63,7 +63,9 @@ import "warp" Network.Wai.Handler.Warp
 import "wai-extra" Network.Wai.Middleware.RequestLogger
 
 import "uri-bytestring" URI.ByteString.QQ
+```
 
+```haskell
 main :: IO ()
 main = do
         mainWithCookies
@@ -137,6 +139,9 @@ mySettings = [uri|http://127.0.0.1:7249|] `reify` \(Proxy :: Proxy baseurl) -> d
 
 ------------------------------------------------------------------------------
 
+```
+
+```haskell
 newtype User = User Text
     deriving (Eq, Show, Read, Generic)
 
@@ -160,7 +165,7 @@ type Unprotected
 unprotected :: CookieSettings -> JWTSettings -> Server Unprotected
 unprotected cs jwts = checkCreds cs jwts :<|> serveDirectoryFileServer "example/static"
 
-type Raven a = UcamWebauthToken '[OctetStream] "authenticate" (Base64UBSL (UcamWebauthInfo a)) a
+type Raven a = "authenticate" :> UcamWebauthToken a (Base64UBSL (UcamWebauthInfo a))
 
 type API auths a
     = Auth auths User :> Protected
