@@ -11,7 +11,7 @@ Use 'UcamWebauthCookie' or 'UcamWebauthToken' for defaults.
 {-# LANGUAGE PackageImports #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeFamilyDependencies #-}
 {-# LANGUAGE TypeInType #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications #-}
@@ -45,14 +45,13 @@ instance MimeUnrender OctetStream (Base64UBSL tag) where
     mimeUnrender _ = pure . B64UL
 
 -- | Transform a given endpoint to be valid for UcamWebauth.
--- This is not injective, as it is possible to supply a 'Cookied' endpoint.
--- Don’t.
 type family UcamWebauthEndpoint
     (auth     :: Type)
     (endpoint :: Type)
-    :: Type where
+    = (verb :: Type) | verb -> auth
+    where
   UcamWebauthEndpoint Cookie (Verb method statusCode contentTypes a) = Verb method statusCode contentTypes (Cookied a)
-  UcamWebauthEndpoint JWT     endpoint                               = endpoint
+  UcamWebauthEndpoint JWT    (Verb method statusCode contentTypes a) = Verb method statusCode contentTypes (Base64UBSL a)
 infixr 4 `UcamWebauthEndpoint`
 
 -- | A bifunctional endpoint for authentication, which both delegates and
@@ -70,7 +69,7 @@ type UcamWebauthToken param token
 -- responds to the Web Login Service (WLS) using Cookies, returning
 -- nothing.
 type UcamWebauthCookie param
-    = UcamWebauthAuthenticate Cookie param (Get '[PlainText] NoContent)
+    = UcamWebauthAuthenticate Cookie param (Get '[NoContent] ())
 
 -- | The WLS response as a query parameter, with the supplied parameter to
 -- send with the request and receive with the response.
