@@ -36,6 +36,8 @@ They work best with handlers for which 'UnliftIO' (from "unliftio-core") is impl
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE RankNTypes #-}
 
 module Servant.UcamWebauth
   ( ucamWebauthCookie
@@ -45,6 +47,14 @@ module Servant.UcamWebauth
   , authURI
   , Cookied
   , servantMkJWT
+  -- Authentication arguments
+  , AuthenticationArgs
+  , authenticationArgs
+  , authJWK
+  , authTokCreate
+  , authTokUse
+  , authWAASettings
+  , authExpires
   ) where
 
 import "servant-raven" Servant.UcamWebauth.API
@@ -64,6 +74,9 @@ import "servant-auth-server" Servant.Auth.Server.SetCookieOrphan ()
 import "jose" Crypto.JOSE.JWK (JWK)
 
 import "aeson" Data.Aeson.Types hiding ((.=))
+import "microlens" Lens.Micro
+import "microlens-mtl" Lens.Micro.Mtl
+import "mtl" Control.Monad.State
 
 ------------------------------------------------------------------------------
 --
@@ -73,6 +86,57 @@ import "aeson" Data.Aeson.Types hiding ((.=))
 instance ToJSON a => ToJWT (UcamWebauthInfo a)
 -- | UcamWebauthInfo can be converted directly from a JWT.
 instance FromJSON a => FromJWT (UcamWebauthInfo a)
+
+--------------------------------------------------
+-- * Authentication arguments
+--------------------------------------------------
+
+data AuthenticationArgs handler tok out a = AuthenticationArgs
+  { _authJWK         :: JWK
+  , _authExpires     :: Maybe UTCTime
+  , _authTokCreate   :: UcamWebauthInfo a -> handler tok
+  , _authTokUse      :: tok -> handler out
+  , _authWAASettings :: SetWAA a
+  }
+
+authJWK :: AuthenticationArgs handler tok out a `Lens'` JWK
+authJWK f AuthenticationArgs{..} = (\_authJWK -> AuthenticationArgs{_authJWK, ..}) <$> f _authJWK
+{-# INLINE authJWK #-}
+
+authExpires :: AuthenticationArgs handler tok out a `Lens'` Maybe UTCTime
+authExpires f AuthenticationArgs{..} = (\_authExpires -> AuthenticationArgs{_authExpires, ..}) <$> f _authExpires
+{-# INLINE authExpires #-}
+
+authTokCreate :: AuthenticationArgs handler tok out a `Lens'` (UcamWebauthInfo a -> handler tok)
+authTokCreate f AuthenticationArgs{..} = (\_authTokCreate -> AuthenticationArgs{_authTokCreate, ..}) <$> f _authTokCreate
+{-# INLINE authTokCreate #-}
+
+authTokUse :: AuthenticationArgs handler tok out a `Lens'` (tok -> handler out)
+authTokUse f AuthenticationArgs{..} = (\_authTokUse -> AuthenticationArgs{_authTokUse, ..}) <$> f _authTokUse
+{-# INLINE authTokUse #-}
+
+authWAASettings :: AuthenticationArgs handler tok out a `Lens'` SetWAA a
+authWAASettings f AuthenticationArgs{..} = (\_authWAASettings -> AuthenticationArgs{_authWAASettings, ..}) <$> f _authWAASettings
+{-# INLINE authWAASettings #-}
+
+authenticationArgs
+    :: forall handler a aas .
+      ( Applicative handler
+      , aas ~ AuthenticationArgs handler (UcamWebauthInfo a) (UcamWebauthInfo a) a
+      )
+    => JWK
+    -> State aas ()
+    -> aas
+authenticationArgs _authJWK = (&~) AuthenticationArgs{..}
+    where
+        _authExpires     = Nothing
+        _authTokCreate   = pure
+        _authTokUse      = pure
+        _authWAASettings = pure ()
+
+--------------------------------------------------
+-- * Handler functions
+--------------------------------------------------
 
 -- | If a GET request is made with no query parameters, redirect (303) to the authentication server.
 --
@@ -103,15 +167,13 @@ ucamWebauthToken
        , ToJWT tok
        , MonadIO handler
        )
-    => (UcamWebauthInfo a -> handler tok)
-    -> (Maybe UTCTime, JWK)
-    -> SetWAA a
+    => AuthenticationArgs handler tok tok a
     -> Maybe (MaybeValidResponse a)
     -> handler (Base64UBSL tok)
-ucamWebauthToken toToken jwkSet settings mresponse = do
-        uwi <- ucamWebauthAuthenticate settings mresponse
-        tok <- toToken uwi
-        servantMkJWT jwkSet tok
+ucamWebauthToken aas@AuthenticationArgs{..} mresponse = do
+        uwi <- ucamWebauthAuthenticate _authWAASettings mresponse
+        tok <- _authTokCreate uwi
+        servantMkJWT aas tok
 
 -- | Here, if a request is made with a valid WLS-Response query parameter, convert the
 -- 'UcamWebauthInfo a' to the token type using the supplied function and then set the log in token
@@ -122,28 +184,28 @@ ucamWebauthCookie
        , ToJWT tok
        , MonadIO handler
        )
-    => (UcamWebauthInfo a -> handler tok, tok -> handler out)
-    -> JWK
-    -> SetWAA a
+    => AuthenticationArgs handler tok out a
     -> Maybe (MaybeValidResponse a)
     -> handler (Cookied out)
-ucamWebauthCookie (toTok, fromTok) ky settings mresponse = let jwtCfg = defaultJWTSettings ky in do
-        uwi <- ucamWebauthAuthenticate settings mresponse
-        tok <- toTok uwi
+ucamWebauthCookie AuthenticationArgs{..} mresponse = do
+        uwi <- ucamWebauthAuthenticate _authWAASettings mresponse
+        tok <- _authTokCreate uwi
         mApplyCookies <- liftIO $ acceptLogin cookieSettings jwtCfg tok
-        out <- fromTok tok
+        out <- _authTokUse tok
         UIO.fromEither . note trans . fmap ($ out) $ mApplyCookies
     where
         trans = err401 { errBody = "Token error" }
         cookieSettings = defaultCookieSettings
+        jwtCfg = defaultJWTSettings _authJWK
 
 servantMkJWT
   :: ( ToJWT tok
      , MonadIO handler
      )
-  => (Maybe UTCTime, JWK) -> tok -> handler (Base64UBSL tok)
-servantMkJWT (mexpires, ky) tok = UIO.fromEitherIO . runExceptT .
-  bimapExceptT trans B64UL . ExceptT $ makeJWT tok jwtCfg mexpires
+  => AuthenticationArgs handler tok tok a
+  -> tok -> handler (Base64UBSL tok)
+servantMkJWT AuthenticationArgs{..} tok = UIO.fromEitherIO . runExceptT .
+  bimapExceptT trans B64UL . ExceptT $ makeJWT tok jwtCfg _authExpires
     where
         trans _ = err401 { errBody = "Token error" }
-        jwtCfg = defaultJWTSettings ky
+        jwtCfg = defaultJWTSettings _authJWK

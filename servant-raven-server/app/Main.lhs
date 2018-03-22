@@ -176,7 +176,7 @@ type API auths a
 server :: ToJSON a => SetWAA a -> CookieSettings -> JWTSettings -> JWK -> Server (API auths a)
 server rs cs jwts ky =
         authenticated @Protected (pure . (\(User user) -> user))
-    :<|> ucamWebauthToken pure (Nothing, ky) rs
+    :<|> ucamWebauthToken (authenticationArgs ky $ authWAASettings .= rs)
     :<|> unprotected cs jwts
 
 -- Auths may be '[JWT] or '[Cookie] or even both.
