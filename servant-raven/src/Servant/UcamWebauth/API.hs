@@ -1,8 +1,17 @@
+{-|
+Module      : Servant.UcamWebauth.API
+Description : API for UcamWebauth endpoints
+Maintainer  : David Baynard <davidbaynard@gmail.com>
+
+Use 'UcamWebauthCookie' or 'UcamWebauthToken' for defaults.
+
+ -}
+
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE PackageImports #-}
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeFamilyDependencies #-}
 {-# LANGUAGE TypeInType #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications #-}
@@ -12,51 +21,69 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
-module Servant.UcamWebauth.API (
-    module Servant.UcamWebauth.API
-)   where
+module Servant.UcamWebauth.API
+  ( UcamWebauthCookie
+  , UcamWebauthToken
+  -- * Helpers
+  , UcamWebauthEndpoint
+  , UcamWebauthAuthenticate
+  , WLSResponse
+  -- * Wrappers
+  , Cookied
+  ) where
+
+import "base" Data.Kind
 
 import "ucam-webauth-types" Data.ByteString.B64
-import "ucam-webauth-types" Network.Protocol.UcamWebauth.Data
-import "ucam-webauth-types" Network.Protocol.UcamWebauth.Data.Internal
+import "ucam-webauth-types" UcamWebauth.Data
 
 import "servant" Servant.API
+import "servant-auth" Servant.Auth
 
 import "cookie" Web.Cookie
 
 -- | Base 64 (URL) encoded 'ByteString's should be serializable as 'OctetStream's.
--- They are already serializable as 'JSON' thanks to the ToJson instance.
+-- They are already serializable as 'JSON' thanks to the 'ToJson' instance.
 instance MimeRender OctetStream (Base64UBSL tag) where
     mimeRender _ = unB64UL
 
 -- TODO Make safe
+-- | Base 64 (URL) encoded 'ByteString's should be serializable as 'OctetStream's.
+-- They are already deserializable from 'JSON' thanks to the 'FromJSON' instance.
 instance MimeUnrender OctetStream (Base64UBSL tag) where
     mimeUnrender _ = pure . B64UL
 
--- | Remove the query parameters from a type for easier safe-link making
--- TODO Make injective?
-type family Unqueried a = p
+-- | Transform a given endpoint to be valid for UcamWebauth.
+type family UcamWebauthEndpoint
+    (auth     :: Type)
+    (endpoint :: Type)
+    = (verb :: Type) | verb -> auth
+    where
+  UcamWebauthEndpoint Cookie (Verb method statusCode contentTypes a) = Verb method statusCode contentTypes (Cookied a)
+  UcamWebauthEndpoint JWT    (Verb method statusCode contentTypes a) = Verb method statusCode contentTypes (Base64UBSL a)
+infixr 4 `UcamWebauthEndpoint`
 
 -- | A bifunctional endpoint for authentication, which both delegates and
 -- responds to the Web Login Service (WLS).
-type UcamWebauthAuthenticate route a
-    = UcamWebauthToken '[JSON] route (UcamWebauthInfo a) a
-
-type instance Unqueried (UcamWebauthAuthenticate route a) = route :> Get '[JSON] (UcamWebauthInfo a)
+type UcamWebauthAuthenticate auth param endpoint
+    = WLSResponse param :> auth `UcamWebauthEndpoint` endpoint
 
 -- | A bifunctional endpoint for authentication, which both delegates and
--- responds to the Web Login Service (WLS).
-type UcamWebauthToken typs route token a
-    = route :> QueryParam "WLS-Response" (MaybeValidResponse a) :> Get typs token
-
-type instance Unqueried (UcamWebauthToken typs route token a) = route :> Get typs token
+-- responds to the Web Login Service (WLS) using JWTs, returning 'token' as
+-- JSON.
+type UcamWebauthToken param token
+    = UcamWebauthAuthenticate JWT param (Get '[JSON] token)
 
 -- | A bifunctional endpoint for authentication, which both delegates and
--- responds to the Web Login Service (WLS).
-type UcamWebauthCookie verb typs route token a
-    = route :> QueryParam "WLS-Response" (MaybeValidResponse a) :> verb typs (Cookied token)
+-- responds to the Web Login Service (WLS) using Cookies, returning
+-- nothing.
+type UcamWebauthCookie param
+    = UcamWebauthAuthenticate Cookie param (Get '[NoContent] ())
 
-type instance Unqueried (UcamWebauthCookie verb typs route token a) = route :> verb typs (Cookied token)
+-- | The WLS response as a query parameter, with the supplied parameter to
+-- send with the request and receive with the response.
+type WLSResponse param
+    = QueryParam "WLS-Response" (MaybeValidResponse param)
 
 -- | Wrap an output in a pair of cookies (for authentication with XSRF
 -- protection)

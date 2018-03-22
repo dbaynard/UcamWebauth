@@ -32,6 +32,7 @@ extra-source-files:
 library:
   source-dirs: src
   exposed-modules:
+  - Extra.Servant.Auth
   - Servant.UcamWebauth
   dependencies:
   - aeson
@@ -82,4 +83,4 @@ flags:
   dev:
     description: Build for development
     manual: false
-    default: false
+    default: true

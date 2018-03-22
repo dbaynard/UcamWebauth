@@ -1,8 +1,8 @@
--- This file has been generated from package.yaml by hpack version 0.20.0.
+-- This file has been generated from package.yaml by hpack version 0.27.0.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 18f549822d431e9bd3204c7feb8cca829db9c42f6e39539cfcf9d5f52ae7b10c
+-- hash: 2014d76170798d8a327283765e4b1e6d953ddef9925cf0832270e82590c6d8ba
 
 name:              ucam-webauth
 version:           0.1.0
@@ -24,18 +24,11 @@ source-repository head
 flag dev
     description: Build for development
     manual: False
-    default: False
+    default: True
 
 library
     hs-source-dirs:
           src
-    exposed-modules:
-          Network.Protocol.UcamWebauth
-    other-modules:
-          Network.Protocol.UcamWebauth.Internal
-          Network.Protocol.UcamWebauth.Parser
-          Paths_ucam_webauth
-    default-language: Haskell2010
     build-depends:
           aeson >=1.2
         , attoparsec
@@ -59,20 +52,36 @@ library
         ghc-options: -Wall -fwarn-tabs -O0
     else
         ghc-options: -Wall -fwarn-tabs -O2
+    default-language: Haskell2010
+    exposed-modules:
+          UcamWebauth
+    other-modules:
+          UcamWebauth.Internal
+          UcamWebauth.Parser
+          UcamWebauth.WLS
+          Paths_ucam_webauth
 
 test-suite test
     type: exitcode-stdio-1.0
     main-is: Spec.hs
     hs-source-dirs:
+          src
           test
     ghc-options: -Wall
     build-depends:
-          base >=4 && <5
+          QuickCheck
+        , base >=4 && <5
+        , generic-arbitrary
+        , here
         , hspec >=2.0.0
-        , ucam-webauth
+        , quickcheck-instances
+        , time-qq
         , ucam-webauth-types
     other-modules:
-          Localhost
-          TestSuite
+          UcamWebauth
+          UcamWebauth.Internal
+          UcamWebauth.Parser
+          UcamWebauth.WLS
+          UcamWebauthSpec
           Paths_ucam_webauth
     default-language: Haskell2010

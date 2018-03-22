@@ -25,10 +25,10 @@ abstract: |
 
 module Main where
 
+import Extra.Servant.Auth
 import Servant.UcamWebauth
 import "servant-raven" Servant.Raven.Test
-import "servant-raven" Servant.UcamWebauth.API
-import "ucam-webauth" Network.Protocol.UcamWebauth
+import "ucam-webauth" UcamWebauth
 
 import "base" Control.Applicative
 import "base" Control.Concurrent
@@ -63,7 +63,9 @@ import "warp" Network.Wai.Handler.Warp
 import "wai-extra" Network.Wai.Middleware.RequestLogger
 
 import "uri-bytestring" URI.ByteString.QQ
+```
 
+```haskell
 main :: IO ()
 main = do
         mainWithCookies
@@ -137,6 +139,9 @@ mySettings = [uri|http://127.0.0.1:7249|] `reify` \(Proxy :: Proxy baseurl) -> d
 
 ------------------------------------------------------------------------------
 
+```
+
+```haskell
 newtype User = User Text
     deriving (Eq, Show, Read, Generic)
 
@@ -160,7 +165,7 @@ type Unprotected
 unprotected :: CookieSettings -> JWTSettings -> Server Unprotected
 unprotected cs jwts = checkCreds cs jwts :<|> serveDirectoryFileServer "example/static"
 
-type Raven a = UcamWebauthToken '[OctetStream] "authenticate" (Base64UBSL (UcamWebauthInfo a)) a
+type Raven a = "authenticate" :> UcamWebauthToken a (UcamWebauthInfo a)
 
 type API auths a
     = Auth auths User :> Protected
@@ -169,8 +174,8 @@ type API auths a
 
 server :: ToJSON a => SetWAA a -> CookieSettings -> JWTSettings -> JWK -> Server (API auths a)
 server rs cs jwts ky =
-        authenticated (return . (\(User user) -> user))
-    :<|> ucamWebauthToken pure (Nothing, ky) rs
+        authenticated @Protected (pure . (\(User user) -> user))
+    :<|> ucamWebauthToken (authenticationArgs ky $ authWAASettings .= rs)
     :<|> unprotected cs jwts
 
 -- Auths may be '[JWT] or '[Cookie] or even both.

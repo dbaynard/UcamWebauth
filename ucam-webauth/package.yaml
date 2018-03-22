@@ -15,7 +15,7 @@ dependencies:
 library:
   source-dirs: src
   exposed-modules:
-  - Network.Protocol.UcamWebauth
+  - UcamWebauth
   dependencies:
   - aeson >=1.2
   - attoparsec
@@ -45,16 +45,24 @@ library:
       - -Wall
       - -fwarn-tabs
       - -O2
+
 tests:
   test:
     main: Spec.hs
-    source-dirs: test
+    source-dirs:
+    - src
+    - test
     ghc-options: -Wall
     dependencies:
-    - ucam-webauth
+    - QuickCheck
+    - generic-arbitrary
+    - here
     - hspec >=2.0.0
+    - quickcheck-instances
+    - time-qq
+
 flags:
   dev:
     description: Build for development
     manual: false
-    default: false
+    default: true

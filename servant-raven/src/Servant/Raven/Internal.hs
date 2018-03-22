@@ -20,32 +20,28 @@ module Servant.Raven.Internal
   , Reifies
   , Symbol
   , URI
+  -- Rexported
+  , UcamWebauthConstraint
   ) where
 
-import "ucam-webauth-types" Network.Protocol.UcamWebauth.Data
+import "ucam-webauth-types" UcamWebauth.Data
 
 import "base" GHC.TypeLits
 
 import "reflection" Data.Reflection
 
-import "servant" Servant.Utils.Links hiding (URI)
 import "this" URI.Convert
 
 -- The protocol
-import "this" Servant.UcamWebauth.API
 import "this" Servant.UcamWebauth.Settings
 
 {-|
   'WAASettings' for Raven
 -}
 ravenDefSettings
-    :: forall baseurl api e a endpoint .
-       ( Reifies baseurl URI
-       , IsElem endpoint api
-       , HasLink endpoint
-       , MkLink endpoint ~ Link
-       , endpoint ~ Unqueried e
-       )
+    :: forall baseurl api endpoint a .
+      ( UcamWebauthConstraint baseurl api endpoint a
+      )
     => SetWAA a
-ravenDefSettings = ucamWebauthSettings @baseurl @api @e
+ravenDefSettings = ucamWebauthSettings @baseurl @api @endpoint
 

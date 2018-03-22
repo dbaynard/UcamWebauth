@@ -11,6 +11,7 @@ Maintainer  : David Baynard <davidbaynard@gmail.com>
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DerivingStrategies #-}
 
 module Data.ByteString.B64
   ( Base64UBS(..)
@@ -18,7 +19,7 @@ module Data.ByteString.B64
   , UcamBase64BS(..)
   , UcamBase64BSL(..)
   , ASCII(..)
-)   where
+  ) where
 
 import "base" Data.Data
 import "base" GHC.Generics
@@ -40,7 +41,8 @@ import "aeson" Data.Aeson.Types
   Ensure Base 64 URL text is not confused with other 'ByteString's
 -}
 newtype Base64UBS (tag :: k) = B64U { unB64U :: ByteString }
-    deriving (Show, Read, Eq, Ord, Semigroup, Monoid, IsString, Generic, Typeable, Data)
+    deriving stock (Eq, Ord, Generic, Typeable, Data)
+    deriving newtype (Show, Read, IsString, Monoid, Semigroup)
 
 instance FromJSON (Base64UBS tag) where
     parseJSON = withObject "Base 64 URL ByteString" $ \v -> B64U . encodeUtf8
@@ -51,7 +53,8 @@ instance ToJSON (Base64UBS tag) where
     toEncoding = toEncoding . decodeUtf8 . unB64U
 
 newtype Base64UBSL (tag :: k) = B64UL { unB64UL :: BSL.ByteString }
-    deriving (Show, Read, Eq, Ord, Semigroup, Monoid, IsString, Generic, Typeable, Data)
+    deriving stock (Eq, Ord, Generic, Typeable, Data)
+    deriving newtype (Show, Read, IsString, Monoid, Semigroup)
 
 instance FromJSON (Base64UBSL tag) where
     parseJSON = withObject "Base 64 URL ByteString" $ \v -> B64UL . TL.encodeUtf8
@@ -65,13 +68,24 @@ instance ToJSON (Base64UBSL tag) where
   Ensure Base 64 URL text modified to fit the Ucam-Webauth protocol is not confused with other 'ByteString's
 -}
 newtype UcamBase64BS = UcamB64 { unUcamB64 :: ByteString }
-    deriving (Show, Read, Eq, Ord, Semigroup, Monoid, IsString, Generic, Typeable, Data)
+    deriving stock (Eq, Ord, Generic, Typeable, Data)
+    deriving newtype (Show, Read, IsString, Monoid, Semigroup)
+
+instance FromJSON UcamBase64BS where
+    parseJSON = withObject "Ucam Base 64 URL ByteString" $ \v -> UcamB64 . encodeUtf8
+        <$> v .: "Ucam Base 64U ByteString"
+
+instance ToJSON UcamBase64BS where
+    toJSON = toJSON . decodeUtf8 . unUcamB64
+    toEncoding = toEncoding . decodeUtf8 . unUcamB64
 
 newtype UcamBase64BSL = UcamB64L { unUcamB64L :: BSL.ByteString }
-    deriving (Show, Read, Eq, Ord, Semigroup, Monoid, IsString, Generic, Typeable, Data)
+    deriving stock (Eq, Ord, Generic, Typeable, Data)
+    deriving newtype (Show, Read, IsString, Monoid, Semigroup)
 
 {-|
   Ensure ASCII text is not confused with other 'ByteString's
 -}
 newtype ASCII = ASCII { unASCII :: Text }
-    deriving (Show, Read, Eq, Ord, Semigroup, Monoid, IsString, Generic, Typeable, Data)
+    deriving stock (Eq, Ord, Generic, Typeable, Data)
+    deriving newtype (Show, Read, IsString, Monoid, Semigroup)

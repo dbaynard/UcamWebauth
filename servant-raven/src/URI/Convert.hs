@@ -6,11 +6,11 @@ Maintainer  : David Baynard <davidbaynard@gmail.com>
 Copyright   : David Baynard 2017
 License     : Apache
 
-Both 'uri-bytestring' and 'network-uri' provide a URI type.
+Both "uri-bytestring" and "network-uri" provide a URI type.
 The consensus seems to be the former is generally better (more strongly typed,
 more maintained) but slightly — yet significantly — less flexible.
-'http-api-data' uses the former . 'servant' uses the latter (but also depends
-on 'http-api-data'.)
+"http-api-data" uses the former . "servant" uses the latter (but also depends
+on "http-api-data".)
 
 This module enables interconversion between the two.
 

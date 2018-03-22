@@ -1,5 +1,5 @@
 {-|
-Module      : Network.Protocol.UcamWebauth
+Module      : UcamWebauth
 Description : The Ucam-Webauth protocol, from the University of Cambridge
 Maintainer  : David Baynard <davidbaynard@gmail.com>
 
@@ -20,7 +20,7 @@ Key parts of the implementation of the protocol itself.
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 
-module Network.Protocol.UcamWebauth
+module UcamWebauth
   ( module X
 
   -- Parser
@@ -34,12 +34,13 @@ module Network.Protocol.UcamWebauth
   ) where
 
 -- Prelude
-import Network.Protocol.UcamWebauth.Internal
+import "this" UcamWebauth.Internal
+import "this" UcamWebauth.WLS
 
-import "ucam-webauth-types" Network.Protocol.UcamWebauth.Data as X
-import "ucam-webauth-types" Network.Protocol.UcamWebauth.Data.Internal
+import "ucam-webauth-types" UcamWebauth.Data as X
+import "ucam-webauth-types" UcamWebauth.Data.Internal
 
-import Network.Protocol.UcamWebauth.Parser
+import "this" UcamWebauth.Parser
 
 import "base" Data.Coerce
 import "base" Control.Monad.IO.Class
@@ -77,7 +78,7 @@ import qualified "bytestring" Data.ByteString.Char8 as B
 import "time" Data.Time (diffUTCTime, getCurrentTime)
 
 -- JSON (Aeson)
-import "aeson" Data.Aeson (FromJSON)
+import "aeson" Data.Aeson.Types (FromJSON, ToJSON)
 
 -- Crypto
 import "cryptonite" Crypto.PubKey.RSA.Types
@@ -139,6 +140,15 @@ authCode = liftMaybe . maybeResult . flip feed "" . parse ucamResponseParser
 -- this package.
 instance FromJSON a => FromHttpApiData (MaybeValidResponse a) where
     parseQueryParam = first T.pack . parseOnly ucamResponseParser . encodeUtf8
+
+instance ToJSON a => ToHttpApiData (MaybeValidResponse a) where
+    toUrlPiece = wlsEncodeSign
+
+instance FromJSON a => FromHttpApiData (AuthResponse a) where
+    parseQueryParam = first T.pack . parseOnly ucamAuthResponseParser . encodeUtf8
+
+instance ToJSON a => ToHttpApiData (AuthResponse a) where
+    toUrlPiece = wlsEncode
 
 ------------------------------------------------------------------------------
 -- * Validation

@@ -41,7 +41,7 @@ import "microlens" Lens.Micro
 import "microlens-mtl" Lens.Micro.Mtl
 
 -- The protocol
-import "ucam-webauth" Network.Protocol.UcamWebauth
+import "ucam-webauth" UcamWebauth
 import Network.Wai.Protocol.UcamWebauth
 import Network.Wai.Protocol.Raven.Test
 

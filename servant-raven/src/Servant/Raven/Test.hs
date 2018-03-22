@@ -30,12 +30,10 @@ module Servant.Raven.Test {-# WARNING "Do not use this module for production cod
 -- Prelude
 import "microlens-mtl" Lens.Micro.Mtl
 import "microlens-ghc" Lens.Micro.GHC
-import "servant" Servant.Utils.Links hiding (URI)
 import "file-embed" Data.FileEmbed
 
 -- The protocol
-import "this" Servant.UcamWebauth.API
-import "ucam-webauth-types" Network.Protocol.UcamWebauth.Data
+import "ucam-webauth-types" UcamWebauth.Data
 
 import "this" Servant.Raven.Internal as X
 
@@ -48,16 +46,12 @@ import "this" Servant.Raven.Internal as X
   > wlsUrl .= "https://demo.raven.cam.ac.uk/auth/authenticate.html"
 -}
 ravenSettings
-    :: forall baseurl api e a endpoint .
-       ( Reifies baseurl URI
-       , IsElem endpoint api
-       , HasLink endpoint
-       , MkLink endpoint ~ Link
-       , endpoint ~ Unqueried e
-       )
+    :: forall baseurl api endpoint a .
+      ( UcamWebauthConstraint baseurl api endpoint a
+      )
     => SetWAA a
 ravenSettings = do
-        ravenDefSettings @baseurl @api @e
+        ravenDefSettings @baseurl @api @endpoint
         wSet . validKids .= ["901"]
         wSet . importedKeys . at "901" .= Just $(embedFile "static/pubkey901.crt")
         wSet . syncTimeOut .= 600

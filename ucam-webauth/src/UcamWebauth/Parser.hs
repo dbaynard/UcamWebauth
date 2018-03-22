@@ -8,20 +8,21 @@
 {-# LANGUAGE ApplicativeDo #-}
 
 {-|
-Module      : Network.Protocol.UcamWebauth.Parser
+Module      : UcamWebauth.Parser
 Description : Parsers for the UCam-Webauth protocol
 Maintainer  : David Baynard <davidbaynard@gmail.com>
 
 -}
 
-module Network.Protocol.UcamWebauth.Parser
+module UcamWebauth.Parser
   ( ucamResponseParser
+  , ucamAuthResponseParser
   ) where
 
 -- Prelude
 import "ucam-webauth-types" Data.ByteString.B64
-import "ucam-webauth-types" Network.Protocol.UcamWebauth.Data
-import "ucam-webauth-types" Network.Protocol.UcamWebauth.Data.Internal
+import "ucam-webauth-types" UcamWebauth.Data
+import "ucam-webauth-types" UcamWebauth.Data.Internal
 
 import "base" Control.Applicative
 import "base" Control.Arrow ((***))
@@ -60,72 +61,71 @@ import qualified "aeson" Data.Aeson as A
 
   As a reminder, the 'MaybeValid' symbol indicates the response has not yet been verified.
 -}
-ucamResponseParser :: forall a . FromJSON a => Parser (MaybeValidResponse a)
+ucamResponseParser :: FromJSON a => Parser (MaybeValidResponse a)
 ucamResponseParser = do
         (_ucamAToSign, _ucamAResponse@AuthResponse{..}) <- noBang . match $ ucamAuthResponseParser
         (_ucamAKid, _ucamASig) <- parseKidSig _ucamAStatus
         _ <- endOfInput
         pure SignedAuthResponse{..}
 
-    where
-        ucamAuthResponseParser :: Parser (AuthResponse a)
-        ucamAuthResponseParser = do
-            _ucamAVer <- noBang wlsVersionParser
-            _ucamAStatus <- noBang responseCodeParser
-            _ucamAMsg <- maybeBang . urlWrapText $ betweenBangs
-            _ucamAIssue <- noBang utcTimeParser
-            _ucamAId <- noBang . urlWrapText $ betweenBangs
-            _ucamAUrl <- noBang . urlWrapText $ betweenBangs
-            _ucamAPrincipal <- parsePrincipal _ucamAStatus
-            _ucamAPtags <- parsePtags _ucamAVer
-            _ucamAAuth <- maybeBang $ authTypeParser
-            _ucamASso <- parseSso _ucamAStatus _ucamAAuth
-            _ucamALife <- maybeBang . fmap timePeriodFromSeconds $ decimal
-            _ucamAParams <- A.decodeStrict . B.decodeLenient <$> betweenBangs <|> pure empty
-            pure AuthResponse{..}
+ucamAuthResponseParser :: FromJSON a => Parser (AuthResponse a)
+ucamAuthResponseParser = do
+    _ucamAVer <- noBang wlsVersionParser
+    _ucamAStatus <- noBang responseCodeParser
+    _ucamAMsg <- maybeBang . urlWrapText $ betweenBangs
+    _ucamAIssue <- noBang utcTimeParser
+    _ucamAId <- noBang . urlWrapText $ betweenBangs
+    _ucamAUrl <- noBang . urlWrapText $ betweenBangs
+    _ucamAPrincipal <- parsePrincipal _ucamAStatus
+    _ucamAPtags <- parsePtags _ucamAVer
+    _ucamAAuth <- maybeBang $ authTypeParser
+    _ucamASso <- parseSso _ucamAStatus _ucamAAuth
+    _ucamALife <- maybeBang . fmap timePeriodFromSeconds $ decimal
+    _ucamAParams <- A.decodeStrict . B.decodeLenient <$> betweenBangs <|> pure empty
+    pure AuthResponse{..}
 
-        noBang :: Parser b -> Parser b
-        noBang = (<* "!")
+noBang :: Parser b -> Parser b
+noBang = (<* "!")
 
-        -- urlWrap :: Functor f => f ByteString -> f ByteString
-        -- urlWrap = fmap (urlDecode False)
+-- urlWrap :: Functor f => f ByteString -> f ByteString
+-- urlWrap = fmap (urlDecode False)
 
-        urlWrapText :: Functor f => f ByteString -> f Text
-        urlWrapText = fmap (decodeUtf8 . urlDecode False)
+urlWrapText :: Functor f => f ByteString -> f Text
+urlWrapText = fmap (decodeUtf8 . urlDecode False)
 
-        maybeBang :: Parser b -> Parser (Maybe b)
-        maybeBang = noBang . optionMaybe
+maybeBang :: Parser b -> Parser (Maybe b)
+maybeBang = noBang . optionMaybe
 
-        parsePtags :: WLSVersion -> Parser (Maybe [Ptag])
-        parsePtags WLS3 = noBang . optionMaybe $ ptagParser `sepBy` ","
-        parsePtags _ = pure empty
+parsePtags :: WLSVersion -> Parser (Maybe [Ptag])
+parsePtags WLS3 = noBang . optionMaybe $ ptagParser `sepBy` ","
+parsePtags _ = pure empty
 
-        parsePrincipal :: StatusCode -> Parser (Maybe Text)
-        parsePrincipal (statusCode . getStatus -> 200) = maybeBang . urlWrapText $ betweenBangs
-        parsePrincipal _ = noBang . pure $ empty
+parsePrincipal :: StatusCode -> Parser (Maybe Text)
+parsePrincipal (statusCode . getStatus -> 200) = maybeBang . urlWrapText $ betweenBangs
+parsePrincipal _ = noBang . pure $ empty
 
-        parseSso :: StatusCode -> Maybe AuthType -> Parser (Maybe [AuthType])
-        parseSso (statusCode . getStatus -> 200) Nothing = noBang . fmap pure $ authTypeParser `sepBy1` ","
-        parseSso _ _ = noBang . pure $ empty
+parseSso :: StatusCode -> Maybe AuthType -> Parser (Maybe [AuthType])
+parseSso (statusCode . getStatus -> 200) Nothing = noBang . fmap pure $ authTypeParser `sepBy1` ","
+parseSso _ _ = noBang . pure $ empty
 
-        parseKidSig :: StatusCode -> Parser (Maybe KeyID, Maybe UcamBase64BS)
-        parseKidSig (statusCode . getStatus -> 200) =
-            curry (pure *** pure)
-                <$> noBang kidParser
-                <*> ucamB64parser
-        parseKidSig _ = (,)
-            <$> noBang (optionMaybe kidParser)
-            <*> optionMaybe ucamB64parser
+parseKidSig :: StatusCode -> Parser (Maybe KeyID, Maybe UcamBase64BS)
+parseKidSig (statusCode . getStatus -> 200) =
+    curry (pure *** pure)
+        <$> noBang kidParser
+        <*> ucamB64parser
+parseKidSig _ = (,)
+    <$> noBang (optionMaybe kidParser)
+    <*> optionMaybe ucamB64parser
 
-        {-|
-          The Ucam-Webauth protocol uses @!@ characters to separate the fields in the response. Any @!@
-          characters in the data itself must be url encoded. The representations used in this module
-          meet this criterion.
+{-|
+  The Ucam-Webauth protocol uses @!@ characters to separate the fields in the response. Any @!@
+  characters in the data itself must be url encoded. The representations used in this module
+  meet this criterion.
 
-          TODO Add tests to verify.
-        -}
-        betweenBangs :: Parser ByteString
-        betweenBangs = takeWhile1 (/= '!')
+  TODO Add tests to verify.
+-}
+betweenBangs :: Parser ByteString
+betweenBangs = takeWhile1 (/= '!')
 
 ------------------------------------------------------------------------------
 -- ** Helpers

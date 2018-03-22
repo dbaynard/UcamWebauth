@@ -2,14 +2,14 @@
 {-# LANGUAGE PackageImports #-}
 
 {-|
-Module      : Network.Protocol.UcamWebauth.Internal
+Module      : UcamWebauth.Internal
 Description : Ucam-Webauth protocol internals
 Maintainer  : David Baynard <davidbaynard@gmail.com>
 
 -}
 
-module Network.Protocol.UcamWebauth.Internal (
-    module Network.Protocol.UcamWebauth.Internal
+module UcamWebauth.Internal (
+    module UcamWebauth.Internal
 )   where
 
 import "base" Control.Applicative (empty, Alternative)

@@ -17,13 +17,13 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
 {-|
-Module      : Network.Protocol.UcamWebauth.Data
+Module      : UcamWebauth.Data
 Description : Data types used in Ucam-Webauth protocol
 Maintainer  : David Baynard <davidbaynard@gmail.com>
 
 -}
 
-module Network.Protocol.UcamWebauth.Data
+module UcamWebauth.Data
   ( UcamWebauthInfo()
   , approveUniq
   , approveUser
@@ -139,7 +139,7 @@ module Network.Protocol.UcamWebauth.Data
 
   ) where
 
-import "this" Network.Protocol.UcamWebauth.Data.Internal
+import "this" UcamWebauth.Data.Internal
 import "this" Data.ByteString.B64
 
 -- Prelude

@@ -11,7 +11,7 @@ git: github.com/dbaynard/UcamWebauth
 
 dependencies:
 - aeson >=1.2
-- base >=4 && <5
+- base >=4.10.0.0 && <5
 - base64-bytestring
 - bytestring >=0.9 && <0.11
 - case-insensitive
@@ -28,8 +28,8 @@ library:
   source-dirs: src
   exposed-modules:
   - Data.ByteString.B64
-  - Network.Protocol.UcamWebauth.Data
-  - Network.Protocol.UcamWebauth.Data.Internal
+  - UcamWebauth.Data
+  - UcamWebauth.Data.Internal
   dependencies: []
   when:
   - condition: flag(dev)
@@ -55,4 +55,4 @@ flags:
   dev:
     description: Build for development
     manual: false
-    default: false
+    default: true

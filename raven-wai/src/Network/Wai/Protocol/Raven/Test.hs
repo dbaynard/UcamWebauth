@@ -24,7 +24,7 @@ module Network.Wai.Protocol.Raven.Test {-# WARNING "Do not use this module for p
 import "microlens-mtl" Lens.Micro.Mtl
 
 -- The protocol
-import "ucam-webauth-types" Network.Protocol.UcamWebauth.Data
+import "ucam-webauth-types" UcamWebauth.Data
 
 import Network.Wai.Protocol.Raven.Internal
 

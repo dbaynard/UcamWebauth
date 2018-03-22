@@ -1,8 +1,8 @@
--- This file has been generated from package.yaml by hpack version 0.21.2.
+-- This file has been generated from package.yaml by hpack version 0.27.0.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 92e167a39a89f6a9194735a6303237926013e29bd11dbe40ed5d6b7bef410eb8
+-- hash: 030a9ac7789b59da7cd625499061a40f7dbcfcf595df0ab4721a9956acc5e5e5
 
 name:           ucam-webauth-types
 version:        0.1.0
@@ -24,14 +24,14 @@ source-repository head
 flag dev
   description: Build for development
   manual: False
-  default: False
+  default: True
 
 library
   hs-source-dirs:
       src
   build-depends:
       aeson >=1.2
-    , base >=4 && <5
+    , base >=4.10.0.0 && <5
     , base64-bytestring
     , bytestring >=0.9 && <0.11
     , case-insensitive
@@ -50,8 +50,8 @@ library
     ghc-options: -Wall -fwarn-tabs -O2
   exposed-modules:
       Data.ByteString.B64
-      Network.Protocol.UcamWebauth.Data
-      Network.Protocol.UcamWebauth.Data.Internal
+      UcamWebauth.Data
+      UcamWebauth.Data.Internal
   other-modules:
       Paths_ucam_webauth_types
   default-language: Haskell2010
@@ -64,7 +64,7 @@ test-suite test
   ghc-options: -Wall
   build-depends:
       aeson >=1.2
-    , base >=4 && <5
+    , base >=4.10.0.0 && <5
     , base64-bytestring
     , bytestring >=0.9 && <0.11
     , case-insensitive
