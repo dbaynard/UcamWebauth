@@ -71,6 +71,14 @@ newtype UcamBase64BS = UcamB64 { unUcamB64 :: ByteString }
     deriving stock (Eq, Ord, Generic, Typeable, Data)
     deriving newtype (Show, Read, IsString, Monoid, Semigroup)
 
+instance FromJSON UcamBase64BS where
+    parseJSON = withObject "Ucam Base 64 URL ByteString" $ \v -> UcamB64 . encodeUtf8
+        <$> v .: "Ucam Base 64U ByteString"
+
+instance ToJSON UcamBase64BS where
+    toJSON = toJSON . decodeUtf8 . unUcamB64
+    toEncoding = toEncoding . decodeUtf8 . unUcamB64
+
 newtype UcamBase64BSL = UcamB64L { unUcamB64L :: BSL.ByteString }
     deriving stock (Eq, Ord, Generic, Typeable, Data)
     deriving newtype (Show, Read, IsString, Monoid, Semigroup)

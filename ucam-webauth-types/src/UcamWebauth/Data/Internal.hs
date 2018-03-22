@@ -13,6 +13,7 @@
 {-# LANGUAGE NumDecimals #-}
 {-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE DerivingStrategies #-}
+{-# LANGUAGE DeriveAnyClass #-}
 
 {-|
 Module      : UcamWebauth.Internal
@@ -100,7 +101,8 @@ import "mtl" Control.Monad.State
 
 import "bytestring" Data.ByteString (ByteString)
 import "text" Data.Text (Text)
-import "base" Data.Char (toLower)
+import "text" Data.Text.Encoding
+import "base" Data.Char (toLower, isDigit)
 
 import "this" Data.ByteString.B64
 
@@ -254,11 +256,18 @@ displayWLSVersion WLS3 = "3"
 bsDisplayWLSVersion :: WLSVersion -> ByteString
 bsDisplayWLSVersion = displayWLSVersion
 
+wlsVersionAesonOptions :: Options
+wlsVersionAesonOptions = defaultOptions
+    { constructorTagModifier = drop 3
+    , sumEncoding = ObjectWithSingleField
+    }
+
 instance FromJSON WLSVersion where
-    parseJSON = fmap (toEnum . subtract 1) . parseJSON
+    parseJSON = genericParseJSON wlsVersionAesonOptions
 
 instance ToJSON WLSVersion where
-    toJSON = toJSON . (+ 1) . fromEnum
+    toJSON = genericToJSON wlsVersionAesonOptions
+    toEncoding = genericToEncoding wlsVersionAesonOptions
 
 ------------------------------------------------------------------------------
 -- *** Authentication types available
@@ -281,17 +290,18 @@ displayAuthType :: IsString a => AuthType -> a
 displayAuthType Pwd = "pwd"
 
 instance FromJSON AuthType where
-    parseJSON = genericParseJSON authTypeAesonOptions
+    parseJSON = genericParseJSON enumAesonOptions
 
 instance ToJSON AuthType where
-    toJSON = genericToJSON authTypeAesonOptions
-    toEncoding = genericToEncoding authTypeAesonOptions
+    toJSON = genericToJSON enumAesonOptions
+    toEncoding = genericToEncoding enumAesonOptions
 
-authTypeAesonOptions :: Options
-authTypeAesonOptions = defaultOptions
+enumAesonOptions :: Options
+enumAesonOptions = defaultOptions
     { constructorTagModifier = fmap toLower
+    , sumEncoding = UntaggedValue
+    , tagSingleConstructors = True
     }
-
 
 ------------------------------------------------------------------------------
 -- *** Data possibly useful for authorization (ptags)
@@ -312,8 +322,12 @@ instance Show Ptag where
 displayPtag :: IsString a => Ptag -> a
 displayPtag Current = "current"
 
-instance ToJSON Ptag
-instance FromJSON Ptag
+instance FromJSON Ptag where
+    parseJSON = genericParseJSON enumAesonOptions
+
+instance ToJSON Ptag where
+    toJSON = genericToJSON enumAesonOptions
+    toEncoding = genericToEncoding enumAesonOptions
 
 ------------------------------------------------------------------------------
 -- *** HTTP response codes
@@ -344,11 +358,19 @@ instance Enum StatusCode where
     toEnum = fromMaybe BadRequest400 . flip IntMap.lookup responseCodes
     fromEnum = statusCode . getStatus
 
+statusCodeAesonOptions :: Options
+statusCodeAesonOptions = defaultOptions
+    { constructorTagModifier = dropWhile (not . isDigit)
+    , sumEncoding = ObjectWithSingleField
+    }
+
 instance FromJSON StatusCode where
-    parseJSON = fmap toEnum . parseJSON
+    parseJSON = genericParseJSON statusCodeAesonOptions
 
 instance ToJSON StatusCode where
-    toJSON = toJSON . fromEnum
+    toJSON = genericToJSON statusCodeAesonOptions
+    toEncoding = genericToEncoding statusCodeAesonOptions
+
 
 {-|
   An 'IntMap' of 'Status' code numbers in the protocol to their typed representations.
@@ -443,6 +465,14 @@ bsDisplayYesOnly = displayYesOnly
 newtype KeyID = KeyID { unKeyID :: ByteString }
     deriving stock (Eq, Ord, Generic, Typeable, Data)
     deriving newtype (Show, Read, IsString, Monoid, Semigroup)
+
+instance FromJSON KeyID where
+    parseJSON = withObject "Key ID" $ \v -> KeyID . encodeUtf8
+        <$> v .: "Ucam Base 64U ByteString"
+
+instance ToJSON KeyID where
+    toJSON = toJSON . decodeUtf8 . unKeyID
+    toEncoding = toEncoding . decodeUtf8 . unKeyID
 
 ------------------------------------------------------------------------------
 -- *** Time
