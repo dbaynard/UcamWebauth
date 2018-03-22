@@ -6,14 +6,16 @@ Maintainer  : David Baynard <davidbaynard@gmail.com>
 -}
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
-{-# LANGUAGE PackageImports #-}
-{-# LANGUAGE TypeApplications #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE AllowAmbiguousTypes #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE
+    PackageImports
+  , AllowAmbiguousTypes
+  , DataKinds
+  , FlexibleContexts
+  , RecordWildCards
+  , ScopedTypeVariables
+  , TypeApplications
+  , TypeFamilies
+  #-}
 
 module Servant.Raven.Internal
   ( ravenDefSettings
@@ -24,24 +26,18 @@ module Servant.Raven.Internal
   , UcamWebauthConstraint
   ) where
 
+import "reflection"         Data.Reflection
+import "base"               GHC.TypeLits
+import "this"               Servant.UcamWebauth.Settings
+import "this"               URI.Convert
 import "ucam-webauth-types" UcamWebauth.Data
-
-import "base" GHC.TypeLits
-
-import "reflection" Data.Reflection
-
-import "this" URI.Convert
-
--- The protocol
-import "this" Servant.UcamWebauth.Settings
 
 {-|
   'WAASettings' for Raven
 -}
 ravenDefSettings
-    :: forall baseurl api endpoint a .
-      ( UcamWebauthConstraint baseurl api endpoint a
-      )
-    => SetWAA a
+  :: forall baseurl api endpoint a .
+    ( UcamWebauthConstraint baseurl api endpoint a
+    )
+  => SetWAA a
 ravenDefSettings = ucamWebauthSettings @baseurl @api @endpoint
-

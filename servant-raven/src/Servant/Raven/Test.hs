@@ -12,30 +12,28 @@ https://raven.cam.ac.uk/project/test-demo/
 The functions in this file shadow the names in the "Servant.Raven.Auth" module. This is deliberate.
 
 -}
-{-# LANGUAGE PackageImports #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE TypeApplications #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE AllowAmbiguousTypes #-}
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE
+    PackageImports
+  , AllowAmbiguousTypes
+  , DataKinds
+  , FlexibleContexts
+  , OverloadedStrings
+  , ScopedTypeVariables
+  , TemplateHaskell
+  , TypeApplications
+  , TypeFamilies
+  #-}
 
 module Servant.Raven.Test {-# WARNING "Do not use this module for production code. It is only for testing." #-}
   ( ravenSettings
   , module X
   ) where
 
--- Prelude
-import "microlens-mtl" Lens.Micro.Mtl
-import "microlens-ghc" Lens.Micro.GHC
-import "file-embed" Data.FileEmbed
-
--- The protocol
+import "file-embed"         Data.FileEmbed
+import "microlens-ghc"      Lens.Micro.GHC
+import "microlens-mtl"      Lens.Micro.Mtl
+import "this"               Servant.Raven.Internal as X
 import "ucam-webauth-types" UcamWebauth.Data
-
-import "this" Servant.Raven.Internal as X
 
 ------------------------------------------------------------------------------
 -- * Raven servers
@@ -46,13 +44,13 @@ import "this" Servant.Raven.Internal as X
   > wlsUrl .= "https://demo.raven.cam.ac.uk/auth/authenticate.html"
 -}
 ravenSettings
-    :: forall baseurl api endpoint a .
-      ( UcamWebauthConstraint baseurl api endpoint a
-      )
-    => SetWAA a
+  :: forall baseurl api endpoint a .
+    ( UcamWebauthConstraint baseurl api endpoint a
+    )
+  => SetWAA a
 ravenSettings = do
-        ravenDefSettings @baseurl @api @endpoint
-        wSet . validKids .= ["901"]
-        wSet . importedKeys . at "901" .= Just $(embedFile "static/pubkey901.crt")
-        wSet . syncTimeOut .= 600
-        wSet . wlsUrl .= "https://demo.raven.cam.ac.uk/auth/authenticate.html"
+  ravenDefSettings @baseurl @api @endpoint
+  wSet . validKids .= ["901"]
+  wSet . importedKeys . at "901" .= Just $(embedFile "static/pubkey901.crt")
+  wSet . syncTimeOut .= 600
+  wSet . wlsUrl .= "https://demo.raven.cam.ac.uk/auth/authenticate.html"

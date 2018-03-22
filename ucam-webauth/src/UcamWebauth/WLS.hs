@@ -46,26 +46,26 @@ textBuilder = decodeUtf8 . BSL.toStrict . B.toLazyByteString
 
 wlsEncode' :: ToJSON a => AuthResponse a -> B.Builder
 wlsEncode' r = mconcat . intersperse "!" $
-    [ r ^. ucamAVer       . to displayWLSVersion
-    , r ^. ucamAStatus    . to (B.stringUtf8 . show . fromEnum)
-    , r ^. ucamAMsg       . mTextEncoded
-    , r ^. ucamAIssue     . encoded (unUcamTime . ucamTime)
-    , r ^. ucamAId        . textEncoded
-    , r ^. ucamAUrl       . textEncoded
-    , r ^. ucamAPrincipal . mTextEncoded
-    , r ^. ucamAPtags     . to (maybe "" $ mconcat . intersperse "," . fmap displayPtag)
-    , r ^. ucamAAuth      . to (maybe "" displayAuthType)
-    , r ^. ucamASso       . to (maybe "" $ mconcat . intersperse "," . fmap displayAuthType)
-    , r ^. ucamALife      . to (maybe "" $ B.stringUtf8 . show . secondsFromTimePeriod)
-    , r ^. ucamAParams    . to (maybe "" $ B.lazyByteString . unUcamB64L . encodeUcamB64L . A.encode)
-    ]
+  [ r ^. ucamAVer       . to displayWLSVersion
+  , r ^. ucamAStatus    . to (B.stringUtf8 . show . fromEnum)
+  , r ^. ucamAMsg       . mTextEncoded
+  , r ^. ucamAIssue     . encoded (unUcamTime . ucamTime)
+  , r ^. ucamAId        . textEncoded
+  , r ^. ucamAUrl       . textEncoded
+  , r ^. ucamAPrincipal . mTextEncoded
+  , r ^. ucamAPtags     . to (maybe "" $ mconcat . intersperse "," . fmap displayPtag)
+  , r ^. ucamAAuth      . to (maybe "" displayAuthType)
+  , r ^. ucamASso       . to (maybe "" $ mconcat . intersperse "," . fmap displayAuthType)
+  , r ^. ucamALife      . to (maybe "" $ B.stringUtf8 . show . secondsFromTimePeriod)
+  , r ^. ucamAParams    . to (maybe "" $ B.lazyByteString . unUcamB64L . encodeUcamB64L . A.encode)
+  ]
 
 wlsEncodeSign' :: ToJSON a => MaybeValidResponse a -> B.Builder
 wlsEncodeSign' r = mconcat . intersperse "!" $
-    [ r ^. ucamAResponse . to wlsEncode'
-    , r ^. ucamAKid      . to (maybe "" $ B.byteString . unKeyID)
-    , r ^. ucamASig      . to (maybe "" $ B.byteString . unUcamB64)
-    ]
+  [ r ^. ucamAResponse . to wlsEncode'
+  , r ^. ucamAKid      . to (maybe "" $ B.byteString . unKeyID)
+  , r ^. ucamASig      . to (maybe "" $ B.byteString . unUcamB64)
+  ]
 
 -- orBlank :: Getting r a B.Builder -> Getting r (Maybe a) B.Builder
 -- orBlank g bcrb a = _

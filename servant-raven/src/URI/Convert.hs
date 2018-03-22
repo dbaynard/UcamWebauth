@@ -16,7 +16,9 @@ This module enables interconversion between the two.
 
 -}
 
-{-# LANGUAGE PackageImports #-}
+{-# LANGUAGE
+    PackageImports
+  #-}
 
 module URI.Convert
   ( UB.URI
@@ -27,12 +29,10 @@ module URI.Convert
   -- , networkUri'
   ) where
 
-import "errors" Control.Error
-
-import qualified "network-uri" Network.URI as NU
+import qualified "bytestring"     Data.ByteString.Char8 as B8
+import           "errors"         Control.Error
+import qualified "network-uri"    Network.URI as NU
 import qualified "uri-bytestring" URI.ByteString as UB
-
-import qualified "bytestring" Data.ByteString.Char8 as B8
 
 uriByteString :: NU.URI -> Maybe (UB.URIRef UB.Absolute)
 uriByteString = hush . UB.parseURI UB.laxURIParserOptions . B8.pack . flip (NU.uriToString id) ""
@@ -46,15 +46,15 @@ uriByteStringRel = hush . UB.parseRelativeRef UB.laxURIParserOptions . B8.pack .
 {-
  -uriByteString' :: NU.URI -> UB.URIRef UB.Absolute
  -uriByteString' NU.URI{..} = UB.URI{..}
- -    where
- -        uriScheme = Scheme . B8.pack $ NU.uriScheme
- -        uriAuthority = do
- -            NU.URIAuth{..} <- NU.uriAuthority
- -            let authorityUserInfo = uriUserInfo
- -                authorityHost = uriRegName
- -                authorityPort = uriPort
- -            pure UB.Authority{..}
- -        uriPath = B8.pack NU.uriPath
- -        uriQuery =
- -        uriFragment = pure . B8.pack $ NU.uriFragment
+ -  where
+ -    uriScheme = Scheme . B8.pack $ NU.uriScheme
+ -    uriAuthority = do
+ -      NU.URIAuth{..} <- NU.uriAuthority
+ -      let authorityUserInfo = uriUserInfo
+ -        authorityHost = uriRegName
+ -        authorityPort = uriPort
+ -      pure UB.Authority{..}
+ -    uriPath = B8.pack NU.uriPath
+ -    uriQuery =
+ -    uriFragment = pure . B8.pack $ NU.uriFragment
  -}

@@ -1,5 +1,7 @@
 {-# OPTIONS_HADDOCK hide, not_here #-}
-{-# LANGUAGE PackageImports #-}
+{-# LANGUAGE
+    PackageImports
+  #-}
 
 {-|
 Module      : UcamWebauth.Internal
@@ -8,9 +10,9 @@ Maintainer  : David Baynard <davidbaynard@gmail.com>
 
 -}
 
-module UcamWebauth.Internal (
-    module UcamWebauth.Internal
-)   where
+module UcamWebauth.Internal
+  ( module UcamWebauth.Internal
+  ) where
 
 import "base" Control.Applicative (empty, Alternative)
 

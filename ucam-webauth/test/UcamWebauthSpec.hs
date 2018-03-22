@@ -2,12 +2,12 @@
 {-# LANGUAGE
     PackageImports
   , AllowAmbiguousTypes
+  , FlexibleInstances
   , OverloadedStrings
   , QuasiQuotes
   , ScopedTypeVariables
   , TypeApplications
   , TypeSynonymInstances
-  , FlexibleInstances
   #-}
 
 module UcamWebauthSpec (spec) where

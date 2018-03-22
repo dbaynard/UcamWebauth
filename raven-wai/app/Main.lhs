@@ -19,45 +19,38 @@ Maintainer  : David Baynard <davidbaynard@gmail.com>
 ```
 
 ```haskell
-{-# LANGUAGE PackageImports #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TypeApplications #-}
-{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE
+    PackageImports
+  , AllowAmbiguousTypes
+  , OverloadedStrings
+  , ScopedTypeVariables
+  , TypeApplications
+  , TypeFamilies
+  #-}
 
-module Main (
-    main
-)   where
+module Main
+ ( main
+ ) where
 
--- Prelude
-import "errors" Control.Error
-import "time" Data.Time (UTCTime, getCurrentTime)
-import "base" Control.Monad
-import "base" Control.Applicative
-import "mtl" Control.Monad.State
+import           "base"          Control.Applicative
+import           "errors"        Control.Error
+import           "base"          Control.Monad
+import           "mtl"           Control.Monad.State
+import           "aeson"         Data.Aeson.Types (FromJSON)
+import           "bytestring"    Data.ByteString (ByteString)
+import           "bytestring"    Data.ByteString.Builder
+import           "text"          Data.Text (Text)
+import qualified "text"          Data.Text.IO as T
+import           "time"          Data.Time (UTCTime, getCurrentTime)
+import           "microlens"     Lens.Micro
+import           "microlens-mtl" Lens.Micro.Mtl
+import           "http-types"    Network.HTTP.Types
+import           "wai"           Network.Wai
+import           "warp"          Network.Wai.Handler.Warp
+import           "ucam-webauth"  UcamWebauth
 
-import "microlens" Lens.Micro
-import "microlens-mtl" Lens.Micro.Mtl
-
--- The protocol
-import "ucam-webauth" UcamWebauth
-import Network.Wai.Protocol.UcamWebauth
 import Network.Wai.Protocol.Raven.Test
-
--- Wai and http protocol
-import "wai" Network.Wai
-import "http-types" Network.HTTP.Types
-
--- ByteString building
-import "text" Data.Text (Text)
-import qualified "text" Data.Text.IO as T
-import "bytestring" Data.ByteString (ByteString)
-import "bytestring" Data.ByteString.Builder
-import "aeson" Data.Aeson.Types (FromJSON)
-
--- Warp server
-import "warp" Network.Wai.Handler.Warp
+import Network.Wai.Protocol.UcamWebauth
 
 main :: IO ()
 main = warpit
@@ -67,49 +60,49 @@ warpit = run 3000 . application =<< getCurrentTime
 
 application :: UTCTime -> Application
 application time req response = case pathInfo req of
-    ["foo", "bar"] -> response $ responseBuilder
-        status200
-        [("Content-Type", "text/plain")]
-        (byteString "You requested /foo/bar")
-    ["foo", "rawquery"] -> response $ responseBuilder
-        status200
-        [("Content-Type", "text/plain")]
-        (byteString . rawQueryString $ req)
-    ["foo", "query"] -> response . responseBuilder
-        status200
-        [("Content-Type", "text/plain")]
-        =<< displayAuthInfo req 
-    ["foo", "queryAll"] -> response . responseBuilder
-        status200
-        [("Content-Type", "text/plain")]
-        =<< displayWLSResponse @Text req 
-    ["foo", "queryR"] -> response $ responseBuilder
-        status200
-        [("Content-Type", "text/plain")]
-        (displayWLSQuery req)
+  ["foo", "bar"] -> response $ responseBuilder
+    status200
+    [("Content-Type", "text/plain")]
+    (byteString "You requested /foo/bar")
+  ["foo", "rawquery"] -> response $ responseBuilder
+    status200
+    [("Content-Type", "text/plain")]
+    (byteString . rawQueryString $ req)
+  ["foo", "query"] -> response . responseBuilder
+    status200
+    [("Content-Type", "text/plain")]
+    =<< displayAuthInfo req 
+  ["foo", "queryAll"] -> response . responseBuilder
+    status200
+    [("Content-Type", "text/plain")]
+    =<< displayWLSResponse @Text req 
+  ["foo", "queryR"] -> response $ responseBuilder
+    status200
+    [("Content-Type", "text/plain")]
+    (displayWLSQuery req)
 ```
 
 ``` { .haskell .ignore }
-    ["foo", "requestHeaders"] -> response $ responseBuilder
-        status200
-        [("Content-Type", "text/plain")]
-        (_ . requestHeaders $ req)
+  ["foo", "requestHeaders"] -> response $ responseBuilder
+    status200
+    [("Content-Type", "text/plain")]
+    (_ . requestHeaders $ req)
 ```
 
 ```haskell
-    ["foo", "authenticate"] -> response $ responseBuilder
-        seeOther303
-        (("Content-Type", "text/plain") : ucamWebauthQuery settings)
-        mempty
-    _ -> response $ responseBuilder
-        status200
-        [("Content-Type", "text/plain")]
-        (byteString "You requested something else")
-    where
-        settings = do
-            mySettings
-            wSet . recentTime .= time
-            aReq . ucamQDate .= pure time
+  ["foo", "authenticate"] -> response $ responseBuilder
+    seeOther303
+    (("Content-Type", "text/plain") : ucamWebauthQuery settings)
+    mempty
+  _ -> response $ responseBuilder
+    status200
+    [("Content-Type", "text/plain")]
+    (byteString "You requested something else")
+  where
+    settings = do
+      mySettings
+      wSet . recentTime .= time
+      aReq . ucamQDate .= pure time
 
 displayWLSQuery :: Request -> Builder
 displayWLSQuery = maybe mempty byteString . lookUpWLSResponse
@@ -133,30 +126,29 @@ Produce the request to the authentication server as a response
 ```haskell
 mySettings :: SetWAA Text
 mySettings = do
-        ravenSettings
-        wSet . applicationUrl .= "http://localhost:3000/foo/query"
-        waa <- get
-        aReq . ucamQUrl .= waa ^. wSet . applicationUrl
-        aReq . ucamQDesc .= pure "This is a sample; it’s rather excellent!"
-        aReq . ucamQAauth .= pure (waa ^. wSet . authAccepted)
-        aReq . ucamQIact .= waa ^. wSet . needReauthentication
-        aReq . ucamQMsg .= pure "This is a private resource, or something."
-        aReq . ucamQParams .= pure "This is 100% of the data! And it’s really quite cool"
-        aReq . ucamQDate .= pure (waa ^. wSet . recentTime)
-        aReq . ucamQFail .= empty
+  ravenSettings
+  wSet . applicationUrl .= "http://localhost:3000/foo/query"
+  waa <- get
+  aReq . ucamQUrl .= waa ^. wSet . applicationUrl
+  aReq . ucamQDesc .= pure "This is a sample; it’s rather excellent!"
+  aReq . ucamQAauth .= pure (waa ^. wSet . authAccepted)
+  aReq . ucamQIact .= waa ^. wSet . needReauthentication
+  aReq . ucamQMsg .= pure "This is a private resource, or something."
+  aReq . ucamQParams .= pure "This is 100% of the data! And it’s really quite cool"
+  aReq . ucamQDate .= pure (waa ^. wSet . recentTime)
+  aReq . ucamQFail .= empty
 
-
-displaySomethingAuthy :: forall b m
-                        . ( m ~ (ExceptT Text IO) -- m ~ ReaderT (SetAuthRequest a) (MaybeT IO)
-                          , Show b
-                          )
-                          -- , a ~ Text )
-                       -- => SetWAA a
-                       => m b
-                       -> IO Builder
+displaySomethingAuthy
+  :: forall b m .
+    ( m ~ (ExceptT Text IO) -- m ~ ReaderT (SetAuthRequest a) (MaybeT IO)
+    , Show b
+    )
+  -- , a ~ Text )
+  -- => SetWAA a
+  => m b
+  -> IO Builder
 displaySomethingAuthy = exceptT (const empty . T.putStrLn) (pure . stringUtf8 . show)
-                        -- . uncurry runReaderT
-
+            -- . uncurry runReaderT
 ```
 
 Helper

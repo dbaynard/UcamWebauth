@@ -19,23 +19,19 @@ for 'readRSAKeyFile'.
 
 -}
 
-{-# LANGUAGE PackageImports #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE
+    PackageImports
+  , OverloadedStrings
+  #-}
 
 module Network.Wai.Protocol.UcamWebauth
   ( lookUpWLSResponse
   ) where
 
--- Prelude
-import "base" Control.Monad
-
-import "bytestring" Data.ByteString (ByteString)
-
--- Map structures
+import           "base"       Control.Monad
+import           "bytestring" Data.ByteString (ByteString)
 import qualified "containers" Data.Map.Strict as M
-
--- Wai
-import "wai" Network.Wai
+import           "wai"        Network.Wai
 
 ------------------------------------------------------------------------------
 -- * Top level functions
@@ -45,4 +41,3 @@ import "wai" Network.Wai
 -}
 lookUpWLSResponse :: Request -> Maybe ByteString
 lookUpWLSResponse = join . M.lookup "WLS-Response" . M.fromList . queryString
-

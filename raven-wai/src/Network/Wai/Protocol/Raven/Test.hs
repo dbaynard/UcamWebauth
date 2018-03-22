@@ -12,21 +12,19 @@ https://raven.cam.ac.uk/project/test-demo/
 The functions in this file shadow the names in the "Network.Wai.Protocol.Raven.Auth" module. This is deliberate.
 
 -}
-{-# LANGUAGE PackageImports #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE
+    PackageImports
+  , OverloadedStrings
+  #-}
 
 module Network.Wai.Protocol.Raven.Test {-# WARNING "Do not use this module for production code. It is only for testing." #-}
   ( ravenSettings
   , ravenDefSettings
   ) where
 
--- Prelude
-import "microlens-mtl" Lens.Micro.Mtl
-
--- The protocol
+import "microlens-mtl"      Lens.Micro.Mtl
+import "this"               Network.Wai.Protocol.Raven.Internal
 import "ucam-webauth-types" UcamWebauth.Data
-
-import Network.Wai.Protocol.Raven.Internal
 
 ------------------------------------------------------------------------------
 -- * Raven servers
@@ -38,7 +36,7 @@ import Network.Wai.Protocol.Raven.Internal
 -}
 ravenSettings :: SetWAA a
 ravenSettings = do
-        ravenDefSettings
-        wSet . validKids .= ["901"]
-        wSet . syncTimeOut .= 600
-        wSet . wlsUrl .= "https://demo.raven.cam.ac.uk/auth/authenticate.html"
+  ravenDefSettings
+  wSet . validKids .= ["901"]
+  wSet . syncTimeOut .= 600
+  wSet . wlsUrl .= "https://demo.raven.cam.ac.uk/auth/authenticate.html"

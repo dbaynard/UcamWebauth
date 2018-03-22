@@ -8,18 +8,20 @@ Use 'UcamWebauthCookie' or 'UcamWebauthToken' for defaults.
  -}
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
-{-# LANGUAGE PackageImports #-}
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE TypeFamilyDependencies #-}
-{-# LANGUAGE TypeInType #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeApplications #-}
-{-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE NamedFieldPuns #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE AllowAmbiguousTypes #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE
+    PackageImports
+  , AllowAmbiguousTypes
+  , DataKinds
+  , FlexibleContexts
+  , MultiParamTypeClasses
+  , NamedFieldPuns
+  , RecordWildCards
+  , ScopedTypeVariables
+  , TypeApplications
+  , TypeFamilyDependencies
+  , TypeInType
+  , TypeOperators
+  #-}
 
 module Servant.UcamWebauth.API
   ( UcamWebauthCookie
@@ -32,26 +34,23 @@ module Servant.UcamWebauth.API
   , Cookied
   ) where
 
-import "base" Data.Kind
-
 import "ucam-webauth-types" Data.ByteString.B64
+import "base"               Data.Kind
+import "servant"            Servant.API
+import "servant-auth"       Servant.Auth
 import "ucam-webauth-types" UcamWebauth.Data
-
-import "servant" Servant.API
-import "servant-auth" Servant.Auth
-
-import "cookie" Web.Cookie
+import "cookie"             Web.Cookie
 
 -- | Base 64 (URL) encoded 'ByteString's should be serializable as 'OctetStream's.
 -- They are already serializable as 'JSON' thanks to the 'ToJson' instance.
 instance MimeRender OctetStream (Base64UBSL tag) where
-    mimeRender _ = unB64UL
+  mimeRender _ = unB64UL
 
 -- TODO Make safe
 -- | Base 64 (URL) encoded 'ByteString's should be serializable as 'OctetStream's.
 -- They are already deserializable from 'JSON' thanks to the 'FromJSON' instance.
 instance MimeUnrender OctetStream (Base64UBSL tag) where
-    mimeUnrender _ = pure . B64UL
+  mimeUnrender _ = pure . B64UL
 
 -- | Transform a given endpoint to be valid for UcamWebauth.
 type family UcamWebauthEndpoint

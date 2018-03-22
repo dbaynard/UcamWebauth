@@ -5,7 +5,9 @@ Maintainer  : David Baynard <davidbaynard@gmail.com>
 
 -}
 
-{-# LANGUAGE PackageImports #-}
+{-# LANGUAGE
+    PackageImports
+  #-}
 
 module Network.Wai.Protocol.Raven.Internal
   ( ravenDefSettings
@@ -19,4 +21,3 @@ import "ucam-webauth-types" UcamWebauth.Data
 -}
 ravenDefSettings :: SetWAA a
 ravenDefSettings = pure ()
-

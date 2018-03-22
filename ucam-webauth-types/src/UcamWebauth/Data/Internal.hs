@@ -1,19 +1,21 @@
 {-# OPTIONS_HADDOCK hide, not_here #-}
-{-# LANGUAGE PackageImports #-}
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE NamedFieldPuns #-}
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE TypeInType #-}
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE DeriveDataTypeable #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE OverloadedLists #-}
-{-# LANGUAGE NumDecimals #-}
-{-# LANGUAGE PatternSynonyms #-}
-{-# LANGUAGE DerivingStrategies #-}
-{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE
+    PackageImports
+  , DataKinds
+  , DeriveAnyClass
+  , DeriveDataTypeable
+  , DeriveGeneric
+  , DerivingStrategies
+  , GeneralizedNewtypeDeriving
+  , NamedFieldPuns
+  , NumDecimals
+  , OverloadedLists
+  , OverloadedStrings
+  , PatternSynonyms
+  , RecordWildCards
+  , TypeInType
+  , TypeOperators
+  #-}
 
 {-|
 Module      : UcamWebauth.Internal
@@ -83,36 +85,26 @@ module UcamWebauth.Data.Internal
   , configWAA
   ) where
 
--- Prelude
-import "base" Data.Data
-import "base" GHC.Generics
-import "base" Control.Applicative
-import "base" Data.Semigroup
-import "base" Data.String
-import "containers" Data.Map.Strict (Map)
-import qualified "containers" Data.Map.Strict as MapS
-import "containers" Data.IntMap (IntMap)
+import           "base"       Control.Applicative
+import           "base"       Control.Arrow ((&&&))
+import           "errors"     Control.Error
+import           "mtl"        Control.Monad.State
+import           "aeson"      Data.Aeson.Types
+import           "bytestring" Data.ByteString (ByteString)
+import           "this"       Data.ByteString.B64
+import           "base"       Data.Char (toLower, isDigit)
+import           "base"       Data.Data
+import           "containers" Data.IntMap (IntMap)
 import qualified "containers" Data.IntMap as IntMap
-import "errors" Control.Error
-import "base" Control.Arrow ((&&&))
-import "mtl" Control.Monad.State
-
--- Character encoding
-
-import "bytestring" Data.ByteString (ByteString)
-import "text" Data.Text (Text)
-import "text" Data.Text.Encoding
-import "base" Data.Char (toLower, isDigit)
-
-import "this" Data.ByteString.B64
-
-import "aeson" Data.Aeson.Types
-
--- Time
-import "time" Data.Time
-
--- HTTP protocol
-import "http-types" Network.HTTP.Types
+import           "containers" Data.Map.Strict (Map)
+import qualified "containers" Data.Map.Strict as MapS
+import           "base"       Data.Semigroup
+import           "base"       Data.String
+import           "text"       Data.Text (Text)
+import           "text"       Data.Text.Encoding
+import           "time"       Data.Time
+import           "base"       GHC.Generics
+import           "http-types" Network.HTTP.Types
 
 ------------------------------------------------------------------------------
 -- * Core data types and associated functions
@@ -126,13 +118,13 @@ import "http-types" Network.HTTP.Types
   exported from the module, to present an abstract API.
 -}
 data UcamWebauthInfo a = AuthInfo
-    { _approveUniq :: (UTCTime, Text)
-    , _approveUser :: Text
-    , _approveAttribs :: [Ptag]
-    , _approveLife :: Maybe TimePeriod
-    , _approveParams :: Maybe a
-    }
-    deriving stock (Show, Eq, Ord, Generic, Generic1, Typeable, Data)
+  { _approveUniq :: (UTCTime, Text)
+  , _approveUser :: Text
+  , _approveAttribs :: [Ptag]
+  , _approveLife :: Maybe TimePeriod
+  , _approveParams :: Maybe a
+  }
+  deriving stock (Show, Eq, Ord, Generic, Generic1, Typeable, Data)
 
 instance ToJSON a => ToJSON (UcamWebauthInfo a)
 instance FromJSON a => FromJSON (UcamWebauthInfo a)
@@ -152,17 +144,17 @@ instance FromJSON a => FromJSON (UcamWebauthInfo a)
   after authentication.
 -}
 data AuthRequest a = MakeAuthRequest
-    { _ucamQVer :: WLSVersion
-    , _ucamQUrl :: Text
-    , _ucamQDesc :: Maybe ASCII
-    , _ucamQAauth :: Maybe [AuthType]
-    , _ucamQIact :: Maybe YesNo
-    , _ucamQMsg :: Maybe Text
-    , _ucamQParams :: Maybe a
-    , _ucamQDate :: Maybe UTCTime
-    , _ucamQFail :: Maybe YesOnly
-    }
-    deriving stock (Show, Eq, Ord, Generic1, Typeable, Data)
+  { _ucamQVer :: WLSVersion
+  , _ucamQUrl :: Text
+  , _ucamQDesc :: Maybe ASCII
+  , _ucamQAauth :: Maybe [AuthType]
+  , _ucamQIact :: Maybe YesNo
+  , _ucamQMsg :: Maybe Text
+  , _ucamQParams :: Maybe a
+  , _ucamQDate :: Maybe UTCTime
+  , _ucamQFail :: Maybe YesOnly
+  }
+  deriving stock (Show, Eq, Ord, Generic1, Typeable, Data)
 
 {-|
   A 'SignedAuthResponse' represents the data returned by the @WLS@, including a
@@ -172,12 +164,12 @@ data AuthRequest a = MakeAuthRequest
   The phantom parameter 'valid' corr
 -}
 data SignedAuthResponse (valid :: IsValid) a = SignedAuthResponse
-    { _ucamAResponse :: AuthResponse a
-    , _ucamAToSign :: ByteString
-    , _ucamAKid :: Maybe KeyID
-    , _ucamASig :: Maybe UcamBase64BS
-    }
-    deriving stock (Show, Eq, Ord, Generic, Generic1, Typeable, Data)
+  { _ucamAResponse :: AuthResponse a
+  , _ucamAToSign :: ByteString
+  , _ucamAKid :: Maybe KeyID
+  , _ucamASig :: Maybe UcamBase64BS
+  }
+  deriving stock (Show, Eq, Ord, Generic, Generic1, Typeable, Data)
 
 {-|
   The intended use of this is with 'IsValid' as a kind (requires the 'DataKinds' extension).
@@ -187,29 +179,29 @@ data SignedAuthResponse (valid :: IsValid) a = SignedAuthResponse
   This is not exported.
 -}
 data IsValid
-    = MaybeValid
-    | Valid
-    deriving stock (Show, Read, Eq, Ord, Enum, Bounded, Generic, Typeable, Data)
+  = MaybeValid
+  | Valid
+  deriving stock (Show, Read, Eq, Ord, Enum, Bounded, Generic, Typeable, Data)
 
 {-|
   An 'AuthResponse' represents the content returned by the @WLS@. The validation
   machinery in this module returns the required data as a 'UcamWebauthInfo' value.
 -}
 data AuthResponse a = AuthResponse
-    { _ucamAVer :: WLSVersion
-    , _ucamAStatus :: StatusCode
-    , _ucamAMsg :: Maybe Text
-    , _ucamAIssue :: UTCTime
-    , _ucamAId :: Text
-    , _ucamAUrl :: Text
-    , _ucamAPrincipal :: Maybe Text
-    , _ucamAPtags :: Maybe [Ptag]
-    , _ucamAAuth :: Maybe AuthType
-    , _ucamASso :: Maybe [AuthType]
-    , _ucamALife :: Maybe TimePeriod
-    , _ucamAParams :: Maybe a
-    }
-    deriving stock (Show, Eq, Ord, Generic, Generic1, Typeable, Data)
+  { _ucamAVer :: WLSVersion
+  , _ucamAStatus :: StatusCode
+  , _ucamAMsg :: Maybe Text
+  , _ucamAIssue :: UTCTime
+  , _ucamAId :: Text
+  , _ucamAUrl :: Text
+  , _ucamAPrincipal :: Maybe Text
+  , _ucamAPtags :: Maybe [Ptag]
+  , _ucamAAuth :: Maybe AuthType
+  , _ucamASso :: Maybe [AuthType]
+  , _ucamALife :: Maybe TimePeriod
+  , _ucamAParams :: Maybe a
+  }
+  deriving stock (Show, Eq, Ord, Generic, Generic1, Typeable, Data)
 
 {-|
   Convert an 'AuthResponse' into a 'UcamWebauthInfo' for export.
@@ -218,13 +210,13 @@ data AuthResponse a = AuthResponse
 -}
 extractAuthInfo :: Alternative f => AuthResponse a -> f (UcamWebauthInfo a)
 extractAuthInfo AuthResponse{..} = maybe empty pure $ do
-        _approveUser <- _ucamAPrincipal
-        return AuthInfo{..}
-        where
-            _approveUniq = (_ucamAIssue, _ucamAId)
-            _approveAttribs = _ucamAPtags ?: empty
-            _approveLife = _ucamALife
-            _approveParams = _ucamAParams
+    _approveUser <- _ucamAPrincipal
+    return AuthInfo{..}
+    where
+      _approveUniq = (_ucamAIssue, _ucamAId)
+      _approveAttribs = _ucamAPtags ?: empty
+      _approveLife = _ucamALife
+      _approveParams = _ucamAParams
 
 ------------------------------------------------------------------------------
 -- *** Protocol version
@@ -233,13 +225,13 @@ extractAuthInfo AuthResponse{..} = maybe empty pure $ do
   Intended to be used as values, but Kind promotion means they can be used as types.
 -}
 data WLSVersion
-    = WLS1 -- ^ Version 1 of the protocol. In the Raven implementation, failures use this version
-    | WLS2 -- ^ Version 2
-    | WLS3 -- ^ Version 3. Used for successful reponses by the Raven implementation
-    deriving stock (Read, Eq, Ord, Enum, Bounded, Generic, Typeable, Data)
+  = WLS1 -- ^ Version 1 of the protocol. In the Raven implementation, failures use this version
+  | WLS2 -- ^ Version 2
+  | WLS3 -- ^ Version 3. Used for successful reponses by the Raven implementation
+  deriving stock (Read, Eq, Ord, Enum, Bounded, Generic, Typeable, Data)
 
 instance Show WLSVersion where
-    show = displayWLSVersion
+  show = displayWLSVersion
 
 {-|
   Used for 'Show' instance.
@@ -258,16 +250,16 @@ bsDisplayWLSVersion = displayWLSVersion
 
 wlsVersionAesonOptions :: Options
 wlsVersionAesonOptions = defaultOptions
-    { constructorTagModifier = drop 3
-    , sumEncoding = ObjectWithSingleField
-    }
+  { constructorTagModifier = drop 3
+  , sumEncoding = ObjectWithSingleField
+  }
 
 instance FromJSON WLSVersion where
-    parseJSON = genericParseJSON wlsVersionAesonOptions
+  parseJSON = genericParseJSON wlsVersionAesonOptions
 
 instance ToJSON WLSVersion where
-    toJSON = genericToJSON wlsVersionAesonOptions
-    toEncoding = genericToEncoding wlsVersionAesonOptions
+  toJSON = genericToJSON wlsVersionAesonOptions
+  toEncoding = genericToEncoding wlsVersionAesonOptions
 
 ------------------------------------------------------------------------------
 -- *** Authentication types available
@@ -277,11 +269,11 @@ instance ToJSON WLSVersion where
   valid type.
 -}
 data AuthType
-    = Pwd -- ^ pwd: Username and password
-    deriving stock (Read, Eq, Ord, Enum, Bounded, Generic, Typeable, Data)
+  = Pwd -- ^ pwd: Username and password
+  deriving stock (Read, Eq, Ord, Enum, Bounded, Generic, Typeable, Data)
 
 instance Show AuthType where
-    show = displayAuthType
+  show = displayAuthType
 
 {-|
   Implement show generically
@@ -290,18 +282,18 @@ displayAuthType :: IsString a => AuthType -> a
 displayAuthType Pwd = "pwd"
 
 instance FromJSON AuthType where
-    parseJSON = genericParseJSON enumAesonOptions
+  parseJSON = genericParseJSON enumAesonOptions
 
 instance ToJSON AuthType where
-    toJSON = genericToJSON enumAesonOptions
-    toEncoding = genericToEncoding enumAesonOptions
+  toJSON = genericToJSON enumAesonOptions
+  toEncoding = genericToEncoding enumAesonOptions
 
 enumAesonOptions :: Options
 enumAesonOptions = defaultOptions
-    { constructorTagModifier = fmap toLower
-    , sumEncoding = UntaggedValue
-    , tagSingleConstructors = True
-    }
+  { constructorTagModifier = fmap toLower
+  , sumEncoding = UntaggedValue
+  , tagSingleConstructors = True
+  }
 
 ------------------------------------------------------------------------------
 -- *** Data possibly useful for authorization (ptags)
@@ -310,11 +302,11 @@ enumAesonOptions = defaultOptions
   This is only in protocol versions ≥ 3
 -}
 data Ptag
-    = Current -- ^ User is current member of university
-    deriving stock (Read, Eq, Ord, Enum, Bounded, Generic, Typeable, Data)
+  = Current -- ^ User is current member of university
+  deriving stock (Read, Eq, Ord, Enum, Bounded, Generic, Typeable, Data)
 
 instance Show Ptag where
-    show = displayPtag
+  show = displayPtag
 
 {-|
   Generic 'Show' implementation
@@ -323,11 +315,11 @@ displayPtag :: IsString a => Ptag -> a
 displayPtag Current = "current"
 
 instance FromJSON Ptag where
-    parseJSON = genericParseJSON enumAesonOptions
+  parseJSON = genericParseJSON enumAesonOptions
 
 instance ToJSON Ptag where
-    toJSON = genericToJSON enumAesonOptions
-    toEncoding = genericToEncoding enumAesonOptions
+  toJSON = genericToJSON enumAesonOptions
+  toEncoding = genericToEncoding enumAesonOptions
 
 ------------------------------------------------------------------------------
 -- *** HTTP response codes
@@ -343,33 +335,33 @@ instance ToJSON Ptag where
   'BadRequest400' is present as a default, if there is any other code received.
 -}
 data StatusCode
-    = Ok200          -- ^ Authentication successful
-    | Gone410        -- ^ Cancelled by the user
-    | NoAuth510      -- ^ No mutually acceptable authentication types
-    | ProtoErr520    -- ^ Unsupported protocol version (Only for version 1)
-    | ParamErr530    -- ^ General request parameter error
-    | NoInteract540  -- ^ Interaction would be required but has been blocked
-    | UnAuthAgent560 -- ^ Application agent is not authorised
-    | Declined570    -- ^ Authentication declined
-    | BadRequest400  -- ^ Response not covered by any protocol responses
-    deriving stock (Show, Read, Eq, Ord, Bounded, Generic, Typeable, Data)
+  = Ok200          -- ^ Authentication successful
+  | Gone410        -- ^ Cancelled by the user
+  | NoAuth510      -- ^ No mutually acceptable authentication types
+  | ProtoErr520    -- ^ Unsupported protocol version (Only for version 1)
+  | ParamErr530    -- ^ General request parameter error
+  | NoInteract540  -- ^ Interaction would be required but has been blocked
+  | UnAuthAgent560 -- ^ Application agent is not authorised
+  | Declined570    -- ^ Authentication declined
+  | BadRequest400  -- ^ Response not covered by any protocol responses
+  deriving stock (Show, Read, Eq, Ord, Bounded, Generic, Typeable, Data)
 
 instance Enum StatusCode where
-    toEnum = fromMaybe BadRequest400 . flip IntMap.lookup responseCodes
-    fromEnum = statusCode . getStatus
+  toEnum = fromMaybe BadRequest400 . flip IntMap.lookup responseCodes
+  fromEnum = statusCode . getStatus
 
 statusCodeAesonOptions :: Options
 statusCodeAesonOptions = defaultOptions
-    { constructorTagModifier = dropWhile (not . isDigit)
-    , sumEncoding = ObjectWithSingleField
-    }
+  { constructorTagModifier = dropWhile (not . isDigit)
+  , sumEncoding = ObjectWithSingleField
+  }
 
 instance FromJSON StatusCode where
-    parseJSON = genericParseJSON statusCodeAesonOptions
+  parseJSON = genericParseJSON statusCodeAesonOptions
 
 instance ToJSON StatusCode where
-    toJSON = genericToJSON statusCodeAesonOptions
-    toEncoding = genericToEncoding statusCodeAesonOptions
+  toJSON = genericToJSON statusCodeAesonOptions
+  toEncoding = genericToEncoding statusCodeAesonOptions
 
 
 {-|
@@ -410,12 +402,12 @@ declined570    = mkStatus 570 "Authentication declined"
   This is like a Boolean, but specifically for the ‘iact’ parameter
 -}
 data YesNo
-    = No
-    | Yes
-    deriving stock (Read, Eq, Ord, Enum, Bounded, Generic, Typeable, Data)
+  = No
+  | Yes
+  deriving stock (Read, Eq, Ord, Enum, Bounded, Generic, Typeable, Data)
 
 instance Show YesNo where
-    show = displayYesNo
+  show = displayYesNo
 
 displayYesNo :: IsString a => YesNo -> a
 displayYesNo Yes = "yes"
@@ -434,8 +426,8 @@ bsDisplayYesNo = displayYesNo
   Like '()' but specifically for the ‘iact’ parameter
 -}
 newtype YesOnly = YesOnly' ()
-    deriving stock (Read, Eq, Ord, Generic, Typeable, Data)
-    deriving newtype (Enum, Bounded)
+  deriving stock (Read, Eq, Ord, Generic, Typeable, Data)
+  deriving newtype (Enum, Bounded)
 
 pattern YesOnly :: YesOnly
 pattern YesOnly = YesOnly' ()
@@ -443,7 +435,7 @@ pattern YesOnly = YesOnly' ()
 {-# COMPLETE YesOnly #-}
 
 instance Show YesOnly where
-    show = displayYesOnly
+  show = displayYesOnly
 
 displayYesOnly :: IsString a => YesOnly -> a
 displayYesOnly YesOnly = "yes"
@@ -463,16 +455,16 @@ bsDisplayYesOnly = displayYesOnly
   Do not export constructors
 -}
 newtype KeyID = KeyID { unKeyID :: ByteString }
-    deriving stock (Eq, Ord, Generic, Typeable, Data)
-    deriving newtype (Show, Read, IsString, Monoid, Semigroup)
+  deriving stock (Eq, Ord, Generic, Typeable, Data)
+  deriving newtype (Show, Read, IsString, Monoid, Semigroup)
 
 instance FromJSON KeyID where
-    parseJSON = withObject "Key ID" $ \v -> KeyID . encodeUtf8
-        <$> v .: "Ucam Base 64U ByteString"
+  parseJSON = withObject "Key ID" $ \v -> KeyID . encodeUtf8
+    <$> v .: "Ucam Base 64U ByteString"
 
 instance ToJSON KeyID where
-    toJSON = toJSON . decodeUtf8 . unKeyID
-    toEncoding = toEncoding . decodeUtf8 . unKeyID
+  toJSON = toJSON . decodeUtf8 . unKeyID
+  toEncoding = toEncoding . decodeUtf8 . unKeyID
 
 ------------------------------------------------------------------------------
 -- *** Time
@@ -484,15 +476,15 @@ instance ToJSON KeyID where
   Do not export constructor or accessor.
 -}
 newtype UcamTime = UcamTime { unUcamTime :: Text }
-    deriving stock (Eq, Ord, Generic, Typeable, Data)
-    deriving newtype (Show, Read, IsString, Monoid, Semigroup)
+  deriving stock (Eq, Ord, Generic, Typeable, Data)
+  deriving newtype (Show, Read, IsString, Monoid, Semigroup)
 
 {-|
   'DiffTime' with 'ToJSON' and 'FromJSON' instances.
 -}
 newtype TimePeriod = TimePeriod { timePeriod :: DiffTime }
-    deriving stock (Eq, Ord, Generic, Typeable, Data)
-    deriving newtype (Show, Num)
+  deriving stock (Eq, Ord, Generic, Typeable, Data)
+  deriving newtype (Show, Num)
 
 secondsFromTimePeriod :: TimePeriod -> Integer
 secondsFromTimePeriod = (`div` 1e12) . diffTimeToPicoseconds . timePeriod
@@ -501,11 +493,11 @@ timePeriodFromSeconds :: Integer -> TimePeriod
 timePeriodFromSeconds = TimePeriod . secondsToDiffTime
 
 instance ToJSON TimePeriod where
-    toJSON = toJSON . secondsFromTimePeriod
-    toEncoding = toEncoding . secondsFromTimePeriod
+  toJSON = toJSON . secondsFromTimePeriod
+  toEncoding = toEncoding . secondsFromTimePeriod
 instance FromJSON TimePeriod where
-    parseJSON = withObject "Seconds" $ \v -> timePeriodFromSeconds
-        <$> v .: "Seconds"
+  parseJSON = withObject "Seconds" $ \v -> timePeriodFromSeconds
+    <$> v .: "Seconds"
 
 ------------------------------------------------------------------------------
 -- * 'WAASettings' and lenses
@@ -517,11 +509,11 @@ instance FromJSON TimePeriod where
   Do not export constructors or accessors, only lenses.
 -}
 data WAAState a = MakeWAAState
-    { _wSet :: WAASettings
-    , _aReq :: AuthRequest a
-    --, _aSrs :: SignedAuthResponse valid a
-    }
-    deriving stock (Show, Eq, Ord, Generic, Typeable, Data)
+  { _wSet :: WAASettings
+  , _aReq :: AuthRequest a
+  --, _aSrs :: SignedAuthResponse valid a
+  }
+  deriving stock (Show, Eq, Ord, Generic, Typeable, Data)
 
 {-|
   The settings for the application.
@@ -530,17 +522,17 @@ data WAAState a = MakeWAAState
   TODO Make urls type safe
 -}
 data WAASettings = MakeWAASettings
-    { _authAccepted :: [AuthType]
-    , _needReauthentication :: Maybe YesNo
-    , _syncTimeOut :: NominalDiffTime
-    , _validKids :: [KeyID]
-    , _recentTime :: UTCTime
-    , _applicationUrl :: Text
-    , _wlsUrl :: Text
-    , _importedKeys :: Map KeyID ByteString
-    , _ucamWebauthHeader :: Maybe ByteString
-    }
-    deriving stock (Show, Eq, Ord, Generic, Typeable, Data)
+  { _authAccepted :: [AuthType]
+  , _needReauthentication :: Maybe YesNo
+  , _syncTimeOut :: NominalDiffTime
+  , _validKids :: [KeyID]
+  , _recentTime :: UTCTime
+  , _applicationUrl :: Text
+  , _wlsUrl :: Text
+  , _importedKeys :: Map KeyID ByteString
+  , _ucamWebauthHeader :: Maybe ByteString
+  }
+  deriving stock (Show, Eq, Ord, Generic, Typeable, Data)
 
 {-|
   Type synonym for WAASettings settings type.
@@ -563,33 +555,33 @@ type SetWAA a = State (WAAState a) ()
 -}
 configWAA :: SetWAA a -> WAAState a
 configWAA = flip execState MakeWAAState
-        { _wSet = settings
-        , _aReq = request
-        }
+    { _wSet = settings
+    , _aReq = request
+    }
 
-    where
-        settings :: WAASettings
-        settings = MakeWAASettings
-            { _authAccepted = [Pwd]
-            , _needReauthentication = Nothing
-            , _syncTimeOut = 40
-            , _validKids = empty
-            , _recentTime = error "You must assign a time to check the issue time of a response is valid."
-            , _applicationUrl = mempty
-            , _wlsUrl = error "You must enter a URL for the authentication server."
-            , _importedKeys = MapS.empty
-            , _ucamWebauthHeader = empty
-            }
+  where
+    settings :: WAASettings
+    settings = MakeWAASettings
+      { _authAccepted = [Pwd]
+      , _needReauthentication = Nothing
+      , _syncTimeOut = 40
+      , _validKids = empty
+      , _recentTime = error "You must assign a time to check the issue time of a response is valid."
+      , _applicationUrl = mempty
+      , _wlsUrl = error "You must enter a URL for the authentication server."
+      , _importedKeys = MapS.empty
+      , _ucamWebauthHeader = empty
+      }
 
-        request :: AuthRequest a
-        request = MakeAuthRequest
-            { _ucamQVer = WLS3
-            , _ucamQUrl = error "You must enter a URL for the application wishing to authenticate the user."
-            , _ucamQDesc = pure "This should be the ASCII description of the application requesting authentication"
-            , _ucamQAauth = empty
-            , _ucamQIact = empty
-            , _ucamQMsg = pure "This should be the reason authentication is requested."
-            , _ucamQParams = empty
-            , _ucamQDate = empty
-            , _ucamQFail = pure YesOnly
-            }
+    request :: AuthRequest a
+    request = MakeAuthRequest
+      { _ucamQVer = WLS3
+      , _ucamQUrl = error "You must enter a URL for the application wishing to authenticate the user."
+      , _ucamQDesc = pure "This should be the ASCII description of the application requesting authentication"
+      , _ucamQAauth = empty
+      , _ucamQIact = empty
+      , _ucamQMsg = pure "This should be the reason authentication is requested."
+      , _ucamQParams = empty
+      , _ucamQDate = empty
+      , _ucamQFail = pure YesOnly
+      }

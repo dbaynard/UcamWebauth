@@ -27,21 +27,23 @@ They work best with handlers for which 'UnliftIO' (from "unliftio-core") is impl
 -}
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
-{-# LANGUAGE PackageImports #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE PartialTypeSignatures #-}
-{-# LANGUAGE TypeApplications #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TypeInType #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE AllowAmbiguousTypes #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE NamedFieldPuns #-}
-{-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE
+    PackageImports
+  , AllowAmbiguousTypes
+  , DataKinds
+  , FlexibleContexts
+  , FlexibleInstances
+  , NamedFieldPuns
+  , OverloadedStrings
+  , PartialTypeSignatures
+  , RankNTypes
+  , RecordWildCards
+  , ScopedTypeVariables
+  , TypeApplications
+  , TypeFamilies
+  , TypeInType
+  , TypeOperators
+  #-}
 
 module Servant.UcamWebauth
   (
@@ -74,26 +76,22 @@ module Servant.UcamWebauth
   , authURI
   ) where
 
-import "servant-raven" Servant.UcamWebauth.API
-import "servant-raven" Servant.UcamWebauth.Settings
-import "ucam-webauth" UcamWebauth
-import "ucam-webauth-types" Data.ByteString.B64
-
-import "base" Control.Monad.IO.Class
-import "errors" Control.Error
-import qualified "unliftio" UnliftIO.Exception as UIO
-
-import "time" Data.Time
-
-import "servant-server" Servant
-import "servant-auth-server" Servant.Auth.Server
-import "servant-auth-server" Servant.Auth.Server.SetCookieOrphan ()
-import "jose" Crypto.JOSE.JWK (JWK)
-
-import "aeson" Data.Aeson.Types hiding ((.=))
-import "microlens" Lens.Micro
-import "microlens-mtl" Lens.Micro.Mtl
-import "mtl" Control.Monad.State
+import           "errors"              Control.Error
+import           "base"                Control.Monad.IO.Class
+import           "mtl"                 Control.Monad.State
+import           "jose"                Crypto.JOSE.JWK (JWK)
+import           "aeson"               Data.Aeson.Types hiding ((.=))
+import           "ucam-webauth-types"  Data.ByteString.B64
+import           "time"                Data.Time
+import           "microlens"           Lens.Micro
+import           "microlens-mtl"       Lens.Micro.Mtl
+import           "servant-server"      Servant
+import           "servant-auth-server" Servant.Auth.Server
+import           "servant-auth-server" Servant.Auth.Server.SetCookieOrphan ()
+import           "servant-raven"       Servant.UcamWebauth.API
+import           "servant-raven"       Servant.UcamWebauth.Settings
+import           "ucam-webauth"        UcamWebauth
+import qualified "unliftio"            UnliftIO.Exception as UIO
 
 ------------------------------------------------------------------------------
 --
@@ -141,18 +139,18 @@ authWAASettings f AuthenticationArgs{..} = (\_authWAASettings -> AuthenticationA
 -- > authenticationArgs ky $ do
 -- >   authWAASettings .= setWAA
 authenticationArgs
-    :: forall handler a aas .
-      ( Applicative handler
-      , aas ~ AuthenticationArgs handler (UcamWebauthInfo a) a
-      )
-    => JWK
-    -> State aas ()
-    -> aas
+  :: forall handler a aas .
+    ( Applicative handler
+    , aas ~ AuthenticationArgs handler (UcamWebauthInfo a) a
+    )
+  => JWK
+  -> State aas ()
+  -> aas
 authenticationArgs _authJWK = (&~) AuthenticationArgs{..}
-    where
-        _authExpires     = Nothing
-        _authTokCreate   = pure
-        _authWAASettings = pure ()
+  where
+    _authExpires   = Nothing
+    _authTokCreate   = pure
+    _authWAASettings = pure ()
 
 --------------------------------------------------
 -- * Handler functions
@@ -170,65 +168,65 @@ authenticationArgs _authJWK = (&~) AuthenticationArgs{..}
 -- 'UcamWebauthInfo a' to the token type using the supplied function and then return the log in token.
 -- Supply 'pure' to use 'UcamWebauthInfo a' as a token.
 ucamWebauthToken
-    :: forall a handler tok .
-       ( ToJSON a
-       , ToJWT tok
-       , MonadIO handler
-       )
-    => AuthenticationArgs handler tok a
-    -> ServerT (UcamWebauthToken a tok) handler
+  :: forall a handler tok .
+     ( ToJSON a
+     , ToJWT tok
+     , MonadIO handler
+     )
+  => AuthenticationArgs handler tok a
+  -> ServerT (UcamWebauthToken a tok) handler
 ucamWebauthToken aas@AuthenticationArgs{..} mresponse = do
-        uwi <- ucamWebauthAuthenticate _authWAASettings mresponse
-        tok <- _authTokCreate uwi
-        servantMkJWT aas tok
+  uwi <- ucamWebauthAuthenticate _authWAASettings mresponse
+  tok <- _authTokCreate uwi
+  servantMkJWT aas tok
 
 -- | Here, if a request is made with a valid WLS-Response query parameter, convert the
 -- 'UcamWebauthInfo a' to the token type using the supplied function and then set the log in token
 -- as a cookie. Supply 'pure' to use 'UcamWebauthInfo a' as a token.
 ucamWebauthCookie
-    :: forall a handler tok .
-       ( ToJSON a
-       , ToJWT tok
-       , MonadIO handler
-       )
-    => AuthenticationArgs handler tok a
-    -> ServerT (UcamWebauthCookie a) handler
+  :: forall a handler tok .
+     ( ToJSON a
+     , ToJWT tok
+     , MonadIO handler
+     )
+  => AuthenticationArgs handler tok a
+  -> ServerT (UcamWebauthCookie a) handler
 ucamWebauthCookie AuthenticationArgs{..} mresponse = do
-        uwi <- ucamWebauthAuthenticate _authWAASettings mresponse
-        tok <- _authTokCreate uwi
-        mApplyCookies <- liftIO $ acceptLogin cookieSettings jwtCfg tok
-        UIO.fromEither . note trans . fmap ($ ()) $ mApplyCookies
-    where
-        trans = err401 { errBody = "Token error" }
-        cookieSettings = defaultCookieSettings
-        jwtCfg = defaultJWTSettings _authJWK
+    uwi <- ucamWebauthAuthenticate _authWAASettings mresponse
+    tok <- _authTokCreate uwi
+    mApplyCookies <- liftIO $ acceptLogin cookieSettings jwtCfg tok
+    UIO.fromEither . note trans . fmap ($ ()) $ mApplyCookies
+  where
+    trans = err401 { errBody = "Token error" }
+    cookieSettings = defaultCookieSettings
+    jwtCfg = defaultJWTSettings _authJWK
 
 -- | Try to parse the WLS-Response to a 'UcamWebauthInfo a', and then return that
 -- parameter or throw a 401 error.
 ucamWebauthAuthenticate
-    :: forall a handler .
-       ( ToJSON a
-       , MonadIO handler
-       )
-    => SetWAA a
-    -> Maybe (MaybeValidResponse a)
-    -> handler (UcamWebauthInfo a)
+  :: forall a handler .
+     ( ToJSON a
+     , MonadIO handler
+     )
+  => SetWAA a
+  -> Maybe (MaybeValidResponse a)
+  -> handler (UcamWebauthInfo a)
 ucamWebauthAuthenticate settings mresponse = do
-        response <- UIO.fromEither . needToAuthenticate $ mresponse
-        UIO.fromEitherIO . runExceptT . authError . authInfo settings $ response
-    where
-        needToAuthenticate = note err303 {errHeaders = ucamWebauthQuery settings}
-        authError = withExceptT . const $ err401 { errBody = "Authentication error" }
+    response <- UIO.fromEither . needToAuthenticate $ mresponse
+    UIO.fromEitherIO . runExceptT . authError . authInfo settings $ response
+  where
+    needToAuthenticate = note err303 {errHeaders = ucamWebauthQuery settings}
+    authError = withExceptT . const $ err401 { errBody = "Authentication error" }
 
 -- | Wrap the base64 encoded 'JWT' with the type it represents.
 servantMkJWT
   :: ( ToJWT tok
-     , MonadIO handler
-     )
+   , MonadIO handler
+   )
   => AuthenticationArgs handler tok a
   -> tok -> handler (Base64UBSL tok)
 servantMkJWT AuthenticationArgs{..} tok = UIO.fromEitherIO . runExceptT .
   bimapExceptT trans B64UL . ExceptT $ makeJWT tok jwtCfg _authExpires
-    where
-        trans _ = err401 { errBody = "Token error" }
-        jwtCfg = defaultJWTSettings _authJWK
+  where
+    trans _ = err401 { errBody = "Token error" }
+    jwtCfg = defaultJWTSettings _authJWK
