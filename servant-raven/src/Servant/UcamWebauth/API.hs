@@ -58,7 +58,7 @@ instance MimeUnrender OctetStream (Base64UBSL tag) where
 type family UcamWebauthEndpoint
     (auth     :: Type)
     (endpoint :: Type)
-    = (verb :: Type) | verb -> auth
+    :: Type
     where
   UcamWebauthEndpoint Cookie (Verb method statusCode contentTypes a) = Verb method statusCode contentTypes (Cookied a)
   UcamWebauthEndpoint JWT    (Verb method statusCode contentTypes a) = Verb method statusCode contentTypes (Base64UBSL a)
@@ -94,4 +94,8 @@ type WLSResponse param
 
 -- | Wrap an output in a pair of cookies (for authentication with XSRF
 -- protection)
-type Cookied a = Headers '[Header "Set-Cookie" SetCookie, Header "Set-Cookie" SetCookie] a
+--
+-- This is like 'AddHeader' but can be used without impredicative polymorphism.
+type family Cookied a where
+  Cookied (Headers headers a) = Headers  (Header "Set-Cookie" SetCookie ': Header "Set-Cookie" SetCookie ': headers) a
+  Cookied                  a  = Headers '[Header "Set-Cookie" SetCookie  , Header "Set-Cookie" SetCookie]            a

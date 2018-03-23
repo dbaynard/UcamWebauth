@@ -242,11 +242,13 @@ ucamWebauthCookieRedir a m = do
   ucamWebauthCookie' rerouted a m
 
 ucamWebauthCookie'
-  :: forall api content a handler tok .
+  :: forall api content a handler tok withOneCookie .
      ( ToJSON a
      , ToJWT tok
      , MonadIO handler
      , api ~ UcamWebauthAuthenticate Cookie a (Get '[PlainText] content)
+     , AddHeader "Set-Cookie" SetCookie content withOneCookie
+     , AddHeader "Set-Cookie" SetCookie withOneCookie (Cookied content)
      )
   => content
   -> AuthSet handler tok a
@@ -254,7 +256,7 @@ ucamWebauthCookie'
 ucamWebauthCookie' content (authenticationArgs -> aas) mresponse = do
     uwi <- ucamWebauthAuthenticate (aas ^. authSetWAA) mresponse
     tok <- aas ^. authTokCreate $ uwi
-    mApplyCookies <- liftIO $ acceptLogin (aas ^. authSetCookie) (aas ^. authSetJWT) tok
+    mApplyCookies <- liftIO $ acceptLogin @_ @_ @_ @(Cookied content) (aas ^. authSetCookie) (aas ^. authSetJWT) tok
     UIO.fromEither . note trans . fmap ($ content) $ mApplyCookies
   where
     trans = err401 { errBody = "Token error" }
