@@ -246,7 +246,7 @@ ucamWebauthCookie'
      ( ToJSON a
      , ToJWT tok
      , MonadIO handler
-     , api ~ UcamWebauthAuthenticate Cookie a (Get '[NoContent] content)
+     , api ~ UcamWebauthAuthenticate Cookie a (Get '[PlainText] content)
      )
   => content
   -> State (AuthenticationArgs handler tok a) ()

@@ -79,7 +79,7 @@ type UcamWebauthToken param token
 -- responds to the Web Login Service (WLS) using Cookies, returning
 -- nothing.
 type UcamWebauthCookie param
-    = UcamWebauthAuthenticate Cookie param (Get '[NoContent] NoContent)
+    = UcamWebauthAuthenticate Cookie param (Get '[PlainText] NoContent)
 
 -- | A bifunctional endpoint for authentication, which both delegates and
 -- responds to the Web Login Service (WLS) using Cookies, returning
