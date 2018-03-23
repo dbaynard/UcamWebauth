@@ -60,10 +60,13 @@ module Servant.UcamWebauth
   -- * Configuration
   -- ** Authentication arguments
   , AuthenticationArgs
-  , authJWK
-  , authTokCreate
   , authSetWAA
+  , authSetJWT
+  , authSetCookie
   , authExpires
+  , authTokCreate
+  , authParam
+  , authJWK
   , authenticationArgs
 
   -- * Reexports
@@ -118,14 +121,18 @@ data AuthenticationArgs handler tok a = AuthenticationArgs
   }
 
 -- | Settings for the WAA.
+--
+-- To change the type, use 'authParam'.
 authSetWAA :: AuthenticationArgs handler tok a `Lens'` SetWAA a
 authSetWAA f AuthenticationArgs{..} = (\_authSetWAA -> AuthenticationArgs{_authSetWAA, ..}) <$> f _authSetWAA
 {-# INLINE authSetWAA #-}
 
+-- | Settings for JWTs.
 authSetJWT :: AuthenticationArgs handler tok a `Lens'` JWTSettings
 authSetJWT f AuthenticationArgs{..} = (\_authSetJWT -> AuthenticationArgs{_authSetJWT, ..}) <$> f _authSetJWT
 {-# INLINE authSetJWT #-}
 
+-- | Settings for cookies.
 authSetCookie :: AuthenticationArgs handler tok a `Lens'` CookieSettings
 authSetCookie f AuthenticationArgs{..} = (\_authSetCookie -> AuthenticationArgs{_authSetCookie, ..}) <$> f _authSetCookie
 {-# INLINE authSetCookie #-}
@@ -137,9 +144,17 @@ authExpires f AuthenticationArgs{..} = (\_authExpires -> AuthenticationArgs{_aut
 
 -- | A function to create a token from the 'UcamWebauthInfo a' recovered
 -- from the WLS-Response.
+--
+-- To change the type, use 'authParam'.
 authTokCreate :: AuthenticationArgs handler tok a `Lens'` (UcamWebauthInfo a -> handler tok)
 authTokCreate f AuthenticationArgs{..} = (\_authTokCreate -> AuthenticationArgs{_authTokCreate, ..}) <$> f _authTokCreate
 {-# INLINE authTokCreate #-}
+
+-- | Set the token function and change the WAA settings.
+--
+-- This lens changes the type of 'AuthenticationArgs'.
+authParam :: Lens (AuthenticationArgs handler0 tok0 a) (AuthenticationArgs handler1 tok1 b) (SetWAA a, UcamWebauthInfo a -> handler0 tok0) (SetWAA b, UcamWebauthInfo b -> handler1 tok1)
+authParam f AuthenticationArgs{..} = (\(_authSetWAA, _authTokCreate) -> AuthenticationArgs{_authSetWAA, _authTokCreate, ..}) <$> f (_authSetWAA, _authTokCreate)
 
 -- | The 'JWK'.
 authJWK :: AuthenticationArgs handler tok a `Lens'` JWK
