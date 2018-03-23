@@ -62,7 +62,7 @@ module Servant.UcamWebauth
   , AuthenticationArgs
   , authJWK
   , authTokCreate
-  , authWAASettings
+  , authSetWAA
   , authExpires
   , authenticationArgs
 
@@ -110,16 +110,25 @@ instance FromJSON a => FromJWT (UcamWebauthInfo a)
 --------------------------------------------------
 
 data AuthenticationArgs handler tok a = AuthenticationArgs
-  { _authJWK         :: JWK
-  , _authExpires     :: Maybe UTCTime
-  , _authTokCreate   :: UcamWebauthInfo a -> handler tok
-  , _authWAASettings :: SetWAA a
+  { _authSetWAA    :: SetWAA a
+  , _authSetJWT    :: JWTSettings
+  , _authSetCookie :: CookieSettings
+  , _authExpires   :: Maybe UTCTime
+  , _authTokCreate :: UcamWebauthInfo a -> handler tok
   }
 
--- | The 'JWK'.
-authJWK :: AuthenticationArgs handler tok a `Lens'` JWK
-authJWK f AuthenticationArgs{..} = (\_authJWK -> AuthenticationArgs{_authJWK, ..}) <$> f _authJWK
-{-# INLINE authJWK #-}
+-- | Settings for the WAA.
+authSetWAA :: AuthenticationArgs handler tok a `Lens'` SetWAA a
+authSetWAA f AuthenticationArgs{..} = (\_authSetWAA -> AuthenticationArgs{_authSetWAA, ..}) <$> f _authSetWAA
+{-# INLINE authSetWAA #-}
+
+authSetJWT :: AuthenticationArgs handler tok a `Lens'` JWTSettings
+authSetJWT f AuthenticationArgs{..} = (\_authSetJWT -> AuthenticationArgs{_authSetJWT, ..}) <$> f _authSetJWT
+{-# INLINE authSetJWT #-}
+
+authSetCookie :: AuthenticationArgs handler tok a `Lens'` CookieSettings
+authSetCookie f AuthenticationArgs{..} = (\_authSetCookie -> AuthenticationArgs{_authSetCookie, ..}) <$> f _authSetCookie
+{-# INLINE authSetCookie #-}
 
 -- | The token expiry time, to be passed to the "servant-auth" machinery.
 authExpires :: AuthenticationArgs handler tok a `Lens'` Maybe UTCTime
@@ -132,15 +141,15 @@ authTokCreate :: AuthenticationArgs handler tok a `Lens'` (UcamWebauthInfo a -> 
 authTokCreate f AuthenticationArgs{..} = (\_authTokCreate -> AuthenticationArgs{_authTokCreate, ..}) <$> f _authTokCreate
 {-# INLINE authTokCreate #-}
 
--- | Settings for the WAA.
-authWAASettings :: AuthenticationArgs handler tok a `Lens'` SetWAA a
-authWAASettings f AuthenticationArgs{..} = (\_authWAASettings -> AuthenticationArgs{_authWAASettings, ..}) <$> f _authWAASettings
-{-# INLINE authWAASettings #-}
+-- | The 'JWK'.
+authJWK :: AuthenticationArgs handler tok a `Lens'` JWK
+authJWK = authSetJWT . \f JWTSettings{..} -> (\_key -> JWTSettings{key = _key, ..}) <$> f key
+{-# INLINE authJWK #-}
 
 -- | Produce a default configuration.
 --
 -- > authenticationArgs ky $ do
--- >   authWAASettings .= setWAA
+-- >   authSetWAA .= setWAA
 authenticationArgs
   :: forall handler a aas .
     ( Applicative handler
@@ -149,11 +158,13 @@ authenticationArgs
   => JWK
   -> State aas ()
   -> aas
-authenticationArgs _authJWK = (&~) AuthenticationArgs{..}
+authenticationArgs key = (&~) AuthenticationArgs{..}
   where
+    _authSetWAA    = pure ()
+    _authSetJWT    = defaultJWTSettings key
+    _authSetCookie = defaultCookieSettings
     _authExpires   = Nothing
-    _authTokCreate   = pure
-    _authWAASettings = pure ()
+    _authTokCreate = pure
 
 --------------------------------------------------
 -- * Handler functions
@@ -178,9 +189,9 @@ ucamWebauthToken
      )
   => AuthenticationArgs handler tok a
   -> ServerT (UcamWebauthToken a tok) handler
-ucamWebauthToken aas@AuthenticationArgs{..} mresponse = do
-  uwi <- ucamWebauthAuthenticate _authWAASettings mresponse
-  tok <- _authTokCreate uwi
+ucamWebauthToken aas mresponse = do
+  uwi <- ucamWebauthAuthenticate (aas ^. authSetWAA) mresponse
+  tok <- aas ^. authTokCreate $ uwi
   servantMkJWT aas tok
 
 -- | Here, if a request is made with a valid WLS-Response query parameter, convert the
@@ -194,16 +205,11 @@ ucamWebauthCookie
      )
   => AuthenticationArgs handler tok a
   -> ServerT (UcamWebauthCookie a) handler
-ucamWebauthCookie AuthenticationArgs{..} mresponse = do
-    uwi <- ucamWebauthAuthenticate _authWAASettings mresponse
-    tok <- _authTokCreate uwi
-    mApplyCookies <- liftIO $ acceptLogin cookieSettings jwtCfg tok
-    UIO.fromEither . note trans . fmap ($ NoContent) $ mApplyCookies
-  where
-    trans = err401 { errBody = "Token error" }
-    cookieSettings = defaultCookieSettings
-    jwtCfg = defaultJWTSettings _authJWK
+ucamWebauthCookie = ucamWebauthCookie' NoContent
 
+-- | Here, if a request is made with a valid WLS-Response query parameter, convert the
+-- 'UcamWebauthInfo a' to the token type using the supplied function, set the log in token
+-- as a cookie and then redirect to the location given by 'route'.
 ucamWebauthCookieRedir
   :: forall route a handler tok .
      ( ToJSON a
@@ -213,17 +219,27 @@ ucamWebauthCookieRedir
      )
   => AuthenticationArgs handler tok a
   -> ServerT (UcamWebauthCookieRedir a Link) handler
-ucamWebauthCookieRedir AuthenticationArgs{..} mresponse = do
-    uwi <- ucamWebauthAuthenticate _authWAASettings mresponse
-    tok <- _authTokCreate uwi
-    mApplyCookies <- liftIO $ acceptLogin cookieSettings jwtCfg tok
-    rerouted <- reroute @route
-    UIO.fromEither . note trans . fmap ($ rerouted) $ mApplyCookies
+ucamWebauthCookieRedir a m = do
+  rerouted <- reroute @route
+  ucamWebauthCookie' rerouted a m
+
+ucamWebauthCookie'
+  :: forall api content a handler tok .
+     ( ToJSON a
+     , ToJWT tok
+     , MonadIO handler
+     , api ~ UcamWebauthAuthenticate Cookie a (Get '[NoContent] content)
+     )
+  => content
+  -> AuthenticationArgs handler tok a
+  -> ServerT api handler
+ucamWebauthCookie' content aas mresponse = do
+    uwi <- ucamWebauthAuthenticate (aas ^. authSetWAA) mresponse
+    tok <- aas ^. authTokCreate $ uwi
+    mApplyCookies <- liftIO $ acceptLogin (aas ^. authSetCookie) (aas ^. authSetJWT) tok
+    UIO.fromEither . note trans . fmap ($ content) $ mApplyCookies
   where
     trans = err401 { errBody = "Token error" }
-    cookieSettings = defaultCookieSettings
-    jwtCfg = defaultJWTSettings _authJWK
-
 
 -- | Try to parse the WLS-Response to a 'UcamWebauthInfo a', and then return that
 -- parameter or throw a 401 error.
@@ -249,8 +265,7 @@ servantMkJWT
    )
   => AuthenticationArgs handler tok a
   -> tok -> handler (Base64UBSL tok)
-servantMkJWT AuthenticationArgs{..} tok = UIO.fromEitherIO . runExceptT .
-  bimapExceptT trans B64UL . ExceptT $ makeJWT tok jwtCfg _authExpires
+servantMkJWT aas tok = UIO.fromEitherIO . runExceptT .
+  bimapExceptT trans B64UL . ExceptT $ makeJWT tok (aas ^. authSetJWT) (aas ^. authExpires)
   where
     trans _ = err401 { errBody = "Token error" }
-    jwtCfg = defaultJWTSettings _authJWK
