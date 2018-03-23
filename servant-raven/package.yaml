@@ -19,6 +19,7 @@ dependencies:
 library:
   source-dirs: src
   exposed-modules:
+  - Extra.Servant.Redirect.API
   - Servant.UcamWebauth.API
   - Servant.UcamWebauth.Settings
   - Servant.Raven.Test

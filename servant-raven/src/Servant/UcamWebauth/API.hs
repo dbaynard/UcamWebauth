@@ -25,6 +25,7 @@ Use 'UcamWebauthCookie' or 'UcamWebauthToken' for defaults.
 
 module Servant.UcamWebauth.API
   ( UcamWebauthCookie
+  , UcamWebauthCookieRedir
   , UcamWebauthToken
   -- * Helpers
   , UcamWebauthEndpoint
@@ -36,6 +37,7 @@ module Servant.UcamWebauth.API
 
 import "ucam-webauth-types" Data.ByteString.B64
 import "base"               Data.Kind
+import "this"               Extra.Servant.Redirect.API
 import "servant"            Servant.API
 import "servant-auth"       Servant.Auth
 import "ucam-webauth-types" UcamWebauth.Data
@@ -77,7 +79,13 @@ type UcamWebauthToken param token
 -- responds to the Web Login Service (WLS) using Cookies, returning
 -- nothing.
 type UcamWebauthCookie param
-    = UcamWebauthAuthenticate Cookie param (Get '[NoContent] ())
+    = UcamWebauthAuthenticate Cookie param (Get '[NoContent] NoContent)
+
+-- | A bifunctional endpoint for authentication, which both delegates and
+-- responds to the Web Login Service (WLS) using Cookies, returning
+-- nothing, with a 302 redirect.
+type UcamWebauthCookieRedir param (loc :: k)
+    = UcamWebauthAuthenticate Cookie param (AuthCookieRedirect 'GET loc)
 
 -- | The WLS response as a query parameter, with the supplied parameter to
 -- send with the request and receive with the response.

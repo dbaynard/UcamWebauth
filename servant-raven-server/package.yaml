@@ -33,6 +33,7 @@ library:
   source-dirs: src
   exposed-modules:
   - Extra.Servant.Auth
+  - Extra.Servant.Redirect
   - Servant.UcamWebauth
   dependencies:
   - aeson

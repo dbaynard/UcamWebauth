@@ -30,6 +30,7 @@ They work best with handlers for which 'UnliftIO' (from "unliftio-core") is impl
 {-# LANGUAGE
     PackageImports
   , AllowAmbiguousTypes
+  , ApplicativeDo
   , DataKinds
   , FlexibleContexts
   , FlexibleInstances
@@ -50,6 +51,7 @@ module Servant.UcamWebauth
   -- * Handlers
   -- $handlers
     ucamWebauthCookie
+  , ucamWebauthCookieRedir
   , ucamWebauthToken
   -- ** Helpers
   , ucamWebauthAuthenticate
@@ -83,6 +85,7 @@ import           "jose"                Crypto.JOSE.JWK (JWK)
 import           "aeson"               Data.Aeson.Types hiding ((.=))
 import           "ucam-webauth-types"  Data.ByteString.B64
 import           "time"                Data.Time
+import           "this"                Extra.Servant.Redirect
 import           "microlens"           Lens.Micro
 import           "microlens-mtl"       Lens.Micro.Mtl
 import           "servant-server"      Servant
@@ -195,11 +198,32 @@ ucamWebauthCookie AuthenticationArgs{..} mresponse = do
     uwi <- ucamWebauthAuthenticate _authWAASettings mresponse
     tok <- _authTokCreate uwi
     mApplyCookies <- liftIO $ acceptLogin cookieSettings jwtCfg tok
-    UIO.fromEither . note trans . fmap ($ ()) $ mApplyCookies
+    UIO.fromEither . note trans . fmap ($ NoContent) $ mApplyCookies
   where
     trans = err401 { errBody = "Token error" }
     cookieSettings = defaultCookieSettings
     jwtCfg = defaultJWTSettings _authJWK
+
+ucamWebauthCookieRedir
+  :: forall route a handler tok .
+     ( ToJSON a
+     , ToJWT tok
+     , MonadIO handler
+     , Rerouteable route
+     )
+  => AuthenticationArgs handler tok a
+  -> ServerT (UcamWebauthCookieRedir a Link) handler
+ucamWebauthCookieRedir AuthenticationArgs{..} mresponse = do
+    uwi <- ucamWebauthAuthenticate _authWAASettings mresponse
+    tok <- _authTokCreate uwi
+    mApplyCookies <- liftIO $ acceptLogin cookieSettings jwtCfg tok
+    rerouted <- reroute @route
+    UIO.fromEither . note trans . fmap ($ rerouted) $ mApplyCookies
+  where
+    trans = err401 { errBody = "Token error" }
+    cookieSettings = defaultCookieSettings
+    jwtCfg = defaultJWTSettings _authJWK
+
 
 -- | Try to parse the WLS-Response to a 'UcamWebauthInfo a', and then return that
 -- parameter or throw a 401 error.
