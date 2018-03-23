@@ -44,6 +44,7 @@ They work best with handlers for which 'UnliftIO' (from "unliftio-core") is impl
   , TypeFamilies
   , TypeInType
   , TypeOperators
+  , ViewPatterns
   #-}
 
 module Servant.UcamWebauth
@@ -163,23 +164,25 @@ authJWK = authSetJWT . \f JWTSettings{..} -> (\_key -> JWTSettings{key = _key, .
 
 -- | Produce a default configuration.
 --
+-- This should not be needed by users of this library, as all functions that
+-- require these arguments take a 'State (AuthenticationArgs …) ()'.
+--
 -- > authenticationArgs ky $ do
 -- >   authSetWAA .= setWAA
 authenticationArgs
-  :: forall handler a aas .
+  :: forall handler tok a aas .
     ( Applicative handler
-    , aas ~ AuthenticationArgs handler (UcamWebauthInfo a) a
+    , aas ~ AuthenticationArgs handler tok a
     )
-  => JWK
-  -> State aas ()
+  => State aas ()
   -> aas
-authenticationArgs key = (&~) AuthenticationArgs{..}
+authenticationArgs = (&~) AuthenticationArgs{..}
   where
     _authSetWAA    = pure ()
-    _authSetJWT    = defaultJWTSettings key
+    _authSetJWT    = defaultJWTSettings $ error "Must set a key"
     _authSetCookie = defaultCookieSettings
     _authExpires   = Nothing
-    _authTokCreate = pure
+    _authTokCreate = error "Must set a token generator"
 
 --------------------------------------------------
 -- * Handler functions
@@ -202,12 +205,12 @@ ucamWebauthToken
      , ToJWT tok
      , MonadIO handler
      )
-  => AuthenticationArgs handler tok a
+  => State (AuthenticationArgs handler tok a) ()
   -> ServerT (UcamWebauthToken a tok) handler
-ucamWebauthToken aas mresponse = do
-  uwi <- ucamWebauthAuthenticate (aas ^. authSetWAA) mresponse
-  tok <- aas ^. authTokCreate $ uwi
-  servantMkJWT aas tok
+ucamWebauthToken aass@(authenticationArgs -> aas) mresponse = do
+    uwi <- ucamWebauthAuthenticate (aas ^. authSetWAA) mresponse
+    tok <- aas ^. authTokCreate $ uwi
+    servantMkJWT aass tok
 
 -- | Here, if a request is made with a valid WLS-Response query parameter, convert the
 -- 'UcamWebauthInfo a' to the token type using the supplied function and then set the log in token
@@ -218,7 +221,7 @@ ucamWebauthCookie
      , ToJWT tok
      , MonadIO handler
      )
-  => AuthenticationArgs handler tok a
+  => State (AuthenticationArgs handler tok a) ()
   -> ServerT (UcamWebauthCookie a) handler
 ucamWebauthCookie = ucamWebauthCookie' NoContent
 
@@ -232,7 +235,7 @@ ucamWebauthCookieRedir
      , MonadIO handler
      , Rerouteable route
      )
-  => AuthenticationArgs handler tok a
+  => State (AuthenticationArgs handler tok a) ()
   -> ServerT (UcamWebauthCookieRedir a Link) handler
 ucamWebauthCookieRedir a m = do
   rerouted <- reroute @route
@@ -246,9 +249,9 @@ ucamWebauthCookie'
      , api ~ UcamWebauthAuthenticate Cookie a (Get '[NoContent] content)
      )
   => content
-  -> AuthenticationArgs handler tok a
+  -> State (AuthenticationArgs handler tok a) ()
   -> ServerT api handler
-ucamWebauthCookie' content aas mresponse = do
+ucamWebauthCookie' content (authenticationArgs -> aas) mresponse = do
     uwi <- ucamWebauthAuthenticate (aas ^. authSetWAA) mresponse
     tok <- aas ^. authTokCreate $ uwi
     mApplyCookies <- liftIO $ acceptLogin (aas ^. authSetCookie) (aas ^. authSetJWT) tok
@@ -278,9 +281,9 @@ servantMkJWT
   :: ( ToJWT tok
    , MonadIO handler
    )
-  => AuthenticationArgs handler tok a
+  => State (AuthenticationArgs handler tok a) ()
   -> tok -> handler (Base64UBSL tok)
-servantMkJWT aas tok = UIO.fromEitherIO . runExceptT .
+servantMkJWT (authenticationArgs -> aas) tok = UIO.fromEitherIO . runExceptT .
   bimapExceptT trans B64UL . ExceptT $ makeJWT tok (aas ^. authSetJWT) (aas ^. authExpires)
   where
     trans _ = err401 { errBody = "Token error" }
