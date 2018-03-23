@@ -60,6 +60,7 @@ module Servant.UcamWebauth
 
   -- * Configuration
   -- ** Authentication arguments
+  , AuthSet
   , AuthenticationArgs
   , authSetWAA
   , authSetJWT
@@ -73,6 +74,7 @@ module Servant.UcamWebauth
   -- * Reexports
   -- ** Endpoints
   , UcamWebauthCookie
+  , UcamWebauthCookieRedir
   , UcamWebauthToken
   -- ** Wrappers
   , Cookied
@@ -112,6 +114,8 @@ instance FromJSON a => FromJWT (UcamWebauthInfo a)
 --------------------------------------------------
 -- * Authentication arguments
 --------------------------------------------------
+
+type AuthSet handler tok a = State (AuthenticationArgs handler tok a) ()
 
 data AuthenticationArgs handler tok a = AuthenticationArgs
   { _authSetWAA    :: SetWAA a
@@ -165,17 +169,13 @@ authJWK = authSetJWT . \f JWTSettings{..} -> (\_key -> JWTSettings{key = _key, .
 -- | Produce a default configuration.
 --
 -- This should not be needed by users of this library, as all functions that
--- require these arguments take a 'State (AuthenticationArgs …) ()'.
+-- require these arguments take an 'AuthSet …'.
 --
--- > authenticationArgs ky $ do
+-- > authenticationArgs $ do
 -- >   authSetWAA .= setWAA
 authenticationArgs
-  :: forall handler tok a aas .
-    ( Applicative handler
-    , aas ~ AuthenticationArgs handler tok a
-    )
-  => State aas ()
-  -> aas
+  :: AuthSet handler tok a
+  -> AuthenticationArgs handler tok a
 authenticationArgs = (&~) AuthenticationArgs{..}
   where
     _authSetWAA    = pure ()
@@ -205,7 +205,7 @@ ucamWebauthToken
      , ToJWT tok
      , MonadIO handler
      )
-  => State (AuthenticationArgs handler tok a) ()
+  => AuthSet handler tok a
   -> ServerT (UcamWebauthToken a tok) handler
 ucamWebauthToken aass@(authenticationArgs -> aas) mresponse = do
     uwi <- ucamWebauthAuthenticate (aas ^. authSetWAA) mresponse
@@ -221,7 +221,7 @@ ucamWebauthCookie
      , ToJWT tok
      , MonadIO handler
      )
-  => State (AuthenticationArgs handler tok a) ()
+  => AuthSet handler tok a
   -> ServerT (UcamWebauthCookie a) handler
 ucamWebauthCookie = ucamWebauthCookie' NoContent
 
@@ -235,7 +235,7 @@ ucamWebauthCookieRedir
      , MonadIO handler
      , Rerouteable route
      )
-  => State (AuthenticationArgs handler tok a) ()
+  => AuthSet handler tok a
   -> ServerT (UcamWebauthCookieRedir a Link) handler
 ucamWebauthCookieRedir a m = do
   rerouted <- reroute @route
@@ -249,7 +249,7 @@ ucamWebauthCookie'
      , api ~ UcamWebauthAuthenticate Cookie a (Get '[PlainText] content)
      )
   => content
-  -> State (AuthenticationArgs handler tok a) ()
+  -> AuthSet handler tok a
   -> ServerT api handler
 ucamWebauthCookie' content (authenticationArgs -> aas) mresponse = do
     uwi <- ucamWebauthAuthenticate (aas ^. authSetWAA) mresponse
@@ -281,7 +281,7 @@ servantMkJWT
   :: ( ToJWT tok
    , MonadIO handler
    )
-  => State (AuthenticationArgs handler tok a) ()
+  => AuthSet handler tok a
   -> tok -> handler (Base64UBSL tok)
 servantMkJWT (authenticationArgs -> aas) tok = UIO.fromEitherIO . runExceptT .
   bimapExceptT trans B64UL . ExceptT $ makeJWT tok (aas ^. authSetJWT) (aas ^. authExpires)
