@@ -256,8 +256,9 @@ ucamWebauthCookie'
 ucamWebauthCookie' content (authenticationArgs -> aas) mresponse = do
     uwi <- ucamWebauthAuthenticate (aas ^. authSetWAA) mresponse
     tok <- aas ^. authTokCreate $ uwi
-    mApplyCookies <- liftIO $ acceptLogin @_ @_ @_ @(Cookied content) (aas ^. authSetCookie) (aas ^. authSetJWT) tok
-    UIO.fromEither . note trans . fmap ($ content) $ mApplyCookies
+    applyCookies <- UIO.fromEither . note trans <=< liftIO $
+      acceptLogin @_ @_ @_ @(Cookied content) (aas ^. authSetCookie) (aas ^. authSetJWT) tok
+    pure $ applyCookies content
   where
     trans = err401 { errBody = "Token error" }
 
