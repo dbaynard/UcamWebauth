@@ -36,4 +36,4 @@ type PostRedirect (code :: Nat) (loc :: k)
 
 -- | Redirect suitable for setting cookies on authentication.
 type AuthCookieRedirect (method :: StdMethod) (loc :: k)
-    = Redirect method 302 '[PlainText] loc
+    = Redirect method 302 '[JSON, PlainText] loc
