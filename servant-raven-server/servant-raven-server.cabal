@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: f6f9a10751fea32304961a22dc69e0d78d1af734643d6661b5ea84244e69386c
+-- hash: 5d1d6a78730a917a1e1980f6f69d7f800aab8023476a91d96d83b60219f24d40
 
 name:           servant-raven-server
 version:        0.1.0
@@ -33,6 +33,7 @@ flag dev
 library
   hs-source-dirs:
       src
+  ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances -ddump-minimal-imports
   build-depends:
       aeson
     , base >=4.7 && <5
@@ -70,6 +71,7 @@ executable servant-raven-example
   main-is: Main.lhs
   hs-source-dirs:
       app
+  ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances -ddump-minimal-imports
   build-depends:
       base >=4.7 && <5
     , bytestring
@@ -103,7 +105,7 @@ test-suite test
   main-is: Spec.hs
   hs-source-dirs:
       test
-  ghc-options: -Wall
+  ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances -ddump-minimal-imports -Wall
   build-depends:
       QuickCheck
     , base >=4.7 && <5

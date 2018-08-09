@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: e33ad488e260457267b40edf5f8b59638465e338dbc3446ba5f39ee5818cf968
+-- hash: 9750caeb91229316e3cded19b178899a366b3d26b345a284763a8df240b21e95
 
 name:           raven-wai
 version:        0.1.0
@@ -29,6 +29,7 @@ flag dev
 library
   hs-source-dirs:
       src
+  ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances -ddump-minimal-imports
   build-depends:
       base >=4 && <5
     , bytestring >=0.9 && <0.11
@@ -54,7 +55,7 @@ executable raven-wai-example
   main-is: Main.lhs
   hs-source-dirs:
       app
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances -ddump-minimal-imports -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       aeson
     , base >=4 && <5
@@ -79,7 +80,7 @@ test-suite test
   main-is: Spec.hs
   hs-source-dirs:
       test
-  ghc-options: -Wall
+  ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances -ddump-minimal-imports -Wall
   build-depends:
       base >=4 && <5
     , bytestring >=0.9 && <0.11

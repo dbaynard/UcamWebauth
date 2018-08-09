@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 030a9ac7789b59da7cd625499061a40f7dbcfcf595df0ab4721a9956acc5e5e5
+-- hash: 42465b7a3aafe42c7c1352d200ecc6b03bff9a205a4fd11fe99cff172d507377
 
 name:           ucam-webauth-types
 version:        0.1.0
@@ -29,6 +29,7 @@ flag dev
 library
   hs-source-dirs:
       src
+  ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances -ddump-minimal-imports
   build-depends:
       aeson >=1.2
     , base >=4.10.0.0 && <5
@@ -61,7 +62,7 @@ test-suite test
   main-is: Spec.hs
   hs-source-dirs:
       test
-  ghc-options: -Wall
+  ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances -ddump-minimal-imports -Wall
   build-depends:
       aeson >=1.2
     , base >=4.10.0.0 && <5

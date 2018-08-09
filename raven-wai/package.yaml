@@ -9,6 +9,16 @@ copyright: 2017 David Baynard
 license: Apache
 git: github.com/dbaynard/UcamWebauth
 
+ghc-options:
+- -Wall
+- -Wincomplete-uni-patterns
+- -Wincomplete-record-updates
+#- -Wmissing-import-lists
+- -Wcompat
+- -Wnoncanonical-monad-instances
+- -Wnoncanonical-monadfail-instances
+- -ddump-minimal-imports
+
 dependencies:
 - base >=4 && <5
 - ucam-webauth
