@@ -65,7 +65,7 @@ redirect = pure . flip addHeader NoContent
 
 -- | Is 'route' a valid link within 'api'
 type Rerouteable' route api =
-  ( MkLink route ~ Link
+  ( MkLink route Link ~ Link
   , IsElem route api
   , HasLink route
   )

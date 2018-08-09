@@ -27,7 +27,6 @@ import           "aeson"      Data.Aeson.Types
 import           "bytestring" Data.ByteString (ByteString)
 import qualified "bytestring" Data.ByteString.Lazy as BSL
 import           "base"       Data.Data
-import           "base"       Data.Semigroup
 import           "base"       Data.String
 import           "text"       Data.Text (Text)
 import           "text"       Data.Text.Encoding

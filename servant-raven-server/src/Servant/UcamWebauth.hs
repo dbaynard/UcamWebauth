@@ -163,7 +163,7 @@ authParam f AuthenticationArgs{..} = (\(_authSetWAA, _authTokCreate) -> Authenti
 
 -- | The 'JWK'.
 authJWK :: AuthenticationArgs handler tok a `Lens'` JWK
-authJWK = authSetJWT . \f JWTSettings{..} -> (\_key -> JWTSettings{key = _key, ..}) <$> f key
+authJWK = authSetJWT . \f JWTSettings{..} -> (\_signingKey -> JWTSettings{signingKey = _signingKey, ..}) <$> f signingKey
 {-# INLINE authJWK #-}
 
 -- | Produce a default configuration.

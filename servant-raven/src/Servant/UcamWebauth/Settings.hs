@@ -38,7 +38,7 @@ import           "text"               Data.Text (Text)
 import           "text"               Data.Text.Encoding
 import           "microlens"          Lens.Micro
 import           "microlens-mtl"      Lens.Micro.Mtl
-import           "servant"            Servant.Utils.Links
+import           "servant"            Servant.Links
 import qualified "uri-bytestring"     URI.ByteString as UB
 import           "this"               URI.Convert hiding (URI)
 import           "ucam-webauth-types" UcamWebauth.Data
@@ -50,7 +50,7 @@ import           "ucam-webauth-types" UcamWebauth.Data
 type UcamWebauthConstraint baseurl api endpoint a =
   ( IsElem endpoint api
   , HasLink endpoint
-  , MkLink endpoint ~ (Maybe (MaybeValidResponse a) -> Link)
+  , MkLink endpoint Text ~ (Maybe (MaybeValidResponse a) -> Text)
   , Reifies baseurl UB.URI
   )
 
@@ -68,7 +68,7 @@ ucamWebauthSettings = do
     wSet . applicationUrl .= authLink
   where
     authLink :: Text
-    authLink = authURI baseUri . linkURI $ safeLink (Proxy @api) (Proxy @endpoint) Nothing
+    authLink = safeLink' (authURI baseUri . linkURI) (Proxy @api) (Proxy @endpoint) Nothing
 
     baseUri :: UB.URI
     baseUri = reflect @baseurl Proxy

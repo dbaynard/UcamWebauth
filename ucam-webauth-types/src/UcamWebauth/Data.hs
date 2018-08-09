@@ -156,7 +156,6 @@ import qualified "case-insensitive"  Data.CaseInsensitive as CI (mk)
 import           "base"              Data.Char (isAlphaNum, isAscii)
 import           "containers"        Data.Map.Strict (Map)
 import           "base"              Data.Maybe (catMaybes)
-import           "base"              Data.Semigroup
 import           "text"              Data.Text (Text)
 import qualified "text"              Data.Text as T
 import           "text"              Data.Text.Encoding

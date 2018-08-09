@@ -98,7 +98,6 @@ import           "containers" Data.IntMap (IntMap)
 import qualified "containers" Data.IntMap as IntMap
 import           "containers" Data.Map.Strict (Map)
 import qualified "containers" Data.Map.Strict as MapS
-import           "base"       Data.Semigroup
 import           "base"       Data.String
 import           "text"       Data.Text (Text)
 import           "text"       Data.Text.Encoding
