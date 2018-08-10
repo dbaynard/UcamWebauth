@@ -1,8 +1,10 @@
--- This file has been generated from package.yaml by hpack version 0.27.0.
+cabal-version: >= 1.10
+
+-- This file has been generated from package.yaml by hpack version 0.29.6.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 9750caeb91229316e3cded19b178899a366b3d26b345a284763a8df240b21e95
+-- hash: 38a4146e99d8ac21e42579d58e471bf1d0d25088c94e8a6e65759835fbd7a823
 
 name:           raven-wai
 version:        0.1.0
@@ -15,7 +17,6 @@ copyright:      2017 David Baynard
 license:        Apache
 license-file:   LICENSE
 build-type:     Simple
-cabal-version:  >= 1.10
 
 source-repository head
   type: git
