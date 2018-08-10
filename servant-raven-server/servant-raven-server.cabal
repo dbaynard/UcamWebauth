@@ -1,8 +1,10 @@
--- This file has been generated from package.yaml by hpack version 0.27.0.
+cabal-version: >= 1.10
+
+-- This file has been generated from package.yaml by hpack version 0.29.6.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 5d1d6a78730a917a1e1980f6f69d7f800aab8023476a91d96d83b60219f24d40
+-- hash: 6a7b7ee304a36cb3be874c2dbd7035b8401efdd9b8c2c9ad03b50d1803141f12
 
 name:           servant-raven-server
 version:        0.1.0
@@ -15,8 +17,6 @@ copyright:      2017 David Baynard
 license:        Apache
 license-file:   LICENSE
 build-type:     Simple
-cabal-version:  >= 1.10
-
 extra-source-files:
     static/pubkey2.crt
     static/pubkey901.crt

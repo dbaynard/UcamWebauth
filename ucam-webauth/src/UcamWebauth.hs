@@ -39,7 +39,6 @@ import           "base"               Control.Applicative
 import           "errors"             Control.Error hiding (catMaybes)
 import           "base"               Control.Monad
 import           "mtl"                Control.Monad.Except
-import           "base"               Control.Monad.IO.Class
 import           "cryptonite"         Crypto.Hash.Algorithms
 import           "cryptonite"         Crypto.PubKey.RSA.PKCS15
 import           "cryptonite"         Crypto.PubKey.RSA.Types
@@ -52,7 +51,6 @@ import           "base"               Data.Coerce
 import           "containers"         Data.Map.Strict (Map)
 import qualified "containers"         Data.Map.Strict as MapS
 import           "pem"                Data.PEM
-import           "base"               Data.Semigroup
 import           "text"               Data.Text (Text)
 import qualified "text"               Data.Text as T
 import           "text"               Data.Text.Encoding hiding (decodeASCII)
