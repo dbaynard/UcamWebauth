@@ -40,9 +40,6 @@ extra-package-dbs: []
 #
 
 # GHC options
-ghc-options:
-  happy: -pgmL ""
-  "$everything": -pgmL markdown-unlit
 
 # Allow newer packages than cabal bounds suggest?
 allow-newer: true

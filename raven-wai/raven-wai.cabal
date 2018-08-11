@@ -4,7 +4,7 @@ cabal-version: >= 1.10
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 38a4146e99d8ac21e42579d58e471bf1d0d25088c94e8a6e65759835fbd7a823
+-- hash: 67a16273d6077a13b1b46128d3f3cb451ec2ca2277774456a5158d7cc62dc01d
 
 name:           raven-wai
 version:        0.1.0
@@ -56,7 +56,7 @@ executable raven-wai-example
   main-is: Main.lhs
   hs-source-dirs:
       app
-  ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances -ddump-minimal-imports -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances -ddump-minimal-imports -threaded -rtsopts -with-rtsopts=-N -pgmL markdown-unlit
   build-depends:
       aeson
     , base >=4 && <5
@@ -72,6 +72,8 @@ executable raven-wai-example
     , ucam-webauth
     , wai
     , warp >=3.2.0
+  build-tools:
+      markdown-unlit
   other-modules:
       Paths_raven_wai
   default-language: Haskell2010

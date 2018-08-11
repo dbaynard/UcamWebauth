@@ -17,6 +17,7 @@ ghc-options:
 - -Wnoncanonical-monad-instances
 - -Wnoncanonical-monadfail-instances
 - -ddump-minimal-imports
+- -pgmL markdown-unlit
 
 dependencies:
 - base >= 4.7 && < 5
@@ -67,6 +68,8 @@ executables:
   servant-raven-example:
     source-dirs:      app
     main:             Main.lhs
+    build-tools:
+    - markdown-unlit
     dependencies:
     - bytestring
     - microlens
