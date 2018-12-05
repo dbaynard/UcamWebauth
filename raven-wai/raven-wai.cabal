@@ -1,26 +1,27 @@
-cabal-version: >= 1.10
-
--- This file has been generated from package.yaml by hpack version 0.29.6.
+-- This file has been generated from package.yaml by hpack version 0.27.0.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 67a16273d6077a13b1b46128d3f3cb451ec2ca2277774456a5158d7cc62dc01d
+-- hash: 2668be4d597770de8e2aa3860b3ebfa81592cd83f1ca7c9fa5a84d9f46fb9a50
 
 name:           raven-wai
 version:        0.1.0
 synopsis:       The Raven protocol as Wai middleware
 description:    Please see README.md
 category:       Web
+homepage:       https://github.com/dbaynard/UcamWebauth#readme
+bug-reports:    https://github.com/dbaynard/UcamWebauth/issues
 author:         David Baynard
-maintainer:     davidbaynard@gmail.com
-copyright:      2017 David Baynard
-license:        Apache
+maintainer:     ucamwebauth@baynard.me
+copyright:      2018 David Baynard
+license:        BSD-3-Clause OR Apache-2.0
 license-file:   LICENSE
 build-type:     Simple
+cabal-version:  >= 1.10
 
 source-repository head
   type: git
-  location: github.com/dbaynard/UcamWebauth
+  location: https://github.com/dbaynard/UcamWebauth
 
 flag dev
   description: Build for development
@@ -28,6 +29,13 @@ flag dev
   default: True
 
 library
+  exposed-modules:
+      Network.Wai.Protocol.UcamWebauth
+      Network.Wai.Protocol.Raven.Auth
+      Network.Wai.Protocol.Raven.Test
+  other-modules:
+      Network.Wai.Protocol.Raven.Internal
+      Paths_raven_wai
   hs-source-dirs:
       src
   ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances -ddump-minimal-imports
@@ -43,17 +51,12 @@ library
     ghc-options: -Wall -fwarn-tabs -O0
   else
     ghc-options: -Wall -fwarn-tabs -O2
-  exposed-modules:
-      Network.Wai.Protocol.UcamWebauth
-      Network.Wai.Protocol.Raven.Auth
-      Network.Wai.Protocol.Raven.Test
-  other-modules:
-      Network.Wai.Protocol.Raven.Internal
-      Paths_raven_wai
   default-language: Haskell2010
 
 executable raven-wai-example
   main-is: Main.lhs
+  other-modules:
+      Paths_raven_wai
   hs-source-dirs:
       app
   ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances -ddump-minimal-imports -threaded -rtsopts -with-rtsopts=-N -pgmL markdown-unlit
@@ -74,13 +77,13 @@ executable raven-wai-example
     , warp >=3.2.0
   build-tools:
       markdown-unlit
-  other-modules:
-      Paths_raven_wai
   default-language: Haskell2010
 
 test-suite test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
+  other-modules:
+      Paths_raven_wai
   hs-source-dirs:
       test
   ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances -ddump-minimal-imports -Wall
@@ -92,6 +95,4 @@ test-suite test
     , raven-wai
     , ucam-webauth
     , wai
-  other-modules:
-      Paths_raven_wai
   default-language: Haskell2010

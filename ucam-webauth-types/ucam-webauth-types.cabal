@@ -1,26 +1,27 @@
-cabal-version: >= 1.10
-
--- This file has been generated from package.yaml by hpack version 0.29.6.
+-- This file has been generated from package.yaml by hpack version 0.27.0.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 5cdb6f8f9548c2c01d28d4288200b3c09afe33bc47a07aa72787ed2e8044b053
+-- hash: 4b12e5d6c4f17821bfb933be23f0c16838a0a50a2a0f2927341fd193956b7f17
 
 name:           ucam-webauth-types
 version:        0.1.0
 synopsis:       Types for the Ucam-Webauth protocol, as used by Raven
 description:    Please see README.md
 category:       Web
+homepage:       https://github.com/dbaynard/UcamWebauth#readme
+bug-reports:    https://github.com/dbaynard/UcamWebauth/issues
 author:         David Baynard
-maintainer:     davidbaynard@gmail.com
-copyright:      2017 David Baynard
-license:        Apache
+maintainer:     ucamwebauth@baynard.me
+copyright:      2018 David Baynard
+license:        BSD-3-Clause OR Apache-2.0
 license-file:   LICENSE
 build-type:     Simple
+cabal-version:  >= 1.10
 
 source-repository head
   type: git
-  location: github.com/dbaynard/UcamWebauth
+  location: https://github.com/dbaynard/UcamWebauth
 
 flag dev
   description: Build for development
@@ -28,6 +29,12 @@ flag dev
   default: True
 
 library
+  exposed-modules:
+      Data.ByteString.B64
+      UcamWebauth.Data
+      UcamWebauth.Data.Internal
+  other-modules:
+      Paths_ucam_webauth_types
   hs-source-dirs:
       src
   ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances -ddump-minimal-imports
@@ -50,17 +57,13 @@ library
     ghc-options: -Wall -fwarn-tabs -O0
   else
     ghc-options: -Wall -fwarn-tabs -O2
-  exposed-modules:
-      Data.ByteString.B64
-      UcamWebauth.Data
-      UcamWebauth.Data.Internal
-  other-modules:
-      Paths_ucam_webauth_types
   default-language: Haskell2010
 
 test-suite test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
+  other-modules:
+      Paths_ucam_webauth_types
   hs-source-dirs:
       test
   ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances -ddump-minimal-imports -Wall
@@ -81,6 +84,4 @@ test-suite test
     , time
     , timerep
     , ucam-webauth
-  other-modules:
-      Paths_ucam_webauth_types
   default-language: Haskell2010

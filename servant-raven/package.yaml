@@ -2,12 +2,12 @@ name: servant-raven
 version: '0.1.0'
 synopsis: Servant API for Raven authentication
 description: See README.md
-license: Apache
+license: BSD-3-Clause OR Apache-2.0
 author: David Baynard
-maintainer: davidbaynard@gmail.com
-copyright: 2017 David Baynard
+maintainer: ucamwebauth@baynard.me
+copyright: 2018 David Baynard
 category: Web
-git: github.com/dbaynard/UcamWebauth
+github: dbaynard/UcamWebauth
 extra-source-files:
 - static/*.crt
 

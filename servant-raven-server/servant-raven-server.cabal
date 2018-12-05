@@ -1,29 +1,31 @@
-cabal-version: >= 1.10
-
--- This file has been generated from package.yaml by hpack version 0.29.6.
+-- This file has been generated from package.yaml by hpack version 0.27.0.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 4a922ec2424cbe9697c32aaa3c7f11e600bde7d9019bfa3b417450d103362f1e
+-- hash: 229be188088092f50f7107b5cd19fbd050b6075e56878a334066f997f4930488
 
 name:           servant-raven-server
 version:        0.1.0
 synopsis:       Servant server for Raven authentication
 description:    See README.md
 category:       Web
+homepage:       https://github.com/dbaynard/UcamWebauth#readme
+bug-reports:    https://github.com/dbaynard/UcamWebauth/issues
 author:         David Baynard
-maintainer:     davidbaynard@gmail.com
-copyright:      2017 David Baynard
-license:        Apache
+maintainer:     ucamwebauth@baynard.me
+copyright:      2018 David Baynard
+license:        BSD-3-Clause OR Apache-2.0
 license-file:   LICENSE
 build-type:     Simple
+cabal-version:  >= 1.10
+
 extra-source-files:
     static/pubkey2.crt
     static/pubkey901.crt
 
 source-repository head
   type: git
-  location: github.com/dbaynard/UcamWebauth
+  location: https://github.com/dbaynard/UcamWebauth
 
 flag dev
   description: Build for development
@@ -31,6 +33,12 @@ flag dev
   default: True
 
 library
+  exposed-modules:
+      Extra.Servant.Auth
+      Extra.Servant.Redirect
+      Servant.UcamWebauth
+  other-modules:
+      Paths_servant_raven_server
   hs-source-dirs:
       src
   ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances -ddump-minimal-imports -pgmL markdown-unlit
@@ -59,16 +67,12 @@ library
     ghc-options: -Wall -fwarn-tabs -O0
   else
     ghc-options: -Wall -fwarn-tabs -O2
-  exposed-modules:
-      Extra.Servant.Auth
-      Extra.Servant.Redirect
-      Servant.UcamWebauth
-  other-modules:
-      Paths_servant_raven_server
   default-language: Haskell2010
 
 executable servant-raven-example
   main-is: Main.lhs
+  other-modules:
+      Paths_servant_raven_server
   hs-source-dirs:
       app
   ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances -ddump-minimal-imports -pgmL markdown-unlit
@@ -98,13 +102,14 @@ executable servant-raven-example
     , yaml
   build-tools:
       markdown-unlit
-  other-modules:
-      Paths_servant_raven_server
   default-language: Haskell2010
 
 test-suite test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
+  other-modules:
+      Servant.UcamWebauthSpec
+      Paths_servant_raven_server
   hs-source-dirs:
       test
   ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances -ddump-minimal-imports -pgmL markdown-unlit -Wall
@@ -129,7 +134,4 @@ test-suite test
     , ucam-webauth
     , unliftio
     , uri-bytestring
-  other-modules:
-      Servant.UcamWebauthSpec
-      Paths_servant_raven_server
   default-language: Haskell2010
