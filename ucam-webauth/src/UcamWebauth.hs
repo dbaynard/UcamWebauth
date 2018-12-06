@@ -1,7 +1,7 @@
 {-|
 Module      : UcamWebauth
 Description : The Ucam-Webauth protocol, from the University of Cambridge
-Maintainer  : David Baynard <davidbaynard@gmail.com>
+Maintainer  : David Baynard <ucamwebauth@baynard.me>
 
 Key parts of the implementation of the protocol itself.
 

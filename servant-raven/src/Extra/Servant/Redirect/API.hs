@@ -1,7 +1,7 @@
 {-|
 Module      : Extra.Servant.Redirect.API
 Description : Redirects within the API
-Maintainer  : David Baynard <davidbaynard@gmail.com>
+Maintainer  : David Baynard <ucamwebauth@baynard.me>
 
 Based on Alp Mestanogullari’s approach to (success) redirects, from
 <https://gist.github.com/alpmestan/757094ecf9401f85c5ba367ca20b8900>

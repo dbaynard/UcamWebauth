@@ -92,6 +92,7 @@ tests:
     - generic-arbitrary
     - QuickCheck
     - quickcheck-instances
+
 flags:
   dev:
     description: Build for development

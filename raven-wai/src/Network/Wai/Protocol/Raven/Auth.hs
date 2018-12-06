@@ -1,7 +1,7 @@
 {-|
 Module      : Network.Wai.Protocol.Raven.Auth 
 Description : Authenticate with Raven
-Maintainer  : David Baynard <davidbaynard@gmail.com>
+Maintainer  : David Baynard <ucamwebauth@baynard.me>
 
 Authenticate with Raven, using the University of Cambridge protocol as implemented
 in the "Network.Wai.Protocol.UcamWebauth" module.

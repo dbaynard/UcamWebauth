@@ -1,8 +1,10 @@
--- This file has been generated from package.yaml by hpack version 0.27.0.
+cabal-version: 2.2
+
+-- This file has been generated from package.yaml by hpack version 0.31.0.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 2668be4d597770de8e2aa3860b3ebfa81592cd83f1ca7c9fa5a84d9f46fb9a50
+-- hash: 51a9353e3bd89c4793fcdfda86d70309eed7602ba91c862bd6e623db6386cb5f
 
 name:           raven-wai
 version:        0.1.0
@@ -14,10 +16,9 @@ bug-reports:    https://github.com/dbaynard/UcamWebauth/issues
 author:         David Baynard
 maintainer:     ucamwebauth@baynard.me
 copyright:      2018 David Baynard
-license:        BSD-3-Clause OR Apache-2.0
+license:        (BSD-3-Clause OR Apache-2.0)
 license-file:   LICENSE
 build-type:     Simple
-cabal-version:  >= 1.10
 
 source-repository head
   type: git
@@ -75,8 +76,8 @@ executable raven-wai-example
     , ucam-webauth
     , wai
     , warp >=3.2.0
-  build-tools:
-      markdown-unlit
+  build-tool-depends:
+      markdown-unlit:markdown-unlit
   default-language: Haskell2010
 
 test-suite test

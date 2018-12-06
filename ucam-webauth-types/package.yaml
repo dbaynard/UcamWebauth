@@ -34,6 +34,7 @@ dependencies:
 - text >=0.11 && <2.0
 - time
 - timerep
+
 library:
   source-dirs: src
   exposed-modules:
@@ -53,6 +54,7 @@ library:
       - -Wall
       - -fwarn-tabs
       - -O2
+
 tests:
   test:
     main: Spec.hs
@@ -61,6 +63,7 @@ tests:
     dependencies:
     - ucam-webauth
     - hspec >=2.0.0
+
 flags:
   dev:
     description: Build for development

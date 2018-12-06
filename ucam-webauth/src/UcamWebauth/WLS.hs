@@ -1,7 +1,7 @@
 {-|
 Module      : Protocol.UcamWebauth.WLS
 Description : Encoding WLS responses in Ucam-Webauth protocol, from the University of Cambridge
-Maintainer  : David Baynard <davidbaynard@gmail.com>
+Maintainer  : David Baynard <ucamwebauth@baynard.me>
 
 Encoding the WLS-Response contents.
 

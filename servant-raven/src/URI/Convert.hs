@@ -1,7 +1,7 @@
 {-|
 Module      : URI.Convert
 Description : Convert between network-uri and uri-bytestring
-Maintainer  : David Baynard <davidbaynard@gmail.com>
+Maintainer  : David Baynard <ucamwebauth@baynard.me>
 
 Copyright   : David Baynard 2017
 License     : Apache

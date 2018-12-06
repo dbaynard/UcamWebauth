@@ -1,7 +1,7 @@
 {-|
 Module      : Data.ByteString.B64
 Description : Base 64 ByteStrings (newtypes)
-Maintainer  : David Baynard <davidbaynard@gmail.com>
+Maintainer  : David Baynard <ucamwebauth@baynard.me>
  -}
 
 {-# LANGUAGE

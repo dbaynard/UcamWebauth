@@ -1,8 +1,10 @@
--- This file has been generated from package.yaml by hpack version 0.27.0.
+cabal-version: 2.2
+
+-- This file has been generated from package.yaml by hpack version 0.31.0.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 4b12e5d6c4f17821bfb933be23f0c16838a0a50a2a0f2927341fd193956b7f17
+-- hash: ba8850ce24b6e40965edba223726d731221b697c5a5ad52d604ece6dc40b2f2e
 
 name:           ucam-webauth-types
 version:        0.1.0
@@ -14,10 +16,9 @@ bug-reports:    https://github.com/dbaynard/UcamWebauth/issues
 author:         David Baynard
 maintainer:     ucamwebauth@baynard.me
 copyright:      2018 David Baynard
-license:        BSD-3-Clause OR Apache-2.0
+license:        (BSD-3-Clause OR Apache-2.0)
 license-file:   LICENSE
 build-type:     Simple
-cabal-version:  >= 1.10
 
 source-repository head
   type: git

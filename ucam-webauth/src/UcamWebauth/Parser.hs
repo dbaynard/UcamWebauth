@@ -12,7 +12,7 @@
 {-|
 Module      : UcamWebauth.Parser
 Description : Parsers for the UCam-Webauth protocol
-Maintainer  : David Baynard <davidbaynard@gmail.com>
+Maintainer  : David Baynard <ucamwebauth@baynard.me>
 
 -}
 

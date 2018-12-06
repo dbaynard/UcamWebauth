@@ -6,7 +6,7 @@
 {-|
 Module      : UcamWebauth.Internal
 Description : Ucam-Webauth protocol internals
-Maintainer  : David Baynard <davidbaynard@gmail.com>
+Maintainer  : David Baynard <ucamwebauth@baynard.me>
 
 -}
 

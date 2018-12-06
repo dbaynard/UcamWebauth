@@ -13,7 +13,7 @@ abstract: |
 {-|
 Module      : Network.Wai.Protocol.Raven.Example
 Description : Example use of Wai Raven authentication (test)
-Maintainer  : David Baynard <davidbaynard@gmail.com>
+Maintainer  : David Baynard <ucamwebauth@baynard.me>
 
 -}
 ```

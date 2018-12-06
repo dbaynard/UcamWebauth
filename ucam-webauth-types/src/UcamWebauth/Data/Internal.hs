@@ -20,7 +20,7 @@
 {-|
 Module      : UcamWebauth.Internal
 Description : Internal use for Ucam Webauth data types
-Maintainer  : David Baynard <davidbaynard@gmail.com>
+Maintainer  : David Baynard <ucamwebauth@baynard.me>
 
 This module is *not* for general use.
 It is *not* considered part of the API.

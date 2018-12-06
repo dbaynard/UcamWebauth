@@ -1,7 +1,7 @@
 {-|
 Module      : Network.Wai.Protocol.Raven.Test
 Description : Test Raven authentication
-Maintainer  : David Baynard <davidbaynard@gmail.com>
+Maintainer  : David Baynard <ucamwebauth@baynard.me>
 
 Test Raven authentication using the test server.
 

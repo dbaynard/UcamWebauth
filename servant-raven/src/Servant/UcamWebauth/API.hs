@@ -1,7 +1,7 @@
 {-|
 Module      : Servant.UcamWebauth.API
 Description : API for UcamWebauth endpoints
-Maintainer  : David Baynard <davidbaynard@gmail.com>
+Maintainer  : David Baynard <ucamwebauth@baynard.me>
 
 Use 'UcamWebauthCookie' or 'UcamWebauthToken' for defaults.
 

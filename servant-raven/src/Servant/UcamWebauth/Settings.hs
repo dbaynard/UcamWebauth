@@ -1,7 +1,7 @@
 {-|
 Module      : Servant.UcamWebauth.Settings
 Description : Authenticate using the Ucam-Webauth protocol
-Maintainer  : David Baynard <davidbaynard@gmail.com>
+Maintainer  : David Baynard <ucamwebauth@baynard.me>
 
 This module generates the settings for the University of Cambridge’s Ucam-Webauth protocol.
  -}

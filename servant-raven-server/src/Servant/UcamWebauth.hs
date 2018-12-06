@@ -1,7 +1,7 @@
 {-|
 Module      : Servant.UcamWebauth
 Description : Authenticate using the Ucam-Webauth protocol
-Maintainer  : David Baynard <davidbaynard@gmail.com>
+Maintainer  : David Baynard <ucamwebauth@baynard.me>
 
 This module implements the client form of the University of Cambridge’s Ucam-Webauth protocol,
 as in the link below. The protocol is a handshake between the

@@ -21,7 +21,7 @@
 {-|
 Module      : UcamWebauth.Data
 Description : Data types used in Ucam-Webauth protocol
-Maintainer  : David Baynard <davidbaynard@gmail.com>
+Maintainer  : David Baynard <ucamwebauth@baynard.me>
 
 -}
 

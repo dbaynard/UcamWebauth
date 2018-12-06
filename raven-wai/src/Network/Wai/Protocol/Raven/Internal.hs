@@ -1,7 +1,7 @@
 {-|
 Module      : Network.Wai.Protocol.Raven.Internal
 Description : UcamWebauth to access Raven (test and live)
-Maintainer  : David Baynard <davidbaynard@gmail.com>
+Maintainer  : David Baynard <ucamwebauth@baynard.me>
 
 -}
 
