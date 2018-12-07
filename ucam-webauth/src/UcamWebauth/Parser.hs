@@ -83,11 +83,11 @@ urlWrapText :: Functor f => f ByteString -> f Text
 urlWrapText = fmap (decodeUtf8 . urlDecode False)
 
 maybeBang :: Parser b -> Parser (Maybe b)
-maybeBang = noBang . optionMaybe
+maybeBang = noBang . optional
 
 parsePtags :: WLSVersion -> Parser (Maybe [Ptag])
-parsePtags WLS3 = noBang . optionMaybe $ ptagParser `sepBy` ","
-parsePtags _ = pure empty
+parsePtags WLS3 = noBang . optional $ ptagParser `sepBy` ","
+parsePtags _    = pure empty
 
 parsePrincipal :: StatusCode -> Parser (Maybe Text)
 parsePrincipal (statusCode . getStatus -> 200) = maybeBang . urlWrapText $ betweenBangs
@@ -103,8 +103,8 @@ parseKidSig (statusCode . getStatus -> 200) =
     <$> noBang kidParser
     <*> ucamB64parser
 parseKidSig _ = (,)
-  <$> noBang (optionMaybe kidParser)
-  <*> optionMaybe ucamB64parser
+  <$> noBang (optional kidParser)
+  <*> optional ucamB64parser
 
 {-|
   The Ucam-Webauth protocol uses @!@ characters to separate the fields in the response. Any @!@
@@ -156,7 +156,7 @@ responseCodeParser = toEnum <$> decimal
 kidParser :: Parser KeyID
 kidParser = do
   frst <- satisfy . inClass $ "1-9"
-  rest <- (fmap catMaybes . A.count 7 . optionMaybe $ digit) <* (lookAhead . satisfy $ not . isDigit)
+  rest <- (fmap catMaybes . A.count 7 . optional $ digit) <* (lookAhead . satisfy $ not . isDigit)
   pure (KeyID . B8.pack $ frst : rest)
 
 {-|
@@ -194,13 +194,6 @@ ucamB64parser = UcamB64 <$> takeWhile1 (ors [isAlphaNum, inClass "-._"])
 
 ------------------------------------------------------------------------------
 -- * Helper functions
-
-{-|
-  * If parser succeeds, wrap return value in 'Just'
-  * If parser fails, return 'Nothing'.
--}
-optionMaybe :: Parser a -> Parser (Maybe a)
-optionMaybe = option empty . fmap pure
 
 {-|
   Combines a list of predicates into a single predicate. /c.f./ 'any', which applies
