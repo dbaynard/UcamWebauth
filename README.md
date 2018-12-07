@@ -1,13 +1,15 @@
 ---
 title:  Ucam Webauth  
 author: David Baynard  
-date:   01 Jun 2017  
+date:   07 Dec 2018  
 fontfamily:   libertine
 csl:    chemical-engineering-science.csl
 link-citations: true
 abstract: |  
     
 ...
+
+[![Build Status](https://travis-ci.com/dbaynard/UcamWebauth.svg?branch=develop)](https://travis-ci.com/dbaynard/UcamWebauth)
 
 # <https://raven.cam.ac.uk/project/>
 
