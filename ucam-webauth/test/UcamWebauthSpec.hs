@@ -12,19 +12,19 @@
 
 module UcamWebauthSpec (spec) where
 
-import "ucam-webauth-types"   Data.ByteString.B64
-import "base"                 Data.Semigroup
-import "here"                 Data.String.Here
-import "text"                 Data.Text (Text)
-import "time-qq"              Data.Time.QQ as Q
-import "hspec"                Test.Hspec
-import "hspec"                Test.Hspec.QuickCheck
-import "QuickCheck"           Test.QuickCheck
-import "generic-arbitrary"    Test.QuickCheck.Arbitrary.Generic
-import "quickcheck-instances" Test.QuickCheck.Instances ()
-import "this"                 UcamWebauth
-import "ucam-webauth-types"   UcamWebauth.Data.Internal
-import "http-api-data"        Web.HttpApiData
+import           "ucam-webauth-types"   Data.ByteString.B64
+import           "here"                 Data.String.Here
+import           "text"                 Data.Text (Text)
+import qualified "text"                 Data.Text as T
+import           "time-qq"              Data.Time.QQ as Q
+import           "hspec"                Test.Hspec
+import           "hspec"                Test.Hspec.QuickCheck
+import           "QuickCheck"           Test.QuickCheck
+import           "generic-arbitrary"    Test.QuickCheck.Arbitrary.Generic
+import           "quickcheck-instances" Test.QuickCheck.Instances ()
+import           "this"                 UcamWebauth
+import           "ucam-webauth-types"   UcamWebauth.Data.Internal
+import           "http-api-data"        Web.HttpApiData
 
 spec :: Spec
 spec = do
@@ -50,7 +50,8 @@ prop_HttpApiData
     )
   => Spec
 prop_HttpApiData = prop "should serialize with HttpApiData correctly" $ \(h :: a) ->
-  (parseQueryParam . toQueryParam) h === Right h
+  let qp = toQueryParam h in counterexample (T.unpack qp) $
+    parseQueryParam qp === Right h
 
 instance Arbitrary a => Arbitrary (MaybeValidResponse a) where
   arbitrary = genericArbitrary
