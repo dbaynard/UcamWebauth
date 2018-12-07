@@ -29,6 +29,7 @@ dependencies:
 - network-uri
 - reflection
 - servant-auth-server
+- servant-raven
 - servant-server
 - text
 - time
@@ -49,7 +50,6 @@ library:
   - aeson
   - microlens
   - servant
-  - servant-raven
   - ucam-webauth-types
   when:
   - condition: flag(dev)
@@ -75,7 +75,6 @@ executables:
     - microlens
     - optparse-generic
     - servant-auth
-    - servant-raven
     - servant-raven-server
     - wai-extra
     - warp

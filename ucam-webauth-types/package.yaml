@@ -61,7 +61,7 @@ tests:
     source-dirs: test
     ghc-options: -Wall
     dependencies:
-    - ucam-webauth
+    - ucam-webauth-types
     - hspec >=2.0.0
 
 flags:
