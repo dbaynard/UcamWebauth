@@ -67,8 +67,15 @@ tests:
     source-dirs: test
     ghc-options: -Wall
     dependencies:
+    - aeson
     - servant-raven
     - hspec >=2.0.0
+    - bytestring
+    - network-uri
+    - QuickCheck
+    - generic-arbitrary
+    - quickcheck-instances
+    - uri-bytestring
 flags:
   dev:
     description: Build for development

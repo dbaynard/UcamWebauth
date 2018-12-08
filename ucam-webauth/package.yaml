@@ -20,31 +20,30 @@ ghc-options:
 - -ddump-minimal-imports
 
 dependencies:
+- aeson >=1.2
+- attoparsec
 - base >=4 && <5
+- base64-bytestring
+- bytestring >=0.9 && <0.11
+- parser-combinators
+- http-types
+- time
 - ucam-webauth-types
+- microlens
+- containers
+- cryptonite
+- errors
+- http-api-data
+- microlens-mtl
+- mtl
+- pem
+- text >=0.11 && <2.0
+- x509
 
 library:
   source-dirs: src
   exposed-modules:
   - UcamWebauth
-  dependencies:
-  - aeson >=1.2
-  - attoparsec
-  - base64-bytestring
-  - bytestring >=0.9 && <0.11
-  - containers
-  - cryptonite
-  - errors
-  - http-api-data
-  - http-types
-  - microlens
-  - microlens-mtl
-  - mtl
-  - pem
-  - text >=0.11 && <2.0
-  - time
-  - x509
-
   when:
   - condition: flag(dev)
     then:
@@ -67,11 +66,15 @@ tests:
     ghc-options: -Wall
     dependencies:
     - QuickCheck
-    - generic-arbitrary
+    - base
+    - generic-random
     - here
     - hspec >=2.0.0
+    - http-api-data
     - quickcheck-instances
+    - text
     - time-qq
+    - ucam-webauth-types
 
 flags:
   dev:

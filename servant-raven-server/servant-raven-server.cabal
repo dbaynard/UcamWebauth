@@ -4,7 +4,7 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 442b96490e7d937bbd1f4a6deedf8ca5952ef0881acec9acc101badc1a9c481c
+-- hash: bf9ea9fb5218456e531c1f80944589dfd235d054706d355853a2a9f95a08d973
 
 name:           servant-raven-server
 version:        0.1.0
@@ -127,6 +127,7 @@ test-suite test
     , quickcheck-instances
     , reflection
     , servant-auth-server
+    , servant-raven
     , servant-raven-server
     , servant-server
     , text

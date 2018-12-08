@@ -4,7 +4,7 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: e09190b1ca730dd58f874a282efbc9fc2464d81d4028abc970b478303d38200d
+-- hash: f5958aede842ac8178a8eacde5686eb4c81497f8e771b08388ec340826c2e42f
 
 name:           ucam-webauth
 version:        0.1.0
@@ -54,6 +54,7 @@ library
     , microlens
     , microlens-mtl
     , mtl
+    , parser-combinators
     , pem
     , text >=0.11 && <2.0
     , time
@@ -81,11 +82,28 @@ test-suite test
   ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances -ddump-minimal-imports -Wall
   build-depends:
       QuickCheck
-    , base >=4 && <5
-    , generic-arbitrary
+    , aeson >=1.2
+    , attoparsec
+    , base
+    , base64-bytestring
+    , bytestring >=0.9 && <0.11
+    , containers
+    , cryptonite
+    , errors
+    , generic-random
     , here
     , hspec >=2.0.0
+    , http-api-data
+    , http-types
+    , microlens
+    , microlens-mtl
+    , mtl
+    , parser-combinators
+    , pem
     , quickcheck-instances
+    , text
+    , time
     , time-qq
     , ucam-webauth-types
+    , x509
   default-language: Haskell2010
