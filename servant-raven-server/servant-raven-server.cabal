@@ -4,7 +4,7 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: bf9ea9fb5218456e531c1f80944589dfd235d054706d355853a2a9f95a08d973
+-- hash: 12e104aa438f6a5e9855d7063419459b7be64a1c8ceee1c5719a93066a7bbdd3
 
 name:           servant-raven-server
 version:        0.1.0
@@ -96,6 +96,7 @@ executable servant-raven-example
     , time
     , ucam-webauth
     , unliftio
+    , unliftio-core
     , uri-bytestring
     , wai-extra
     , warp
