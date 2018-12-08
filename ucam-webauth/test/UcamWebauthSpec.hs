@@ -70,11 +70,13 @@ instance (ToJSON a, FromJSON a, Arbitrary a) => Arbitrary (MaybeValidResponse a)
 instance (ToJSON a, FromJSON a, Arbitrary a) => Arbitrary (AuthResponse a) where
   arbitrary = do
     x <- genericArbitraryU `suchThat` \a -> and @[]
-      [ a ^. ucamAPrincipal /= Just ""
-      , a ^. ucamAMsg /= Just ""
-      , a ^. ucamAId /= "!"
-      , a ^. ucamAUrl /= "!"
+      [ fromMaybe True $ a ^? ucamAPrincipal . _Just . to (T.all (/= '!'))
+      , fromMaybe True $ a ^? ucamAMsg . _Just . to (T.all (/= '!'))
+      , a ^. ucamAId . to (T.all (/= '!'))
+      , a ^. ucamAUrl . to (T.all (/= '!'))
       , isJust (a ^. ucamAAuth) `xor` isJust (a ^. ucamASso)
+      , a ^. ucamAPrincipal /= Just ""
+      , a ^. ucamAMsg /= Just ""
       ]
     pure $ x &~ do
       ucamAIssue . dayTime %= fromInteger . round
