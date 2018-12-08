@@ -51,8 +51,11 @@ spec = do
       toQueryParam @(AuthResponse Text) exampleResponse `shouldBe` exampleResponseText
     it "should produce example signed response" $ do
       toQueryParam @(MaybeValidResponse Text) exampleSignedResponse `shouldBe` exampleSignedResponseText
-    prop_HttpApiData @(AuthResponse Text)
-    prop_HttpApiData @(MaybeValidResponse Text)
+    modifyMaxSuccess (const 1000) $ prop_HttpApiData @(AuthResponse Text)
+    modArgs $ prop_HttpApiData @(MaybeValidResponse Text)
+
+modArgs :: SpecWith a -> SpecWith a
+modArgs = modifyMaxSuccess (const 100) . modifyMaxDiscardRatio (const 1) . modifyMaxSize (const 1)
 
 prop_HttpApiData
   :: forall a .
