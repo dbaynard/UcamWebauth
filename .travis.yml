@@ -219,9 +219,9 @@ install:
       # the .cabal files needed by cabal-install.
       PACKAGES=$(stack --install-ghc query locals | sed -rn 's@^([^ ]+?):@\1@p')
 
-      cabal new-configure --enable-tests --enable-benchmarks --force-reinstalls --ghc-options=-O0 --reorder-goals --max-backjumps=-1 $CABALARGS $PACKAGES
+      cabal new-configure --force-reinstalls --ghc-options=-O0 --reorder-goals --max-backjumps=-1 $CABALARGS $PACKAGES
 
-      cabal new-build --enable-tests --enable-benchmarks --only-dependencies --force-reinstalls --ghc-options=-O0 --reorder-goals --max-backjumps=-1 $CABALARGS $PACKAGES
+      cabal new-build --only-dependencies --force-reinstalls --ghc-options=-O0 --reorder-goals --max-backjumps=-1 $CABALARGS $PACKAGES
       ;;
   esac
   set +ex
