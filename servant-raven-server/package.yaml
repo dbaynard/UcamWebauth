@@ -16,26 +16,22 @@ ghc-options:
 - -Wcompat
 - -Wnoncanonical-monad-instances
 - -Wnoncanonical-monadfail-instances
-- -ddump-minimal-imports
 - -pgmL markdown-unlit
+
+flags:
+  dev:
+    description: Compile for development
+    default: false
+    manual: true
+
+when:
+- condition: flag(dev)
+  ghc-options: -ddump-minimal-imports
 
 dependencies:
 - base >= 4.7 && < 5
-- bytestring
-- errors
-- jose
-- microlens-mtl
-- mtl
-- network-uri
-- reflection
-- servant-auth-server
 - servant-raven
 - servant-server
-- text
-- time
-- ucam-webauth
-- unliftio
-- uri-bytestring
 
 extra-source-files:
 - static/*.crt
@@ -48,21 +44,17 @@ library:
   - Servant.UcamWebauth
   dependencies:
   - aeson
+  - errors
+  - jose
   - microlens
+  - microlens-mtl
+  - mtl
   - servant
+  - servant-auth-server
+  - time
+  - ucam-webauth
   - ucam-webauth-types
-  when:
-  - condition: flag(dev)
-    then:
-      ghc-options:
-      - -Wall
-      - -fwarn-tabs
-      - -O0
-    else:
-      ghc-options:
-      - -Wall
-      - -fwarn-tabs
-      - -O2
+  - unliftio
 
 executables:
   servant-raven-example:
@@ -72,11 +64,22 @@ executables:
     - markdown-unlit
     dependencies:
     - bytestring
+    - errors
+    - jose
     - microlens
+    - microlens-mtl
+    - mtl
     - optparse-generic
+    - reflection
     - servant-auth
+    - servant-auth-server
     - servant-raven-server
+    - text
+    - time
+    - ucam-webauth
+    - unliftio
     - unliftio-core
+    - uri-bytestring
     - wai-extra
     - warp
     - yaml
@@ -87,16 +90,10 @@ tests:
     source-dirs: test
     ghc-options: -Wall
     dependencies:
-    - servant-raven-server
+    - bytestring
     - hspec >=2.0.0
-    - generic-arbitrary
-    - QuickCheck
-    - quickcheck-instances
+    - servant-raven-server
+    - text
+    - uri-bytestring
     build-tools:
     - hspec-discover
-
-flags:
-  dev:
-    description: Build for development
-    manual: false
-    default: true

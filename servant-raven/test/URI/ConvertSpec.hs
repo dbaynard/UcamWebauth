@@ -8,7 +8,7 @@
   , RecordWildCards
   #-}
 
-module URI.ConvertSpec (main, spec) where
+module URI.ConvertSpec (spec) where
 
 import           "base"                 Control.Monad
 import qualified "bytestring"           Data.ByteString.Char8 as B8
@@ -20,9 +20,6 @@ import           "quickcheck-instances" Test.QuickCheck.Instances ()
 import qualified "uri-bytestring"       URI.ByteString as UB
 import           "uri-bytestring"       URI.ByteString.QQ
 import                                  URI.Convert
-
-main :: IO ()
-main = hspec spec
 
 spec :: Spec
 spec = do

@@ -17,24 +17,19 @@ ghc-options:
 - -Wcompat
 - -Wnoncanonical-monad-instances
 - -Wnoncanonical-monadfail-instances
-- -ddump-minimal-imports
+
+flags:
+  dev:
+    description: Compile for development
+    default: false
+    manual: true
+
+when:
+- condition: flag(dev)
+  ghc-options: -ddump-minimal-imports
 
 dependencies:
-- aeson >=1.2
 - base >=4.10.0.0 && <5
-- base64-bytestring
-- bytestring >=0.9 && <0.11
-- case-insensitive
-- containers
-- errors
-- http-types
-- microlens
-- microlens-mtl
-- mtl
-- text >=0.11 && <2.0
-- time
-- timerep
-- deepseq
 
 library:
   source-dirs: src
@@ -42,19 +37,21 @@ library:
   - Data.ByteString.B64
   - UcamWebauth.Data
   - UcamWebauth.Data.Internal
-  dependencies: []
-  when:
-  - condition: flag(dev)
-    then:
-      ghc-options:
-      - -Wall
-      - -fwarn-tabs
-      - -O0
-    else:
-      ghc-options:
-      - -Wall
-      - -fwarn-tabs
-      - -O2
+  dependencies:
+  - aeson >=1.2
+  - base64-bytestring
+  - bytestring >=0.9 && <0.11
+  - case-insensitive
+  - containers
+  - errors
+  - http-types
+  - microlens
+  - microlens-mtl
+  - mtl
+  - text >=0.11 && <2.0
+  - time
+  - timerep
+  - deepseq
 
 tests:
   test:
@@ -62,13 +59,6 @@ tests:
     source-dirs: test
     ghc-options: -Wall
     dependencies:
-    - ucam-webauth-types
     - hspec >=2.0.0
     build-tools:
     - hspec-discover
-
-flags:
-  dev:
-    description: Build for development
-    manual: false
-    default: true

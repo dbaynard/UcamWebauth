@@ -4,7 +4,7 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 765f19e14b8ec4372ef5f718cef81b515f80f28438a50775dc72e3f14268f154
+-- hash: e818b27fd0f3eea32bcf2ddf4ea1a97ea51ba3e496383a226dc68140a02bec2e
 
 name:           servant-raven
 version:        0.1.0
@@ -28,9 +28,9 @@ source-repository head
   location: https://github.com/dbaynard/UcamWebauth
 
 flag dev
-  description: Build for development
-  manual: False
-  default: True
+  description: Compile for development
+  manual: True
+  default: False
 
 library
   exposed-modules:
@@ -45,7 +45,7 @@ library
       Paths_servant_raven
   hs-source-dirs:
       src
-  ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances -ddump-minimal-imports
+  ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances
   build-depends:
       base >=4.7 && <5
     , bytestring
@@ -63,9 +63,7 @@ library
     , ucam-webauth-types
     , uri-bytestring
   if flag(dev)
-    ghc-options: -Wall -fwarn-tabs -O0
-  else
-    ghc-options: -Wall -fwarn-tabs -O2
+    ghc-options: -ddump-minimal-imports
   default-language: Haskell2010
 
 test-suite test
@@ -76,20 +74,18 @@ test-suite test
       Paths_servant_raven
   hs-source-dirs:
       test
-  ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances -ddump-minimal-imports -Wall
+  ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances -Wall
   build-tool-depends:
       hspec-discover:hspec-discover
   build-depends:
       QuickCheck
-    , aeson
     , base >=4.7 && <5
     , bytestring
     , generic-arbitrary
     , hspec >=2.0.0
-    , network-uri
     , quickcheck-instances
-    , servant
     , servant-raven
-    , ucam-webauth-types
     , uri-bytestring
+  if flag(dev)
+    ghc-options: -ddump-minimal-imports
   default-language: Haskell2010

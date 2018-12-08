@@ -4,7 +4,7 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: beec7d0a15f9747d7f0d8fd1ffb73d2acff11f5951222c0d6767e99e1e84176e
+-- hash: 68b80a65eefff8f2b8df5206c00729779c636a87e44b3ac86989065a783f7048
 
 name:           ucam-webauth
 version:        0.1.0
@@ -25,9 +25,9 @@ source-repository head
   location: https://github.com/dbaynard/UcamWebauth
 
 flag dev
-  description: Build for development
-  manual: False
-  default: True
+  description: Compile for development
+  manual: True
+  default: False
 
 library
   exposed-modules:
@@ -39,12 +39,11 @@ library
       Paths_ucam_webauth
   hs-source-dirs:
       src
-  ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances -ddump-minimal-imports
+  ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances
   build-depends:
       aeson >=1.2
     , attoparsec
     , base >=4 && <5
-    , base64-bytestring
     , bytestring >=0.9 && <0.11
     , containers
     , cryptonite
@@ -60,6 +59,8 @@ library
     , time
     , ucam-webauth-types
     , x509
+  if flag(dev)
+    ghc-options: -ddump-minimal-imports
   if flag(dev)
     ghc-options: -Wall -fwarn-tabs -O0
   else
@@ -79,7 +80,7 @@ test-suite test
   hs-source-dirs:
       src
       test
-  ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances -ddump-minimal-imports -Wall
+  ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances -Wall
   build-tool-depends:
       hspec-discover:hspec-discover
   build-depends:
@@ -87,7 +88,6 @@ test-suite test
     , aeson >=1.2
     , attoparsec
     , base
-    , base64-bytestring
     , bytestring >=0.9 && <0.11
     , containers
     , cryptonite
@@ -108,4 +108,6 @@ test-suite test
     , time-qq
     , ucam-webauth-types
     , x509
+  if flag(dev)
+    ghc-options: -ddump-minimal-imports
   default-language: Haskell2010

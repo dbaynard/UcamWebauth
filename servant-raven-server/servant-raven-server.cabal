@@ -4,7 +4,7 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: f23872ba8075839af069d9257e2aad0d9c58735e359f05161a762aff8f020992
+-- hash: 4e58c95f3f65611ebead7d9e280341e06d58146835d6571efd634809f1b5981a
 
 name:           servant-raven-server
 version:        0.1.0
@@ -28,9 +28,9 @@ source-repository head
   location: https://github.com/dbaynard/UcamWebauth
 
 flag dev
-  description: Build for development
-  manual: False
-  default: True
+  description: Compile for development
+  manual: True
+  default: False
 
 library
   exposed-modules:
@@ -41,32 +41,25 @@ library
       Paths_servant_raven_server
   hs-source-dirs:
       src
-  ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances -ddump-minimal-imports -pgmL markdown-unlit
+  ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances -pgmL markdown-unlit
   build-depends:
       aeson
     , base >=4.7 && <5
-    , bytestring
     , errors
     , jose
     , microlens
     , microlens-mtl
     , mtl
-    , network-uri
-    , reflection
     , servant
     , servant-auth-server
     , servant-raven
     , servant-server
-    , text
     , time
     , ucam-webauth
     , ucam-webauth-types
     , unliftio
-    , uri-bytestring
   if flag(dev)
-    ghc-options: -Wall -fwarn-tabs -O0
-  else
-    ghc-options: -Wall -fwarn-tabs -O2
+    ghc-options: -ddump-minimal-imports
   default-language: Haskell2010
 
 executable servant-raven-example
@@ -75,7 +68,7 @@ executable servant-raven-example
       Paths_servant_raven_server
   hs-source-dirs:
       app
-  ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances -ddump-minimal-imports -pgmL markdown-unlit
+  ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances -pgmL markdown-unlit
   build-depends:
       base >=4.7 && <5
     , bytestring
@@ -84,7 +77,6 @@ executable servant-raven-example
     , microlens
     , microlens-mtl
     , mtl
-    , network-uri
     , optparse-generic
     , reflection
     , servant-auth
@@ -101,6 +93,8 @@ executable servant-raven-example
     , wai-extra
     , warp
     , yaml
+  if flag(dev)
+    ghc-options: -ddump-minimal-imports
   build-tool-depends:
       markdown-unlit:markdown-unlit
   default-language: Haskell2010
@@ -113,29 +107,18 @@ test-suite test
       Paths_servant_raven_server
   hs-source-dirs:
       test
-  ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances -ddump-minimal-imports -pgmL markdown-unlit -Wall
+  ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances -pgmL markdown-unlit -Wall
   build-tool-depends:
       hspec-discover:hspec-discover
   build-depends:
-      QuickCheck
-    , base >=4.7 && <5
+      base >=4.7 && <5
     , bytestring
-    , errors
-    , generic-arbitrary
     , hspec >=2.0.0
-    , jose
-    , microlens-mtl
-    , mtl
-    , network-uri
-    , quickcheck-instances
-    , reflection
-    , servant-auth-server
     , servant-raven
     , servant-raven-server
     , servant-server
     , text
-    , time
-    , ucam-webauth
-    , unliftio
     , uri-bytestring
+  if flag(dev)
+    ghc-options: -ddump-minimal-imports
   default-language: Haskell2010
