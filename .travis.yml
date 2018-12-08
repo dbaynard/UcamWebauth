@@ -219,9 +219,9 @@ install:
       # the .cabal files needed by cabal-install.
       PACKAGES=$(stack --install-ghc query locals | sed -rn 's@^([^ ]+?):@\1@p')
 
-      cabal new-configure --ghc-options=-O0 --reorder-goals --max-backjumps=-1 $CABALARGS $PACKAGES
+      cabal new-configure --disable-optimization --reorder-goals --max-backjumps=-1 $CABALARGS $PACKAGES
 
-      cabal new-build --only-dependencies --ghc-options=-O0 --reorder-goals --max-backjumps=-1 $CABALARGS $PACKAGES
+      cabal new-build --only-dependencies --disable-optimization --reorder-goals --max-backjumps=-1 $CABALARGS $PACKAGES
       ;;
   esac
   set +ex
@@ -234,7 +234,7 @@ script:
       stack --no-terminal $ARGS test --bench --no-run-benchmarks --haddock --no-haddock-deps
       ;;
     cabal)
-      cabal new-test --enable-tests --enable-benchmarks --ghc-options=-O0 --reorder-goals --max-backjumps=-1 $CABALARGS $PACKAGES
+      cabal new-test --enable-tests --enable-benchmarks --disable-optimization --reorder-goals --max-backjumps=-1 $CABALARGS $PACKAGES
 
       ORIGDIR=$(pwd)
       for dir in $PACKAGES
