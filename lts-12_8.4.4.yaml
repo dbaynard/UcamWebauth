@@ -1,0 +1,9 @@
+resolver: lts-12.21
+packages:
+- 'raven-wai'
+- 'servant-raven'
+- 'servant-raven-server'
+- 'ucam-webauth'
+- 'ucam-webauth-types'
+extra-deps:
+  - time-qq-0.0.1.0@sha256:0eb66a848f6d0c37dd84cdbd7e8a108e6929c93f503bc397690eb525a277e7bc
