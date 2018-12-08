@@ -84,7 +84,7 @@ noBang = (<* "!")
 -- urlWrap = fmap (urlDecode False)
 
 urlWrapText :: Parser ByteString -> Parser Text
-urlWrapText = either (fail . show) pure . decodeUtf8' <=< fmap (urlDecode False)
+urlWrapText = (<?> "Url wrapping") . either (fail . show) pure . decodeUtf8' <=< fmap (urlDecode False)
 
 maybeBang :: Parser b -> Parser (Maybe b)
 maybeBang = noBang . optional
@@ -104,11 +104,11 @@ parseSso _ _                                     = noBang (pure empty <?> "Empty
 parseKidSig :: StatusCode -> Parser (Maybe KeyID, Maybe UcamBase64BS)
 parseKidSig (statusCode . getStatus -> 200) =
   curry (pure *** pure)
-    <$> noBang kidParser
-    <*> ucamB64parser
+    <$> (noBang kidParser <?> "The Kid")
+    <*> (ucamB64parser <?> "The signature")
 parseKidSig _ = (,)
-  <$> noBang (optional kidParser)
-  <*> optional ucamB64parser
+  <$> (maybeBang kidParser <?> "The Kid")
+  <*> (optional ucamB64parser <?> "The signature")
 
 {-|
   The Ucam-Webauth protocol uses @!@ characters to separate the fields in the response. Any @!@
