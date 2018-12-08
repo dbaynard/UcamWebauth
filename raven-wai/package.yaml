@@ -79,6 +79,8 @@ tests:
     dependencies:
     - raven-wai
     - hspec >=2.0.0
+    build-tools:
+    - hspec-discover
 
 flags:
   dev:

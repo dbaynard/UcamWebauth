@@ -75,6 +75,8 @@ tests:
     - text
     - time-qq
     - ucam-webauth-types
+    build-tools:
+    - hspec-discover
 
 flags:
   dev:

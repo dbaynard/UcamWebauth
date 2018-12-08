@@ -64,6 +64,8 @@ tests:
     dependencies:
     - ucam-webauth-types
     - hspec >=2.0.0
+    build-tools:
+    - hspec-discover
 
 flags:
   dev:

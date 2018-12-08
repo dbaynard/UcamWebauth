@@ -1,4 +1,4 @@
-resolver: lts-12.21
+resolver: nightly-2018-12-08
 packages:
 - 'ucam-webauth-types'
 - 'ucam-webauth'

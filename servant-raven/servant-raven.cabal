@@ -4,7 +4,7 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: a1df8089026b782d737a1816b1275d42eb6bfabead1484ba7cd33cf757c848ba
+-- hash: 765f19e14b8ec4372ef5f718cef81b515f80f28438a50775dc72e3f14268f154
 
 name:           servant-raven
 version:        0.1.0
@@ -77,6 +77,8 @@ test-suite test
   hs-source-dirs:
       test
   ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances -ddump-minimal-imports -Wall
+  build-tool-depends:
+      hspec-discover:hspec-discover
   build-depends:
       QuickCheck
     , aeson

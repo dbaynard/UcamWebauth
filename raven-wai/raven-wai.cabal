@@ -4,7 +4,7 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 51a9353e3bd89c4793fcdfda86d70309eed7602ba91c862bd6e623db6386cb5f
+-- hash: 94fd6169126fc9cd01b88cf18cb1a2b37112f156eaa31e608e4d7811fbab3574
 
 name:           raven-wai
 version:        0.1.0
@@ -88,6 +88,8 @@ test-suite test
   hs-source-dirs:
       test
   ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances -ddump-minimal-imports -Wall
+  build-tool-depends:
+      hspec-discover:hspec-discover
   build-depends:
       base >=4 && <5
     , bytestring >=0.9 && <0.11
