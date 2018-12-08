@@ -54,7 +54,7 @@ import           "ucam-webauth-types" UcamWebauth.Data.Internal
 ucamResponseParser :: FromJSON a => Parser (MaybeValidResponse a)
 ucamResponseParser = do
   (_ucamAToSign, _ucamAResponse@AuthResponse{..}) <- noBang . match $ ucamAuthResponseParser
-  (_ucamAKid, _ucamASig) <- parseKidSig _ucamAStatus
+  (_ucamAKid, _ucamASig) <- parseKidSig _ucamAStatus <?> "A Kid signature"
   _ <- endOfInput
   pure SignedAuthResponse{..}
 

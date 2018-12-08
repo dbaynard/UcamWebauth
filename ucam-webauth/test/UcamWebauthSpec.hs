@@ -16,12 +16,16 @@
 
 module UcamWebauthSpec (spec) where
 
-import           "aeson"                Data.Aeson.Types
+import           "aeson"                Data.Aeson.Types hiding ((.=))
 import           "base"                 Data.Bits
+import qualified "bytestring"           Data.ByteString as BS
 import           "ucam-webauth-types"   Data.ByteString.B64
+import qualified "bytestring"           Data.ByteString.Char8 as B8
+import           "base"                 Data.Char
 import           "base"                 Data.Maybe
 import           "here"                 Data.String.Here
 import           "text"                 Data.Text (Text)
+import           "text"                 Data.Text.Encoding
 import qualified "text"                 Data.Text as T
 import           "time"                 Data.Time
 import           "time-qq"              Data.Time.QQ as Q
@@ -64,7 +68,13 @@ prop_HttpApiData = prop "should serialize with HttpApiData correctly" $ \(h :: a
     parseQueryParam qp === Right h
 
 instance (ToJSON a, FromJSON a, Arbitrary a) => Arbitrary (MaybeValidResponse a) where
-  arbitrary = genericArbitraryU
+  arbitrary = do
+    x <- genericArbitraryU `suchThat` \a -> and @[]
+      [ notElem @[] (a ^. ucamASig) [Just "", Nothing]
+      , isNothing (a ^. ucamASig) || isJust (a ^. ucamAKid)
+      ]
+    pure $ x &~ do
+      ucamAToSign .= encodeUtf8 (toQueryParam (x ^. ucamAResponse))
   shrink = genericShrink
 
 instance (ToJSON a, FromJSON a, Arbitrary a) => Arbitrary (AuthResponse a) where
@@ -87,7 +97,11 @@ dayTime f UTCTime{..} = (\x -> UTCTime{utctDayTime = x, ..}) <$> f utctDayTime
 {-# INLINE dayTime #-}
 
 instance Arbitrary KeyID where
-  arbitrary = genericArbitraryU
+  arbitrary = genericArbitraryU `suchThat` \(KeyID a) -> and @[]
+    [ BS.length a & \x -> x >= 1 && x <= 8
+    , B8.all isDigit a
+    , B8.head a /= '0'
+    ]
   shrink = genericShrink
 
 instance Arbitrary WLSVersion where
@@ -97,7 +111,7 @@ instance Arbitrary StatusCode where
   arbitrary = pure Ok200
 
 instance Arbitrary UcamBase64BS where
-  arbitrary = genericArbitraryU
+  arbitrary = encodeUcamB64 <$> arbitrary
   shrink = genericShrink
 
 instance Arbitrary Ptag where
