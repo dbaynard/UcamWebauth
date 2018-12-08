@@ -106,7 +106,7 @@ matrix:
     #compiler: ": #stack 8.2.2"
     #addons: {apt: {packages: [libgmp-dev]}}
 
-  - env: BUILD=stack ARGS="--resolver lts-12"
+  - env: BUILD=stack ARGS="--stack-yaml lts-12_8.4.4.yaml"
     compiler: ": #stack 8.4.4"
     addons: {apt: {packages: [libgmp-dev]}}
 
@@ -115,10 +115,10 @@ matrix:
     compiler: ": #stack nightly"
     addons: {apt: {packages: [libgmp-dev]}}
 
-  # Build on macOS in addition to Linux
-  - env: BUILD=stack ARGS=""
-    compiler: ": #stack default osx"
-    os: osx
+  ## Build on macOS in addition to Linux
+  #- env: BUILD=stack ARGS=""
+    #compiler: ": #stack default osx"
+    #os: osx
 
   # Travis includes an macOS which is incompatible with GHC 7.8.4
   #- env: BUILD=stack ARGS="--resolver lts-2"
@@ -145,13 +145,13 @@ matrix:
     #compiler: ": #stack 8.2.2 osx"
     #os: osx
 
-  - env: BUILD=stack ARGS="--resolver lts-12"
-    compiler: ": #stack 8.4.4 osx"
-    os: osx
+  #- env: BUILD=stack ARGS="--resolver lts-12"
+    #compiler: ": #stack 8.4.4 osx"
+    #os: osx
 
-  - env: BUILD=stack ARGS="--resolver nightly"
-    compiler: ": #stack nightly osx"
-    os: osx
+  #- env: BUILD=stack ARGS="--resolver nightly"
+    #compiler: ": #stack nightly osx"
+    #os: osx
 
   allow_failures:
   - env: BUILD=cabal GHCVER=head  CABALVER=head HAPPYVER=1.19.5 ALEXVER=3.1.7
@@ -206,7 +206,7 @@ install:
       #  stack --no-terminal $ARGS solver --update-config)
 
       # Build the dependencies
-      stack --verbose --no-terminal --install-ghc $ARGS test --bench --only-dependencies
+      stack --no-terminal --install-ghc $ARGS test --bench --only-dependencies
       ;;
     cabal)
       cabal --version
