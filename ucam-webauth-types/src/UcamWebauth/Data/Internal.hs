@@ -87,6 +87,7 @@ module UcamWebauth.Data.Internal
 
 import           "base"       Control.Applicative
 import           "base"       Control.Arrow ((&&&))
+import           "deepseq"    Control.DeepSeq (NFData, NFData1)
 import           "errors"     Control.Error
 import           "mtl"        Control.Monad.State
 import           "aeson"      Data.Aeson.Types
@@ -126,6 +127,7 @@ data UcamWebauthInfo a = AuthInfo
   , _approveParams  :: Maybe a
   }
   deriving stock (Show, Eq, Ord, Generic, Generic1, Typeable, Data)
+  deriving anyclass (NFData, NFData1)
 
 instance ToJSON a => ToJSON (UcamWebauthInfo a)
 instance FromJSON a => FromJSON (UcamWebauthInfo a)
@@ -155,7 +157,8 @@ data AuthRequest a = MakeAuthRequest
   , _ucamQDate   :: Maybe UTCTime
   , _ucamQFail   :: Maybe YesOnly
   }
-  deriving stock (Show, Eq, Ord, Generic1, Typeable, Data)
+  deriving stock (Show, Eq, Ord, Generic, Generic1, Typeable, Data)
+  deriving anyclass (NFData, NFData1)
 
 {-|
   A 'SignedAuthResponse' represents the data returned by the @WLS@, including a
@@ -171,6 +174,7 @@ data SignedAuthResponse (valid :: IsValid) a = SignedAuthResponse
   , _ucamASig      :: Maybe UcamBase64BS
   }
   deriving stock (Show, Eq, Ord, Generic, Generic1, Typeable, Data)
+  deriving anyclass (NFData, NFData1)
 
 {-|
   The intended use of this is with 'IsValid' as a kind (requires the 'DataKinds' extension).
@@ -183,6 +187,7 @@ data IsValid
   = MaybeValid
   | Valid
   deriving stock (Show, Read, Eq, Ord, Enum, Bounded, Generic, Typeable, Data)
+  deriving anyclass (NFData)
 
 {-|
   An 'AuthResponse' represents the content returned by the @WLS@. The validation
@@ -203,6 +208,7 @@ data AuthResponse a = AuthResponse
   , _ucamAParams    :: Maybe a
   }
   deriving stock (Show, Eq, Ord, Generic, Generic1, Typeable, Data)
+  deriving anyclass (NFData, NFData1)
 
 {-|
   Convert an 'AuthResponse' into a 'UcamWebauthInfo' for export.
@@ -230,6 +236,7 @@ data WLSVersion
   | WLS2 -- ^ Version 2
   | WLS3 -- ^ Version 3. Used for successful reponses by the Raven implementation
   deriving stock (Read, Eq, Ord, Enum, Bounded, Generic, Typeable, Data)
+  deriving anyclass (NFData)
 
 instance Show WLSVersion where
   show = displayWLSVersion
@@ -272,6 +279,7 @@ instance ToJSON WLSVersion where
 data AuthType
   = Pwd -- ^ pwd: Username and password
   deriving stock (Read, Eq, Ord, Enum, Bounded, Generic, Typeable, Data)
+  deriving anyclass (NFData)
 
 instance Show AuthType where
   show = displayAuthType
@@ -305,6 +313,7 @@ enumAesonOptions = defaultOptions
 data Ptag
   = Current -- ^ User is current member of university
   deriving stock (Read, Eq, Ord, Enum, Bounded, Generic, Typeable, Data)
+  deriving anyclass (NFData)
 
 instance Show Ptag where
   show = displayPtag
@@ -346,6 +355,7 @@ data StatusCode
   | Declined570    -- ^ Authentication declined
   | BadRequest400  -- ^ Response not covered by any protocol responses
   deriving stock (Show, Read, Eq, Ord, Bounded, Generic, Typeable, Data)
+  deriving anyclass (NFData)
 
 instance Enum StatusCode where
   toEnum   = fromMaybe BadRequest400 . flip IntMap.lookup responseCodes
@@ -407,6 +417,7 @@ data YesNo
   = No
   | Yes
   deriving stock (Read, Eq, Ord, Enum, Bounded, Generic, Typeable, Data)
+  deriving anyclass (NFData)
 
 instance Show YesNo where
   show = displayYesNo
@@ -429,7 +440,7 @@ bsDisplayYesNo = displayYesNo
 -}
 newtype YesOnly = YesOnly' ()
   deriving stock (Read, Eq, Ord, Generic, Typeable, Data)
-  deriving newtype (Enum, Bounded)
+  deriving newtype (Enum, Bounded, NFData)
 
 pattern YesOnly :: YesOnly
 pattern YesOnly = YesOnly' ()
@@ -458,7 +469,7 @@ bsDisplayYesOnly = displayYesOnly
 -}
 newtype KeyID = KeyID { unKeyID :: ByteString }
   deriving stock (Eq, Ord, Generic, Typeable, Data)
-  deriving newtype (Show, Read, IsString, Monoid, Semigroup)
+  deriving newtype (Show, Read, IsString, Monoid, Semigroup, NFData)
 
 instance FromJSON KeyID where
   parseJSON = withObject "Key ID" $ \v -> KeyID . encodeUtf8
@@ -479,14 +490,14 @@ instance ToJSON KeyID where
 -}
 newtype UcamTime = UcamTime { unUcamTime :: Text }
   deriving stock (Eq, Ord, Generic, Typeable, Data)
-  deriving newtype (Show, Read, IsString, Monoid, Semigroup)
+  deriving newtype (Show, Read, IsString, Monoid, Semigroup, NFData)
 
 {-|
   'DiffTime' with 'ToJSON' and 'FromJSON' instances.
 -}
 newtype TimePeriod = TimePeriod { timePeriod :: DiffTime }
   deriving stock (Eq, Ord, Generic, Typeable, Data)
-  deriving newtype (Show, Num)
+  deriving newtype (Show, Num, NFData)
 
 secondsFromTimePeriod :: TimePeriod -> Integer
 secondsFromTimePeriod = round . timePeriod
@@ -516,7 +527,8 @@ data WAAState a = MakeWAAState
   , _aReq :: AuthRequest a
   --, _aSrs :: SignedAuthResponse valid a
   }
-  deriving stock (Show, Eq, Ord, Generic, Typeable, Data)
+  deriving stock (Show, Eq, Ord, Generic, Generic1, Typeable, Data)
+  deriving anyclass (NFData, NFData1)
 
 {-|
   The settings for the application.
@@ -536,6 +548,7 @@ data WAASettings = MakeWAASettings
   , _ucamWebauthHeader    :: Maybe ByteString
   }
   deriving stock (Show, Eq, Ord, Generic, Typeable, Data)
+  deriving anyclass (NFData)
 
 {-|
   Type synonym for WAASettings settings type.

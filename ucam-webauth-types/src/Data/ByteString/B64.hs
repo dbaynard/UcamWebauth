@@ -23,6 +23,7 @@ module Data.ByteString.B64
   , ASCII(..)
   ) where
 
+import           "deepseq"    Control.DeepSeq (NFData)
 import           "aeson"      Data.Aeson.Types
 import           "bytestring" Data.ByteString (ByteString)
 import qualified "bytestring" Data.ByteString.Lazy as BSL
@@ -41,7 +42,7 @@ import           "base"       GHC.Generics
 -}
 newtype Base64UBS (tag :: k) = B64U { unB64U :: ByteString }
   deriving stock (Eq, Ord, Generic, Typeable, Data)
-  deriving newtype (Show, Read, IsString, Monoid, Semigroup)
+  deriving newtype (Show, Read, IsString, Monoid, Semigroup, NFData)
 
 instance FromJSON (Base64UBS tag) where
   parseJSON = withObject "Base 64 URL ByteString" $ \v -> B64U . encodeUtf8
@@ -53,7 +54,7 @@ instance ToJSON (Base64UBS tag) where
 
 newtype Base64UBSL (tag :: k) = B64UL { unB64UL :: BSL.ByteString }
   deriving stock (Eq, Ord, Generic, Typeable, Data)
-  deriving newtype (Show, Read, IsString, Monoid, Semigroup)
+  deriving newtype (Show, Read, IsString, Monoid, Semigroup, NFData)
 
 instance FromJSON (Base64UBSL tag) where
   parseJSON = withObject "Base 64 URL ByteString" $ \v -> B64UL . TL.encodeUtf8
@@ -68,7 +69,7 @@ instance ToJSON (Base64UBSL tag) where
 -}
 newtype UcamBase64BS = UcamB64 { unUcamB64 :: ByteString }
   deriving stock (Eq, Ord, Generic, Typeable, Data)
-  deriving newtype (Show, Read, IsString, Monoid, Semigroup)
+  deriving newtype (Show, Read, IsString, Monoid, Semigroup, NFData)
 
 instance FromJSON UcamBase64BS where
   parseJSON = withObject "Ucam Base 64 URL ByteString" $ \v -> UcamB64 . encodeUtf8
@@ -80,11 +81,11 @@ instance ToJSON UcamBase64BS where
 
 newtype UcamBase64BSL = UcamB64L { unUcamB64L :: BSL.ByteString }
   deriving stock (Eq, Ord, Generic, Typeable, Data)
-  deriving newtype (Show, Read, IsString, Monoid, Semigroup)
+  deriving newtype (Show, Read, IsString, Monoid, Semigroup, NFData)
 
 {-|
   Ensure ASCII text is not confused with other 'ByteString's
 -}
 newtype ASCII = ASCII { unASCII :: Text }
   deriving stock (Eq, Ord, Generic, Typeable, Data)
-  deriving newtype (Show, Read, IsString, Monoid, Semigroup)
+  deriving newtype (Show, Read, IsString, Monoid, Semigroup, NFData)
