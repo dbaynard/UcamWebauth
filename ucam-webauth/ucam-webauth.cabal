@@ -4,7 +4,7 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 7ec8c6984545cb8a19f2e3c68f43c1f560954e6ba7e084615abc12b54c035933
+-- hash: 296fdb96ec4a21de02f0fb3781812ed3795cbd9ac9621b968af263b38a09cec1
 
 name:           ucam-webauth
 version:        0.1.0
@@ -54,6 +54,7 @@ library
     , microlens
     , microlens-mtl
     , mtl
+    , parser-combinators
     , pem
     , text >=0.11 && <2.0
     , time
@@ -97,6 +98,7 @@ test-suite test
     , microlens
     , microlens-mtl
     , mtl
+    , parser-combinators
     , pem
     , quickcheck-instances
     , text

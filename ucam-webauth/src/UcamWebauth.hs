@@ -48,6 +48,7 @@ import           "base"               Data.Bifunctor
 import           "bytestring"         Data.ByteString (ByteString)
 import qualified "bytestring"         Data.ByteString.Char8 as B
 import           "base"               Data.Coerce
+import           "base"               Data.List.NonEmpty (NonEmpty)
 import           "containers"         Data.Map.Strict (Map)
 import qualified "containers"         Data.Map.Strict as MapS
 import           "pem"                Data.PEM
@@ -296,7 +297,7 @@ validateAuthTypes (configWAA -> waa) ar =
     isAcceptableAuth :: AuthType -> Bool
     isAcceptableAuth = flip elem $ waa ^. wSet . authAccepted
 
-    anyAuth :: Maybe AuthType -> Maybe [AuthType] -> Bool
+    anyAuth :: Maybe AuthType -> Maybe (NonEmpty AuthType) -> Bool
     anyAuth Nothing (Just x) = any isAcceptableAuth x
     anyAuth (Just x) Nothing = isAcceptableAuth x
     anyAuth _ _ = False

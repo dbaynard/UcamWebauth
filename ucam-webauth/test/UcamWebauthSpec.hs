@@ -3,20 +3,30 @@
     PackageImports
   , AllowAmbiguousTypes
   , FlexibleInstances
+  , NamedFieldPuns
+  , OverloadedLists
   , OverloadedStrings
   , QuasiQuotes
+  , RecordWildCards
   , ScopedTypeVariables
   , TypeApplications
+  , TypeOperators
   , TypeSynonymInstances
   #-}
 
 module UcamWebauthSpec (spec) where
 
+import           "aeson"                Data.Aeson.Types
+import           "base"                 Data.Bits
 import           "ucam-webauth-types"   Data.ByteString.B64
+import           "base"                 Data.Maybe
 import           "here"                 Data.String.Here
 import           "text"                 Data.Text (Text)
 import qualified "text"                 Data.Text as T
+import           "time"                 Data.Time
 import           "time-qq"              Data.Time.QQ as Q
+import           "microlens"            Lens.Micro
+import           "microlens-mtl"        Lens.Micro.Mtl
 import           "hspec"                Test.Hspec
 import           "hspec"                Test.Hspec.QuickCheck
 import           "QuickCheck"           Test.QuickCheck
@@ -53,13 +63,26 @@ prop_HttpApiData = prop "should serialize with HttpApiData correctly" $ \(h :: a
   let qp = toQueryParam h in counterexample (T.unpack qp) $
     parseQueryParam qp === Right h
 
-instance Arbitrary a => Arbitrary (MaybeValidResponse a) where
+instance (ToJSON a, FromJSON a, Arbitrary a) => Arbitrary (MaybeValidResponse a) where
   arbitrary = genericArbitrary
   shrink = genericShrink
 
-instance Arbitrary a => Arbitrary (AuthResponse a) where
-  arbitrary = genericArbitrary
+instance (ToJSON a, FromJSON a, Arbitrary a) => Arbitrary (AuthResponse a) where
+  arbitrary = do
+    x <- genericArbitrary `suchThat` \a -> and @[]
+      [ a ^. ucamAPrincipal /= Just ""
+      , a ^. ucamAMsg /= Just ""
+      , a ^. ucamAId /= "!"
+      , a ^. ucamAUrl /= "!"
+      , isJust (a ^. ucamAAuth) `xor` isJust (a ^. ucamASso)
+      ]
+    pure $ x &~ do
+      ucamAIssue . dayTime %= fromInteger . round
   shrink = genericShrink
+
+dayTime :: UTCTime `Lens'` DiffTime
+dayTime f UTCTime{..} = (\x -> UTCTime{utctDayTime = x, ..}) <$> f utctDayTime
+{-# INLINE dayTime #-}
 
 instance Arbitrary KeyID where
   arbitrary = genericArbitrary
@@ -84,7 +107,8 @@ instance Arbitrary AuthType where
   shrink = genericShrink
 
 instance Arbitrary TimePeriod where
-  arbitrary = genericArbitrary
+  arbitrary = timePeriodFromSeconds . secondsFromTimePeriod <$> genericArbitrary `suchThat` (>= 0)
+
   shrink = genericShrink
 
 exampleSignedResponse :: MaybeValidResponse Text
@@ -97,7 +121,7 @@ exampleSignedResponse = SignedAuthResponse
     , _ucamAId        = "oANAuhC9fZmMlZUPIm53y5vn"
     , _ucamAUrl       = "http://localhost:3000/foo/query"
     , _ucamAPrincipal = Just "test0244"
-    , _ucamAPtags     = Just [Current]
+    , _ucamAPtags     = [Current]
     , _ucamAAuth      = Nothing
     , _ucamASso       = Just [Pwd]
     , _ucamALife      = Just (timePeriodFromSeconds 30380)
@@ -121,7 +145,7 @@ exampleResponse = AuthResponse
   , _ucamAId        = "oANAuhC9fZmMlZUPIm53y5vn"
   , _ucamAUrl       = "http://localhost:3000/foo/query"
   , _ucamAPrincipal = Just "test0244"
-  , _ucamAPtags     = Just [Current]
+  , _ucamAPtags     = [Current]
   , _ucamAAuth      = Nothing
   , _ucamASso       = Just [Pwd]
   , _ucamALife      = Just (timePeriodFromSeconds 30380)
