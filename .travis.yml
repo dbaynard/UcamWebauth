@@ -21,6 +21,7 @@ cache:
   - $HOME/.cabal
   - $HOME/.stack
   - $TRAVIS_BUILD_DIR/.stack-work
+  - $TRAVIS_BUILD_DIR/dist-newstyle
 
 branches:
   only:
@@ -209,6 +210,7 @@ install:
       stack --no-terminal --install-ghc $ARGS test --bench --only-dependencies
       ;;
     cabal)
+      ln -s "$HOME" "\$HOME"
       cabal --version
       travis_retry cabal new-update
 
@@ -216,6 +218,8 @@ install:
       # this will also implicitly run hpack as necessary to generate
       # the .cabal files needed by cabal-install.
       PACKAGES=$(stack --install-ghc query locals | sed -rn 's@^([^ ]+?):@\1@p')
+
+      cabal new-configure --enable-tests --enable-benchmarks --force-reinstalls --ghc-options=-O0 --reorder-goals --max-backjumps=-1 $CABALARGS $PACKAGES
 
       cabal new-build --enable-tests --enable-benchmarks --only-dependencies --force-reinstalls --ghc-options=-O0 --reorder-goals --max-backjumps=-1 $CABALARGS $PACKAGES
       ;;
