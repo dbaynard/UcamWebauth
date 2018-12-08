@@ -84,7 +84,7 @@ noBang = (<* "!")
 -- urlWrap = fmap (urlDecode False)
 
 urlWrapText :: Parser ByteString -> Parser Text
-urlWrapText = (<?> "Url wrapping") . either (fail . show) pure . decodeUtf8' <=< fmap (urlDecode False)
+urlWrapText = (<?> "Url wrapping") . either (fail . show) pure . decodeUtf8' <=< fmap id -- (urlDecode False)
 
 maybeBang :: Parser b -> Parser (Maybe b)
 maybeBang = noBang . optional
