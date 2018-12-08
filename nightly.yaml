@@ -1,0 +1,8 @@
+resolver: nightly
+packages:
+- 'raven-wai'
+- 'servant-raven'
+- 'servant-raven-server'
+- 'ucam-webauth'
+- 'ucam-webauth-types'
+extra-deps: []

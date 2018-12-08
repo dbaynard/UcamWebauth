@@ -111,7 +111,7 @@ matrix:
     addons: {apt: {packages: [libgmp-dev]}}
 
   # Nightly builds are allowed to fail
-  - env: BUILD=stack ARGS="--resolver nightly"
+  - env: BUILD=stack ARGS="--stack-yaml nightly.yaml"
     compiler: ": #stack nightly"
     addons: {apt: {packages: [libgmp-dev]}}
 
@@ -155,7 +155,7 @@ matrix:
 
   allow_failures:
   - env: BUILD=cabal GHCVER=head  CABALVER=head HAPPYVER=1.19.5 ALEXVER=3.1.7
-  - env: BUILD=stack ARGS="--resolver nightly"
+  - env: BUILD=stack ARGS="--stack-yaml nightly.yaml"
 
 before_install:
 # Using compiler above sets CC to an invalid value, so unset it
