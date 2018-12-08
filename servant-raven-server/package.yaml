@@ -76,6 +76,7 @@ executables:
     - optparse-generic
     - servant-auth
     - servant-raven-server
+    - unliftio-core
     - wai-extra
     - warp
     - yaml
