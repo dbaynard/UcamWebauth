@@ -27,15 +27,16 @@ import qualified "aeson"              Data.Aeson as A
 import           "ucam-webauth-types" Data.ByteString.B64
 import qualified "bytestring"         Data.ByteString.Builder as B
 import qualified "bytestring"         Data.ByteString.Lazy as BSL
+import           "base"               Data.Foldable (fold)
 import           "base"               Data.List (intersperse)
 import qualified "base"               Data.List.NonEmpty as NE (intersperse)
 import           "base"               Data.Maybe
 import           "text"               Data.Text (Text)
 import           "text"               Data.Text.Encoding
+import           "text"               Data.Text.Encoding.Error (lenientDecode)
 import           "microlens"          Lens.Micro
 import           "ucam-webauth-types" UcamWebauth.Data as X
 import           "ucam-webauth-types" UcamWebauth.Data.Internal
-import "base" Data.Foldable (fold)
 
 wlsEncode :: ToJSON a => AuthResponse a -> Text
 wlsEncode = textBuilder . wlsEncode'
@@ -44,7 +45,7 @@ wlsEncodeSign :: ToJSON a => MaybeValidResponse a -> Text
 wlsEncodeSign = textBuilder . wlsEncodeSign'
 
 textBuilder :: B.Builder -> Text
-textBuilder = decodeUtf8 . BSL.toStrict . B.toLazyByteString
+textBuilder = decodeUtf8With lenientDecode . BSL.toStrict . B.toLazyByteString
 
 wlsEncode' :: ToJSON a => AuthResponse a -> B.Builder
 wlsEncode' r = mconcat . intersperse "!" $

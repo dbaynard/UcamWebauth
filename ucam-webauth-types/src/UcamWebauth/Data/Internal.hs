@@ -102,6 +102,7 @@ import qualified "containers" Data.Map.Strict as MapS
 import           "base"       Data.String
 import           "text"       Data.Text (Text)
 import           "text"       Data.Text.Encoding
+import           "text"       Data.Text.Encoding.Error
 import           "time"       Data.Time
 import           "base"       GHC.Generics
 import           "http-types" Network.HTTP.Types
@@ -464,8 +465,8 @@ instance FromJSON KeyID where
     <$> v .: "Ucam Base 64U ByteString"
 
 instance ToJSON KeyID where
-  toJSON     = toJSON . decodeUtf8 . unKeyID
-  toEncoding = toEncoding . decodeUtf8 . unKeyID
+  toJSON     = toJSON . decodeUtf8With lenientDecode . unKeyID
+  toEncoding = toEncoding . decodeUtf8With lenientDecode . unKeyID
 
 ------------------------------------------------------------------------------
 -- *** Time

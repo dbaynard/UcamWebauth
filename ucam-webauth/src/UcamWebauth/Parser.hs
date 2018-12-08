@@ -24,6 +24,7 @@ module UcamWebauth.Parser
 import           "base"               Control.Applicative
 import           "parser-combinators" Control.Applicative.Combinators.NonEmpty
 import           "base"               Control.Arrow ((***))
+import           "base"               Control.Monad ((<=<))
 import           "aeson"              Data.Aeson (FromJSON)
 import qualified "aeson"              Data.Aeson as A
 import qualified "attoparsec"         Data.Attoparsec.ByteString.Char8 as A
@@ -31,7 +32,9 @@ import           "attoparsec"         Data.Attoparsec.ByteString.Char8 hiding (c
 import           "attoparsec"         Data.Attoparsec.Combinator (lookAhead)
 import           "bytestring"         Data.ByteString (ByteString)
 import           "ucam-webauth-types" Data.ByteString.B64
+import           "bytestring"         Data.ByteString.Builder (stringUtf8, toLazyByteString)
 import qualified "bytestring"         Data.ByteString.Char8 as B8
+import qualified "bytestring"         Data.ByteString.Lazy as BSL
 import           "base"               Data.Char (isAlphaNum)
 import           "base"               Data.List.NonEmpty (NonEmpty)
 import           "base"               Data.Maybe
@@ -80,8 +83,8 @@ noBang = (<* "!")
 -- urlWrap :: Functor f => f ByteString -> f ByteString
 -- urlWrap = fmap (urlDecode False)
 
-urlWrapText :: Functor f => f ByteString -> f Text
-urlWrapText = fmap (decodeUtf8 . urlDecode False)
+urlWrapText :: Parser ByteString -> Parser Text
+urlWrapText = either (fail . show) pure . decodeUtf8' <=< fmap (urlDecode False)
 
 maybeBang :: Parser b -> Parser (Maybe b)
 maybeBang = noBang . optional
@@ -181,17 +184,15 @@ utcTimeParser = let er = error "Cannot parse time as RFC3339. There’s a bug in
   This parses a 'ByteString' into a 'UcamTime'
 -}
 ucamTimeParser :: Parser UcamTime
-ucamTimeParser = do
-  year   <- A.take 4
-  month  <- A.take 2
-  day    <- A.take 2 <* "T"
-  hour   <- A.take 2
-  minute <- A.take 2
-  sec    <- A.take 2 <* "Z"
-  pure
-    ( UcamTime . decodeUtf8 . mconcat $
-      [year, "-", month, "-", day, "T", hour, ":", minute, ":", sec, "Z"]
-    ) <?> "UcamWebauth Time"
+ucamTimeParser = (<?> "UcamWebauth Time") $ do
+  year   <- stringUtf8 <$> A.count 4 digit
+  month  <- stringUtf8 <$> A.count 2 digit
+  day    <- stringUtf8 <$> A.count 2 digit <* "T"
+  hour   <- stringUtf8 <$> A.count 2 digit
+  minute <- stringUtf8 <$> A.count 2 digit
+  sec    <- stringUtf8 <$> A.count 2 digit <* "Z"
+  either (fail . show) (pure . UcamTime) . decodeUtf8' . BSL.toStrict . toLazyByteString . mconcat $
+    [year, "-", month, "-", day, "T", hour, ":", minute, ":", sec, "Z"]
 
 {-|
   A parser to represent a Ucam-Webauth variant base64–encoded 'ByteString' as a 'UcamBase64BS'
