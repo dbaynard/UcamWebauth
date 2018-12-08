@@ -76,6 +76,9 @@ tests:
     - generic-arbitrary
     - quickcheck-instances
     - uri-bytestring
+    build-tools:
+    - hspec-discover
+
 flags:
   dev:
     description: Build for development

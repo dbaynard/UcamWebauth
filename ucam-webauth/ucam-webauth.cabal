@@ -4,7 +4,7 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: f5958aede842ac8178a8eacde5686eb4c81497f8e771b08388ec340826c2e42f
+-- hash: beec7d0a15f9747d7f0d8fd1ffb73d2acff11f5951222c0d6767e99e1e84176e
 
 name:           ucam-webauth
 version:        0.1.0
@@ -80,6 +80,8 @@ test-suite test
       src
       test
   ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances -ddump-minimal-imports -Wall
+  build-tool-depends:
+      hspec-discover:hspec-discover
   build-depends:
       QuickCheck
     , aeson >=1.2

@@ -92,6 +92,8 @@ tests:
     - generic-arbitrary
     - QuickCheck
     - quickcheck-instances
+    build-tools:
+    - hspec-discover
 
 flags:
   dev:
