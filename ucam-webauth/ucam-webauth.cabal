@@ -4,7 +4,7 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 296fdb96ec4a21de02f0fb3781812ed3795cbd9ac9621b968af263b38a09cec1
+-- hash: f5958aede842ac8178a8eacde5686eb4c81497f8e771b08388ec340826c2e42f
 
 name:           ucam-webauth
 version:        0.1.0
@@ -90,7 +90,7 @@ test-suite test
     , containers
     , cryptonite
     , errors
-    , generic-arbitrary
+    , generic-random
     , here
     , hspec >=2.0.0
     , http-api-data

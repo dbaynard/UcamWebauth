@@ -25,12 +25,12 @@ import           "text"                 Data.Text (Text)
 import qualified "text"                 Data.Text as T
 import           "time"                 Data.Time
 import           "time-qq"              Data.Time.QQ as Q
+import           "generic-random"       Generic.Random
 import           "microlens"            Lens.Micro
 import           "microlens-mtl"        Lens.Micro.Mtl
 import           "hspec"                Test.Hspec
 import           "hspec"                Test.Hspec.QuickCheck
 import           "QuickCheck"           Test.QuickCheck
-import           "generic-arbitrary"    Test.QuickCheck.Arbitrary.Generic
 import           "quickcheck-instances" Test.QuickCheck.Instances ()
 import           "this"                 UcamWebauth
 import           "ucam-webauth-types"   UcamWebauth.Data.Internal
@@ -64,12 +64,12 @@ prop_HttpApiData = prop "should serialize with HttpApiData correctly" $ \(h :: a
     parseQueryParam qp === Right h
 
 instance (ToJSON a, FromJSON a, Arbitrary a) => Arbitrary (MaybeValidResponse a) where
-  arbitrary = genericArbitrary
+  arbitrary = genericArbitraryU
   shrink = genericShrink
 
 instance (ToJSON a, FromJSON a, Arbitrary a) => Arbitrary (AuthResponse a) where
   arbitrary = do
-    x <- genericArbitrary `suchThat` \a -> and @[]
+    x <- genericArbitraryU `suchThat` \a -> and @[]
       [ a ^. ucamAPrincipal /= Just ""
       , a ^. ucamAMsg /= Just ""
       , a ^. ucamAId /= "!"
@@ -85,7 +85,7 @@ dayTime f UTCTime{..} = (\x -> UTCTime{utctDayTime = x, ..}) <$> f utctDayTime
 {-# INLINE dayTime #-}
 
 instance Arbitrary KeyID where
-  arbitrary = genericArbitrary
+  arbitrary = genericArbitraryU
   shrink = genericShrink
 
 instance Arbitrary WLSVersion where
@@ -95,19 +95,19 @@ instance Arbitrary StatusCode where
   arbitrary = pure Ok200
 
 instance Arbitrary UcamBase64BS where
-  arbitrary = genericArbitrary
+  arbitrary = genericArbitraryU
   shrink = genericShrink
 
 instance Arbitrary Ptag where
-  arbitrary = genericArbitrary
+  arbitrary = genericArbitraryU
   shrink = genericShrink
 
 instance Arbitrary AuthType where
-  arbitrary = genericArbitrary
+  arbitrary = genericArbitraryU
   shrink = genericShrink
 
 instance Arbitrary TimePeriod where
-  arbitrary = timePeriodFromSeconds . secondsFromTimePeriod <$> genericArbitrary `suchThat` (>= 0)
+  arbitrary = timePeriodFromSeconds . secondsFromTimePeriod <$> genericArbitraryU `suchThat` (>= 0)
 
   shrink = genericShrink
 

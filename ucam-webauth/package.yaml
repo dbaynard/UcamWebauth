@@ -67,7 +67,7 @@ tests:
     dependencies:
     - QuickCheck
     - base
-    - generic-arbitrary
+    - generic-random
     - here
     - hspec >=2.0.0
     - http-api-data
