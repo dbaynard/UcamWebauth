@@ -27,10 +27,13 @@ import qualified "aeson"              Data.Aeson as A
 import           "ucam-webauth-types" Data.ByteString.B64
 import qualified "bytestring"         Data.ByteString.Builder as B
 import qualified "bytestring"         Data.ByteString.Lazy as BSL
+import           "base"               Data.Foldable (fold)
 import           "base"               Data.List (intersperse)
+import qualified "base"               Data.List.NonEmpty as NE (intersperse)
 import           "base"               Data.Maybe
 import           "text"               Data.Text (Text)
 import           "text"               Data.Text.Encoding
+import           "text"               Data.Text.Encoding.Error (lenientDecode)
 import           "microlens"          Lens.Micro
 import           "ucam-webauth-types" UcamWebauth.Data as X
 import           "ucam-webauth-types" UcamWebauth.Data.Internal
@@ -42,7 +45,7 @@ wlsEncodeSign :: ToJSON a => MaybeValidResponse a -> Text
 wlsEncodeSign = textBuilder . wlsEncodeSign'
 
 textBuilder :: B.Builder -> Text
-textBuilder = decodeUtf8 . BSL.toStrict . B.toLazyByteString
+textBuilder = decodeUtf8With lenientDecode . BSL.toStrict . B.toLazyByteString
 
 wlsEncode' :: ToJSON a => AuthResponse a -> B.Builder
 wlsEncode' r = mconcat . intersperse "!" $
@@ -53,9 +56,9 @@ wlsEncode' r = mconcat . intersperse "!" $
   , r ^. ucamAId        . textEncoded
   , r ^. ucamAUrl       . textEncoded
   , r ^. ucamAPrincipal . mTextEncoded
-  , r ^. ucamAPtags     . to (maybe "" $ mconcat . intersperse "," . fmap displayPtag)
+  , r ^. ucamAPtags     . to (mconcat . intersperse "," . fmap displayPtag)
   , r ^. ucamAAuth      . to (maybe "" displayAuthType)
-  , r ^. ucamASso       . to (maybe "" $ mconcat . intersperse "," . fmap displayAuthType)
+  , r ^. ucamASso       . to (maybe "" $ fold . NE.intersperse "," . fmap displayAuthType)
   , r ^. ucamALife      . to (maybe "" $ B.stringUtf8 . show . secondsFromTimePeriod)
   , r ^. ucamAParams    . to (maybe "" $ B.lazyByteString . unUcamB64L . encodeUcamB64L . A.encode)
   ]

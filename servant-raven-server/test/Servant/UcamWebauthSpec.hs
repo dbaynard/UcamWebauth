@@ -11,7 +11,7 @@ module Servant.UcamWebauthSpec (main, spec) where
 
 import "text"                 Data.Text (Text)
 import "servant-server"       Servant
-import "servant-raven-server" Servant.UcamWebauth
+import                        Servant.UcamWebauth
 import "hspec"                Test.Hspec
 import "uri-bytestring"       URI.ByteString.QQ
 

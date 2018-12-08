@@ -4,7 +4,7 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: ba8850ce24b6e40965edba223726d731221b697c5a5ad52d604ece6dc40b2f2e
+-- hash: eefa802859ac48ca75e6c969f178d1cfe3ca0e347bbc2ec3fc3fb48d59f8f4af
 
 name:           ucam-webauth-types
 version:        0.1.0
@@ -84,5 +84,5 @@ test-suite test
     , text >=0.11 && <2.0
     , time
     , timerep
-    , ucam-webauth
+    , ucam-webauth-types
   default-language: Haskell2010

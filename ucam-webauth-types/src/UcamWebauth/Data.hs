@@ -155,6 +155,7 @@ import qualified "bytestring"        Data.ByteString.Lazy.Char8 as BL
 import qualified "case-insensitive"  Data.CaseInsensitive as CI (mk)
 import           "base"              Data.Char (isAlphaNum, isAscii)
 import           "containers"        Data.Map.Strict (Map)
+import           "base"              Data.List.NonEmpty (NonEmpty)
 import           "base"              Data.Maybe (catMaybes)
 import           "text"              Data.Text (Text)
 import qualified "text"              Data.Text as T
@@ -402,7 +403,7 @@ ucamAPrincipal f AuthResponse{..} = (\_ucamAPrincipal -> AuthResponse{_ucamAPrin
 {-|
   Comma separated attributes of principal. Optional in version 3, must be Nothing otherwise.
 -}
-ucamAPtags :: AuthResponse a `Lens'` Maybe [Ptag]
+ucamAPtags :: AuthResponse a `Lens'` [Ptag]
 ucamAPtags f AuthResponse{..} = (\_ucamAPtags -> AuthResponse{_ucamAPtags, ..}) <$> f _ucamAPtags
 
 {-|
@@ -414,7 +415,7 @@ ucamAAuth f AuthResponse{..} = (\_ucamAAuth -> AuthResponse{_ucamAAuth, ..}) <$>
 {-|
   Comma separated list of previous authentications. Required if ucamAAuth is Nothing.
 -}
-ucamASso :: AuthResponse a `Lens'` Maybe [AuthType]
+ucamASso :: AuthResponse a `Lens'` Maybe (NonEmpty AuthType)
 ucamASso f AuthResponse{..} = (\_ucamASso -> AuthResponse{_ucamASso, ..}) <$> f _ucamASso
 
 {-|

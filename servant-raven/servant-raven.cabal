@@ -4,7 +4,7 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: b14d12684c2558f4a76374cf766d18ec866026d6ceb5df378c797ec9c0f36d74
+-- hash: a1df8089026b782d737a1816b1275d42eb6bfabead1484ba7cd33cf757c848ba
 
 name:           servant-raven
 version:        0.1.0
@@ -78,9 +78,16 @@ test-suite test
       test
   ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances -ddump-minimal-imports -Wall
   build-depends:
-      base >=4.7 && <5
+      QuickCheck
+    , aeson
+    , base >=4.7 && <5
+    , bytestring
+    , generic-arbitrary
     , hspec >=2.0.0
+    , network-uri
+    , quickcheck-instances
     , servant
     , servant-raven
     , ucam-webauth-types
+    , uri-bytestring
   default-language: Haskell2010

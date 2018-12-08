@@ -11,19 +11,15 @@
 module URI.ConvertSpec (main, spec) where
 
 import           "base"                 Control.Monad
-import           "bytestring"           Data.ByteString (ByteString)
 import qualified "bytestring"           Data.ByteString.Char8 as B8
 import           "base"                 Data.Maybe
-import           "base"                 Data.Semigroup
-import qualified "network-uri"          Network.URI as NU
 import           "hspec"                Test.Hspec
-import           "hspec"                Test.Hspec.QuickCheck
 import           "QuickCheck"           Test.QuickCheck
 import           "generic-arbitrary"    Test.QuickCheck.Arbitrary.Generic
-import           "quickcheck-instances" Test.QuickCheck.Instances
+import           "quickcheck-instances" Test.QuickCheck.Instances ()
 import qualified "uri-bytestring"       URI.ByteString as UB
 import           "uri-bytestring"       URI.ByteString.QQ
-import           "servant-raven-server" URI.Convert
+import                                  URI.Convert
 
 main :: IO ()
 main = hspec spec
@@ -56,6 +52,7 @@ spec = do
         uriByteString <=< networkUri $ x
 
 
+sampleURIs :: [UB.URIRef UB.Absolute]
 sampleURIs =
   [ [uri|http://www.example.org/|]
   , [uri|http://www.example.org?foo=bar&|]
@@ -70,9 +67,10 @@ sampleURIs =
   , [uri|http:/.|]
   ]
 
-nonNetworkURIs =
-  [ [uri|https://user:pass:wo%20rd@www.example.org?foo=bar&foo=baz+quux#frag|]
-  ]
+-- nonNetworkURIs :: [UB.URIRef UB.Absolute]
+-- nonNetworkURIs =
+--   [ [uri|https://user:pass:wo%20rd@www.example.org?foo=bar&foo=baz+quux#frag|]
+--   ]
 
 -- [relativeRef|verysimple|]
 -- [relativeRef|./this:that/thap/sub?1=2|]
