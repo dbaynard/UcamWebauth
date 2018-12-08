@@ -1,9 +1,6 @@
 {-# LANGUAGE
     PackageImports
   , DataKinds
-  , DeriveDataTypeable
-  , DeriveGeneric
-  , GeneralizedNewtypeDeriving
   , NamedFieldPuns
   , NumDecimals
   , OverloadedLists
