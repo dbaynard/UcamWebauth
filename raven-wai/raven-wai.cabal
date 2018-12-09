@@ -4,7 +4,7 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: ded75671bc1a648e424efee4ba3b3eb5bd3ae2d5a47f43150f39eee01e28ec4b
+-- hash: dbc1acb4bfdb6a3c8ffaee61858e39590b9b816274f13704fbe7575479d3041e
 
 name:           raven-wai
 version:        0.1.0.0
@@ -13,8 +13,8 @@ description:    The UcamWebauth protocol instantiated to the University of Cambr
 category:       Web
 homepage:       https://github.com/dbaynard/UcamWebauth#readme
 bug-reports:    https://github.com/dbaynard/UcamWebauth/issues
-author:         David Baynard
-maintainer:     ucamwebauth@baynard.me
+author:         David Baynard <ucamwebauth@baynard.me>
+maintainer:     David Baynard <ucamwebauth@baynard.me>
 copyright:      2018 David Baynard
 license:        (BSD-3-Clause OR Apache-2.0)
 license-file:   LICENSE

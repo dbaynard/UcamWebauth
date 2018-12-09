@@ -4,7 +4,7 @@ This changelog is shared among all the packages within the same project.
 
 ## 0.1.0.0 - 2018-12-09
 
-Initial versions
+Initial versions of `ucam-webauth` and `ucam-webauth-types`.
 
 ---
 

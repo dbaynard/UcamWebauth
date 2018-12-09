@@ -4,7 +4,7 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 684cb8d545721c48da09fed261dd17ffb6c6aa0d907224707b110120cdabab40
+-- hash: eeafbc2b53e6321843e81a3fd48011aabf6a7f733a75ceade2a996e3b6ff5419
 
 name:           servant-raven-server
 version:        0.1.0.0
@@ -15,8 +15,8 @@ description:    Servant server to authenticate using the University of Cambridge
 category:       Web
 homepage:       https://github.com/dbaynard/UcamWebauth#readme
 bug-reports:    https://github.com/dbaynard/UcamWebauth/issues
-author:         David Baynard
-maintainer:     ucamwebauth@baynard.me
+author:         David Baynard <ucamwebauth@baynard.me>
+maintainer:     David Baynard <ucamwebauth@baynard.me>
 copyright:      2018 David Baynard
 license:        (BSD-3-Clause OR Apache-2.0)
 license-file:   LICENSE

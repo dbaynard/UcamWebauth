@@ -6,8 +6,8 @@ description: |
 
   This package is suitable for servers.
 license: BSD-3-Clause OR Apache-2.0
-author: David Baynard
-maintainer: ucamwebauth@baynard.me
+author: David Baynard <ucamwebauth@baynard.me>
+maintainer: David Baynard <ucamwebauth@baynard.me>
 copyright: 2018 David Baynard
 category: Web
 github: dbaynard/UcamWebauth

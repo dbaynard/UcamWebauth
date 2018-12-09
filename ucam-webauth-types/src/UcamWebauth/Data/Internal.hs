@@ -88,7 +88,6 @@ module UcamWebauth.Data.Internal
 import           "base"       Control.Applicative
 import           "base"       Control.Arrow ((&&&))
 import           "deepseq"    Control.DeepSeq (NFData, NFData1)
-import           "errors"     Control.Error
 import           "mtl"        Control.Monad.State
 import           "aeson"      Data.Aeson.Types
 import           "bytestring" Data.ByteString (ByteString)
@@ -100,6 +99,7 @@ import qualified "containers" Data.IntMap as IntMap
 import           "base"       Data.List.NonEmpty (NonEmpty)
 import           "containers" Data.Map.Strict (Map)
 import qualified "containers" Data.Map.Strict as MapS
+import           "base"       Data.Maybe (fromMaybe)
 import           "base"       Data.String
 import           "text"       Data.Text (Text)
 import           "text"       Data.Text.Encoding

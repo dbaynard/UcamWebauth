@@ -4,7 +4,7 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: d92927e25de56349ce30e1d31ab0d0799f0e572dfba58fb3b2837d1dd676b7d3
+-- hash: 48170f78183a86e39dc2dc6fe0499f16f2dc396dd80cefc1d2c861a026c1a59a
 
 name:           ucam-webauth-types
 version:        0.1.0.0
@@ -14,8 +14,8 @@ description:    Types for the implementation of the Ucam-Webauth protocol, as us
 category:       Web
 homepage:       https://github.com/dbaynard/UcamWebauth#readme
 bug-reports:    https://github.com/dbaynard/UcamWebauth/issues
-author:         David Baynard
-maintainer:     ucamwebauth@baynard.me
+author:         David Baynard <ucamwebauth@baynard.me>
+maintainer:     David Baynard <ucamwebauth@baynard.me>
 copyright:      2018 David Baynard
 license:        (BSD-3-Clause OR Apache-2.0)
 license-file:   LICENSE
@@ -43,18 +43,17 @@ library
   ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances
   build-depends:
       aeson >=1.2
-    , base >=4.10.0.0 && <5
+    , base >=4.10.0.0
     , base64-bytestring
-    , bytestring >=0.9 && <0.11
+    , bytestring
     , case-insensitive
     , containers
     , deepseq
-    , errors
     , http-types
     , microlens
     , microlens-mtl
     , mtl
-    , text >=0.11 && <2.0
+    , text >=0.11 && <1.2.3.0 || >=1.2.3.1
     , time
     , timerep
   if flag(dev)
@@ -74,7 +73,7 @@ test-suite test
   build-tool-depends:
       hspec-discover:hspec-discover
   build-depends:
-      base >=4.10.0.0 && <5
+      base >=4.10.0.0
     , hspec >=2.0.0
   if flag(dev)
     ghc-options: -ddump-minimal-imports
