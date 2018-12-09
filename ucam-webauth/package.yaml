@@ -5,8 +5,8 @@ description: |
   An implementation of the Ucam-Webauth protocol, as used by the University of Cambridge’s
   Raven authentication service.
 category: Web
-author: David Baynard
-maintainer: ucamwebauth@baynard.me
+author: David Baynard <ucamwebauth@baynard.me>
+maintainer: David Baynard <ucamwebauth@baynard.me>
 copyright: 2018 David Baynard
 license: BSD-3-Clause OR Apache-2.0
 github: dbaynard/UcamWebauth
@@ -37,21 +37,21 @@ when:
 dependencies:
 - aeson >=1.2
 - attoparsec
-- base >=4 && <5
-- bytestring >=0.9 && <0.11
-- parser-combinators
-- http-types
-- time
-- ucam-webauth-types
-- microlens
+- base >=4.10.0.0
+- bytestring
 - containers
 - cryptonite
 - errors
 - http-api-data
+- http-types
+- microlens
 - microlens-mtl
 - mtl
+- parser-combinators
 - pem
-- text >=0.11 && <2.0
+- text >=0.11 && < 1.2.3.0 || >= 1.2.3.1
+- time
+- ucam-webauth-types
 - x509
 
 library:
@@ -74,13 +74,10 @@ tests:
     - Paths_ucam_webauth
     dependencies:
     - QuickCheck
-    - base
     - generic-random
     - here
     - hspec >=2.0.0
-    - http-api-data
     - quickcheck-instances
-    - text
     - time-qq
     - ucam-webauth-types
     build-tools:
