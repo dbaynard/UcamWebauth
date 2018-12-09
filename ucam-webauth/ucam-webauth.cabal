@@ -4,7 +4,7 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: a7662501e5428b4c0d3070cecb7e74a15023b95eb857913d0d305ed021912ab0
+-- hash: b29f9dbe7c38818b026f1959c4ca846824e611dab63a19fbedbc24f353ffc4a8
 
 name:           ucam-webauth
 version:        0.1.0.0
@@ -14,8 +14,8 @@ description:    An implementation of the Ucam-Webauth protocol, as used by the U
 category:       Web
 homepage:       https://github.com/dbaynard/UcamWebauth#readme
 bug-reports:    https://github.com/dbaynard/UcamWebauth/issues
-author:         David Baynard
-maintainer:     ucamwebauth@baynard.me
+author:         David Baynard <ucamwebauth@baynard.me>
+maintainer:     David Baynard <ucamwebauth@baynard.me>
 copyright:      2018 David Baynard
 license:        (BSD-3-Clause OR Apache-2.0)
 license-file:   LICENSE

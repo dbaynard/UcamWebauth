@@ -5,8 +5,8 @@ description: |
   An implementation of the Ucam-Webauth protocol, as used by the University of Cambridge’s
   Raven authentication service.
 category: Web
-author: David Baynard
-maintainer: ucamwebauth@baynard.me
+author: David Baynard <ucamwebauth@baynard.me>
+maintainer: David Baynard <ucamwebauth@baynard.me>
 copyright: 2018 David Baynard
 license: BSD-3-Clause OR Apache-2.0
 github: dbaynard/UcamWebauth
