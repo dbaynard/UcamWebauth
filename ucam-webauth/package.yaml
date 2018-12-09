@@ -1,13 +1,19 @@
 name: ucam-webauth
-version: '0.1.0'
+version: '0.1.0.0'
 synopsis: The Ucam-Webauth protocol, used by Raven
-description: Please see README.md
+description: |
+  An implementation of the Ucam-Webauth protocol, as used by the University of Cambridge’s
+  Raven authentication service.
 category: Web
 author: David Baynard
 maintainer: ucamwebauth@baynard.me
 copyright: 2018 David Baynard
 license: BSD-3-Clause OR Apache-2.0
 github: dbaynard/UcamWebauth
+
+extra-source-files:
+- Changelog.md
+- README.md
 
 ghc-options:
 - -Wall
@@ -17,13 +23,21 @@ ghc-options:
 - -Wcompat
 - -Wnoncanonical-monad-instances
 - -Wnoncanonical-monadfail-instances
-- -ddump-minimal-imports
+
+flags:
+  dev:
+    description: Compile for development
+    default: false
+    manual: true
+
+when:
+- condition: flag(dev)
+  ghc-options: -ddump-minimal-imports
 
 dependencies:
 - aeson >=1.2
 - attoparsec
 - base >=4 && <5
-- base64-bytestring
 - bytestring >=0.9 && <0.11
 - parser-combinators
 - http-types
@@ -44,18 +58,10 @@ library:
   source-dirs: src
   exposed-modules:
   - UcamWebauth
-  when:
-  - condition: flag(dev)
-    then:
-      ghc-options:
-      - -Wall
-      - -fwarn-tabs
-      - -O0
-    else:
-      ghc-options:
-      - -Wall
-      - -fwarn-tabs
-      - -O2
+  - UcamWebauth.Internal
+  - UcamWebauth.Parser
+  - UcamWebauth.WLS
+  other-modules: []
 
 tests:
   test:
@@ -64,6 +70,8 @@ tests:
     - src
     - test
     ghc-options: -Wall
+    generated-other-modules:
+    - Paths_ucam_webauth
     dependencies:
     - QuickCheck
     - base
@@ -77,9 +85,3 @@ tests:
     - ucam-webauth-types
     build-tools:
     - hspec-discover
-
-flags:
-  dev:
-    description: Build for development
-    manual: false
-    default: true

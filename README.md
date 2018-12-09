@@ -1,12 +1,7 @@
 ---
 title:  Ucam Webauth  
 author: David Baynard  
-date:   08 Dec 2018  
-fontfamily:   libertine
-csl:    chemical-engineering-science.csl
-link-citations: true
-abstract: |  
-    
+date:   09 Dec 2018  
 ...
 
 [![Build Status](https://travis-ci.com/dbaynard/UcamWebauth.svg?branch=develop)](https://travis-ci.com/dbaynard/UcamWebauth)

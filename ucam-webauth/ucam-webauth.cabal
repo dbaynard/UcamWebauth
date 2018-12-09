@@ -4,12 +4,13 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: beec7d0a15f9747d7f0d8fd1ffb73d2acff11f5951222c0d6767e99e1e84176e
+-- hash: 57047d85f1dc6aaaa962f901b00fe884f8bd00383b60d457121529d4760ed978
 
 name:           ucam-webauth
-version:        0.1.0
+version:        0.1.0.0
 synopsis:       The Ucam-Webauth protocol, used by Raven
-description:    Please see README.md
+description:    An implementation of the Ucam-Webauth protocol, as used by the University of Cambridge’s
+                Raven authentication service.
 category:       Web
 homepage:       https://github.com/dbaynard/UcamWebauth#readme
 bug-reports:    https://github.com/dbaynard/UcamWebauth/issues
@@ -19,32 +20,32 @@ copyright:      2018 David Baynard
 license:        (BSD-3-Clause OR Apache-2.0)
 license-file:   LICENSE
 build-type:     Simple
+extra-source-files:
+    Changelog.md
+    README.md
 
 source-repository head
   type: git
   location: https://github.com/dbaynard/UcamWebauth
 
 flag dev
-  description: Build for development
-  manual: False
-  default: True
+  description: Compile for development
+  manual: True
+  default: False
 
 library
   exposed-modules:
       UcamWebauth
-  other-modules:
       UcamWebauth.Internal
       UcamWebauth.Parser
       UcamWebauth.WLS
-      Paths_ucam_webauth
   hs-source-dirs:
       src
-  ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances -ddump-minimal-imports
+  ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances
   build-depends:
       aeson >=1.2
     , attoparsec
     , base >=4 && <5
-    , base64-bytestring
     , bytestring >=0.9 && <0.11
     , containers
     , cryptonite
@@ -61,9 +62,7 @@ library
     , ucam-webauth-types
     , x509
   if flag(dev)
-    ghc-options: -Wall -fwarn-tabs -O0
-  else
-    ghc-options: -Wall -fwarn-tabs -O2
+    ghc-options: -ddump-minimal-imports
   default-language: Haskell2010
 
 test-suite test
@@ -76,10 +75,12 @@ test-suite test
       UcamWebauth.WLS
       UcamWebauthSpec
       Paths_ucam_webauth
+  autogen-modules:
+      Paths_ucam_webauth
   hs-source-dirs:
       src
       test
-  ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances -ddump-minimal-imports -Wall
+  ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances -Wall
   build-tool-depends:
       hspec-discover:hspec-discover
   build-depends:
@@ -87,7 +88,6 @@ test-suite test
     , aeson >=1.2
     , attoparsec
     , base
-    , base64-bytestring
     , bytestring >=0.9 && <0.11
     , containers
     , cryptonite
@@ -108,4 +108,6 @@ test-suite test
     , time-qq
     , ucam-webauth-types
     , x509
+  if flag(dev)
+    ghc-options: -ddump-minimal-imports
   default-language: Haskell2010

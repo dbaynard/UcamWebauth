@@ -1,15 +1,21 @@
 name: servant-raven
-version: '0.1.0'
+version: '0.1.0.0'
 synopsis: Servant API for Raven authentication
-description: See README.md
+description: |
+  Servant combinators to authenticate using the University of Cambridge’s Raven servers.
+
+  This package is suitable for clients and servers.
 license: BSD-3-Clause OR Apache-2.0
 author: David Baynard
 maintainer: ucamwebauth@baynard.me
 copyright: 2018 David Baynard
 category: Web
 github: dbaynard/UcamWebauth
+
 extra-source-files:
 - static/*.crt
+- Changelog.md
+- README.md
 
 ghc-options:
 - -Wall
@@ -19,22 +25,31 @@ ghc-options:
 - -Wcompat
 - -Wnoncanonical-monad-instances
 - -Wnoncanonical-monadfail-instances
-- -ddump-minimal-imports
+
+flags:
+  dev:
+    description: Compile for development
+    default: false
+    manual: true
+
+when:
+- condition: flag(dev)
+  ghc-options: -ddump-minimal-imports
 
 dependencies:
 - base >= 4.7 && < 5
-- servant
-- ucam-webauth-types
 
 library:
   source-dirs: src
   exposed-modules:
   - Extra.Servant.Redirect.API
+  - Servant.Raven.Auth
+  - Servant.Raven.Internal
+  - Servant.Raven.Test
   - Servant.UcamWebauth.API
   - Servant.UcamWebauth.Settings
-  - Servant.Raven.Test
-  - Servant.Raven.Auth
   - URI.Convert
+  other-modules: []
   dependencies:
   - bytestring
   - cookie
@@ -45,42 +60,26 @@ library:
   - microlens-mtl
   - network-uri
   - reflection
+  - servant
   - servant-auth
   - text
+  - ucam-webauth-types
   - uri-bytestring
-  when:
-  - condition: flag(dev)
-    then:
-      ghc-options:
-      - -Wall
-      - -fwarn-tabs
-      - -O0
-    else:
-      ghc-options:
-      - -Wall
-      - -fwarn-tabs
-      - -O2
 
 tests:
   test:
     main: Spec.hs
     source-dirs: test
     ghc-options: -Wall
+    generated-other-modules:
+    - Paths_servant_raven
     dependencies:
-    - aeson
-    - servant-raven
-    - hspec >=2.0.0
-    - bytestring
-    - network-uri
     - QuickCheck
+    - bytestring
     - generic-arbitrary
+    - hspec >=2.0.0
     - quickcheck-instances
+    - servant-raven
     - uri-bytestring
     build-tools:
     - hspec-discover
-
-flags:
-  dev:
-    description: Build for development
-    manual: false
-    default: true

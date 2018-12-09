@@ -43,3 +43,5 @@ extra-package-dbs: []
 
 # Allow newer packages than cabal bounds suggest?
 allow-newer: true
+
+pvp-bounds: both

@@ -1,13 +1,18 @@
 name: raven-wai
-version: '0.1.0'
-synopsis: The Raven protocol as Wai middleware
-description: Please see README.md
+version: '0.1.0.0'
+synopsis: Raven authentication as Wai middleware
+description: |
+  The UcamWebauth protocol instantiated to the University of Cambridge’s Raven service, as Wai middleware.
 category: Web
 author: David Baynard
 maintainer: ucamwebauth@baynard.me
 copyright: 2018 David Baynard
 license: BSD-3-Clause OR Apache-2.0
 github: dbaynard/UcamWebauth
+
+extra-source-files:
+- Changelog.md
+- README.md
 
 ghc-options:
 - -Wall
@@ -17,41 +22,40 @@ ghc-options:
 - -Wcompat
 - -Wnoncanonical-monad-instances
 - -Wnoncanonical-monadfail-instances
-- -ddump-minimal-imports
+
+flags:
+  dev:
+    description: Compile for development
+    default: false
+    manual: true
+
+when:
+- condition: flag(dev)
+  ghc-options: -ddump-minimal-imports
 
 dependencies:
 - base >=4 && <5
-- ucam-webauth
-- bytestring >=0.9 && <0.11
-- microlens-mtl
-- wai
 
 library:
   source-dirs: src
   exposed-modules:
-  - Network.Wai.Protocol.UcamWebauth
   - Network.Wai.Protocol.Raven.Auth
+  - Network.Wai.Protocol.Raven.Internal
   - Network.Wai.Protocol.Raven.Test
+  - Network.Wai.Protocol.UcamWebauth
+  other-modules: []
   dependencies:
   - containers
   - ucam-webauth-types
-  when:
-  - condition: flag(dev)
-    then:
-      ghc-options:
-      - -Wall
-      - -fwarn-tabs
-      - -O0
-    else:
-      ghc-options:
-      - -Wall
-      - -fwarn-tabs
-      - -O2
+  - bytestring >=0.9 && <0.11
+  - microlens-mtl
+  - wai
 
 executables:
   raven-wai-example:
     source-dirs: app
     main: Main.lhs
+    other-modules: []
     ghc-options:
     - -threaded
     - -rtsopts
@@ -61,13 +65,16 @@ executables:
     - markdown-unlit
     dependencies:
     - aeson
+    - bytestring
     - errors
     - http-types
     - microlens
+    - microlens-mtl
     - mtl
     - raven-wai
     - text >=0.11 && <2.0
     - time
+    - ucam-webauth
     - wai
     - warp >=3.2.0
 
@@ -76,14 +83,9 @@ tests:
     main: Spec.hs
     source-dirs: test
     ghc-options: -Wall
+    generated-other-modules:
+    - Paths_raven_wai
     dependencies:
-    - raven-wai
     - hspec >=2.0.0
     build-tools:
     - hspec-discover
-
-flags:
-  dev:
-    description: Build for development
-    manual: false
-    default: true

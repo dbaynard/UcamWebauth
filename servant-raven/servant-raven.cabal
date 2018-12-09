@@ -4,12 +4,14 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 765f19e14b8ec4372ef5f718cef81b515f80f28438a50775dc72e3f14268f154
+-- hash: 3da26c35ce034eccb21b704e0c58f865aafd3cef0307dd00505350f1cf47bb54
 
 name:           servant-raven
-version:        0.1.0
+version:        0.1.0.0
 synopsis:       Servant API for Raven authentication
-description:    See README.md
+description:    Servant combinators to authenticate using the University of Cambridge’s Raven servers.
+                .
+                This package is suitable for clients and servers.
 category:       Web
 homepage:       https://github.com/dbaynard/UcamWebauth#readme
 bug-reports:    https://github.com/dbaynard/UcamWebauth/issues
@@ -22,30 +24,30 @@ build-type:     Simple
 extra-source-files:
     static/pubkey2.crt
     static/pubkey901.crt
+    Changelog.md
+    README.md
 
 source-repository head
   type: git
   location: https://github.com/dbaynard/UcamWebauth
 
 flag dev
-  description: Build for development
-  manual: False
-  default: True
+  description: Compile for development
+  manual: True
+  default: False
 
 library
   exposed-modules:
       Extra.Servant.Redirect.API
+      Servant.Raven.Auth
+      Servant.Raven.Internal
+      Servant.Raven.Test
       Servant.UcamWebauth.API
       Servant.UcamWebauth.Settings
-      Servant.Raven.Test
-      Servant.Raven.Auth
       URI.Convert
-  other-modules:
-      Servant.Raven.Internal
-      Paths_servant_raven
   hs-source-dirs:
       src
-  ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances -ddump-minimal-imports
+  ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances
   build-depends:
       base >=4.7 && <5
     , bytestring
@@ -63,9 +65,7 @@ library
     , ucam-webauth-types
     , uri-bytestring
   if flag(dev)
-    ghc-options: -Wall -fwarn-tabs -O0
-  else
-    ghc-options: -Wall -fwarn-tabs -O2
+    ghc-options: -ddump-minimal-imports
   default-language: Haskell2010
 
 test-suite test
@@ -74,22 +74,22 @@ test-suite test
   other-modules:
       URI.ConvertSpec
       Paths_servant_raven
+  autogen-modules:
+      Paths_servant_raven
   hs-source-dirs:
       test
-  ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances -ddump-minimal-imports -Wall
+  ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances -Wall
   build-tool-depends:
       hspec-discover:hspec-discover
   build-depends:
       QuickCheck
-    , aeson
     , base >=4.7 && <5
     , bytestring
     , generic-arbitrary
     , hspec >=2.0.0
-    , network-uri
     , quickcheck-instances
-    , servant
     , servant-raven
-    , ucam-webauth-types
     , uri-bytestring
+  if flag(dev)
+    ghc-options: -ddump-minimal-imports
   default-language: Haskell2010

@@ -4,12 +4,12 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 94fd6169126fc9cd01b88cf18cb1a2b37112f156eaa31e608e4d7811fbab3574
+-- hash: ded75671bc1a648e424efee4ba3b3eb5bd3ae2d5a47f43150f39eee01e28ec4b
 
 name:           raven-wai
-version:        0.1.0
-synopsis:       The Raven protocol as Wai middleware
-description:    Please see README.md
+version:        0.1.0.0
+synopsis:       Raven authentication as Wai middleware
+description:    The UcamWebauth protocol instantiated to the University of Cambridge’s Raven service, as Wai middleware.
 category:       Web
 homepage:       https://github.com/dbaynard/UcamWebauth#readme
 bug-reports:    https://github.com/dbaynard/UcamWebauth/issues
@@ -19,52 +19,48 @@ copyright:      2018 David Baynard
 license:        (BSD-3-Clause OR Apache-2.0)
 license-file:   LICENSE
 build-type:     Simple
+extra-source-files:
+    Changelog.md
+    README.md
 
 source-repository head
   type: git
   location: https://github.com/dbaynard/UcamWebauth
 
 flag dev
-  description: Build for development
-  manual: False
-  default: True
+  description: Compile for development
+  manual: True
+  default: False
 
 library
   exposed-modules:
-      Network.Wai.Protocol.UcamWebauth
       Network.Wai.Protocol.Raven.Auth
-      Network.Wai.Protocol.Raven.Test
-  other-modules:
       Network.Wai.Protocol.Raven.Internal
-      Paths_raven_wai
+      Network.Wai.Protocol.Raven.Test
+      Network.Wai.Protocol.UcamWebauth
   hs-source-dirs:
       src
-  ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances -ddump-minimal-imports
+  ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances
   build-depends:
       base >=4 && <5
     , bytestring >=0.9 && <0.11
     , containers
     , microlens-mtl
-    , ucam-webauth
     , ucam-webauth-types
     , wai
   if flag(dev)
-    ghc-options: -Wall -fwarn-tabs -O0
-  else
-    ghc-options: -Wall -fwarn-tabs -O2
+    ghc-options: -ddump-minimal-imports
   default-language: Haskell2010
 
 executable raven-wai-example
   main-is: Main.lhs
-  other-modules:
-      Paths_raven_wai
   hs-source-dirs:
       app
-  ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances -ddump-minimal-imports -threaded -rtsopts -with-rtsopts=-N -pgmL markdown-unlit
+  ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances -threaded -rtsopts -with-rtsopts=-N -pgmL markdown-unlit
   build-depends:
       aeson
     , base >=4 && <5
-    , bytestring >=0.9 && <0.11
+    , bytestring
     , errors
     , http-types
     , microlens
@@ -76,6 +72,8 @@ executable raven-wai-example
     , ucam-webauth
     , wai
     , warp >=3.2.0
+  if flag(dev)
+    ghc-options: -ddump-minimal-imports
   build-tool-depends:
       markdown-unlit:markdown-unlit
   default-language: Haskell2010
@@ -85,17 +83,16 @@ test-suite test
   main-is: Spec.hs
   other-modules:
       Paths_raven_wai
+  autogen-modules:
+      Paths_raven_wai
   hs-source-dirs:
       test
-  ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances -ddump-minimal-imports -Wall
+  ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances -Wall
   build-tool-depends:
       hspec-discover:hspec-discover
   build-depends:
       base >=4 && <5
-    , bytestring >=0.9 && <0.11
     , hspec >=2.0.0
-    , microlens-mtl
-    , raven-wai
-    , ucam-webauth
-    , wai
+  if flag(dev)
+    ghc-options: -ddump-minimal-imports
   default-language: Haskell2010
