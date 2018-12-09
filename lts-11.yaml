@@ -7,3 +7,5 @@ packages:
 - 'raven-wai'
 extra-deps:
 - time-qq-0.0.1.0@sha256:0eb66a848f6d0c37dd84cdbd7e8a108e6929c93f503bc397690eb525a277e7bc
+- servant-auth-0.3.2.0@sha256:a9d9759f8f1ddf93d86a04b47bcb3d3b15fdbf10906533812d8e325ac8265a83
+- servant-auth-server-0.4.0.1@sha256:37e53e60e0e778504c0d8be1018276fd4d997f859b254db9842306e701ca6550
