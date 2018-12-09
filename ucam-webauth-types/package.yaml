@@ -46,18 +46,18 @@ library:
   other-modules: []
   dependencies:
   - aeson >=1.2
-  - base64-bytestring
-  - bytestring
-  - case-insensitive
+  - base64-bytestring >= 1.0.0.1
+  - bytestring >=0.10.8.2
+  - case-insensitive >=1.2.0.11
   - containers >= 0.5.11.0 && <0.7
-  - http-types
-  - microlens
-  - microlens-mtl
-  - mtl
+  - deepseq >=1.4.3.0
+  - http-types >=0.12.2
+  - microlens >=0.4.9.1
+  - microlens-mtl >=0.1.11.1
+  - mtl >=2.2.2
   - text >=0.11 && < 1.2.3.0 || >= 1.2.3.1
-  - time
-  - timerep
-  - deepseq
+  - time >=1.8.0.2
+  - timerep >=2.0.0.2
 
 tests:
   test:

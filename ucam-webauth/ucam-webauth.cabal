@@ -4,7 +4,7 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 00dad0ad5beb8e15161e64b59ba356acd28faaf8fed44c81b355ac3e8bee38ba
+-- hash: 2db27ab19a6e1a49d36aebcfb2c083eeed899aab7e0eed9702fca34a6999211f
 
 name:           ucam-webauth
 version:        0.1.0.0
@@ -44,23 +44,23 @@ library
   ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances
   build-depends:
       aeson >=1.2
-    , attoparsec
+    , attoparsec >=0.13.2.2
     , base >=4.11.0.0 && <4.13
-    , bytestring
+    , bytestring >=0.10.8.2
     , containers >=0.5.11.0 && <0.7
-    , cryptonite
-    , errors
+    , cryptonite >=0.25
+    , errors >=2.3.0
     , http-api-data >=0.3.8.1 && <0.5
-    , http-types
-    , microlens
-    , microlens-mtl
-    , mtl
-    , parser-combinators
-    , pem
+    , http-types >=0.12.2
+    , microlens >=0.4.9.1
+    , microlens-mtl >=0.1.11.1
+    , mtl >=2.2.2
+    , parser-combinators >=1.0.0
+    , pem >=0.2.4
     , text >=0.11 && <1.2.3.0 || >=1.2.3.1
-    , time
-    , ucam-webauth-types
-    , x509
+    , time >=1.8.0.2
+    , ucam-webauth-types >=0.1.0.0
+    , x509 >=1.7.5
   if flag(dev)
     ghc-options: -ddump-minimal-imports
   default-language: Haskell2010
@@ -84,30 +84,30 @@ test-suite test
   build-tool-depends:
       hspec-discover:hspec-discover
   build-depends:
-      QuickCheck
+      QuickCheck >=2.11.3
     , aeson >=1.2
-    , attoparsec
+    , attoparsec >=0.13.2.2
     , base >=4.11.0.0 && <4.13
-    , bytestring
+    , bytestring >=0.10.8.2
     , containers >=0.5.11.0 && <0.7
-    , cryptonite
-    , errors
-    , generic-random
-    , here
+    , cryptonite >=0.25
+    , errors >=2.3.0
+    , generic-random >=1.2.0.0
+    , here >=1.2.13
     , hspec >=2.0.0 && <2.7
     , http-api-data >=0.3.8.1 && <0.5
-    , http-types
-    , microlens
-    , microlens-mtl
-    , mtl
-    , parser-combinators
-    , pem
-    , quickcheck-instances
+    , http-types >=0.12.2
+    , microlens >=0.4.9.1
+    , microlens-mtl >=0.1.11.1
+    , mtl >=2.2.2
+    , parser-combinators >=1.0.0
+    , pem >=0.2.4
+    , quickcheck-instances >=0.3.19
     , text >=0.11 && <1.2.3.0 || >=1.2.3.1
-    , time
-    , time-qq
+    , time >=1.8.0.2
+    , time-qq >=0.0.1.0
     , ucam-webauth-types
-    , x509
+    , x509 >=1.7.5
   if flag(dev)
     ghc-options: -ddump-minimal-imports
   default-language: Haskell2010
