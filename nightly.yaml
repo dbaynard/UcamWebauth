@@ -1,0 +1,9 @@
+resolver: nightly-2018-12-08
+packages:
+- 'ucam-webauth-types'
+- 'ucam-webauth'
+- 'servant-raven'
+- 'servant-raven-server'
+- 'raven-wai'
+extra-deps:
+- time-qq-0.0.1.0@sha256:0eb66a848f6d0c37dd84cdbd7e8a108e6929c93f503bc397690eb525a277e7bc

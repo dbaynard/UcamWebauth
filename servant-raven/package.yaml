@@ -1,0 +1,85 @@
+name: servant-raven
+version: '0.1.0.0'
+synopsis: Servant API for Raven authentication
+description: |
+  Servant combinators to authenticate using the University of Cambridge’s Raven servers.
+
+  This package is suitable for clients and servers.
+license: BSD-3-Clause OR Apache-2.0
+author: David Baynard <ucamwebauth@baynard.me>
+maintainer: David Baynard <ucamwebauth@baynard.me>
+copyright: 2018 David Baynard
+category: Web
+github: dbaynard/UcamWebauth
+
+extra-source-files:
+- static/*.crt
+- Changelog.md
+- README.md
+
+ghc-options:
+- -Wall
+- -Wincomplete-uni-patterns
+- -Wincomplete-record-updates
+#- -Wmissing-import-lists
+- -Wcompat
+- -Wnoncanonical-monad-instances
+- -Wnoncanonical-monadfail-instances
+
+flags:
+  dev:
+    description: Compile for development
+    default: false
+    manual: true
+
+when:
+- condition: flag(dev)
+  ghc-options: -ddump-minimal-imports
+
+dependencies:
+- base >= 4.7 && < 5
+
+library:
+  source-dirs: src
+  exposed-modules:
+  - Extra.Servant.Redirect.API
+  - Servant.Raven.Auth
+  - Servant.Raven.Internal
+  - Servant.Raven.Test
+  - Servant.UcamWebauth.API
+  - Servant.UcamWebauth.Settings
+  - URI.Convert
+  other-modules: []
+  dependencies:
+  - bytestring
+  - cookie
+  - errors
+  - file-embed
+  - microlens
+  - microlens-ghc
+  - microlens-mtl
+  - network-uri
+  - reflection
+  - servant
+  - servant-auth
+  - text
+  - ucam-webauth-types
+  - uri-bytestring
+
+tests:
+  test:
+    main: Spec.hs
+    source-dirs: test
+    ghc-options: -Wall
+    generated-other-modules:
+    - Paths_servant_raven
+    dependencies:
+    - QuickCheck
+    - bytestring
+    - generic-arbitrary
+    - hspec >=2.0.0
+    - quickcheck-instances
+    - servant-raven
+    - uri-bytestring
+    build-tools:
+    - hspec-discover

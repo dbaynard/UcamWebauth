@@ -1,0 +1,126 @@
+cabal-version: 2.2
+
+-- This file has been generated from package.yaml by hpack version 0.31.0.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: eeafbc2b53e6321843e81a3fd48011aabf6a7f733a75ceade2a996e3b6ff5419
+
+name:           servant-raven-server
+version:        0.1.0.0
+synopsis:       Servant server for Raven authentication
+description:    Servant server to authenticate using the University of Cambridge’s Raven servers.
+                .
+                This package is suitable for servers.
+category:       Web
+homepage:       https://github.com/dbaynard/UcamWebauth#readme
+bug-reports:    https://github.com/dbaynard/UcamWebauth/issues
+author:         David Baynard <ucamwebauth@baynard.me>
+maintainer:     David Baynard <ucamwebauth@baynard.me>
+copyright:      2018 David Baynard
+license:        (BSD-3-Clause OR Apache-2.0)
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    static/pubkey2.crt
+    static/pubkey901.crt
+    Changelog.md
+    README.md
+
+source-repository head
+  type: git
+  location: https://github.com/dbaynard/UcamWebauth
+
+flag dev
+  description: Compile for development
+  manual: True
+  default: False
+
+library
+  exposed-modules:
+      Extra.Servant.Auth
+      Extra.Servant.Redirect
+      Servant.UcamWebauth
+  hs-source-dirs:
+      src
+  ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances -pgmL markdown-unlit
+  build-depends:
+      aeson
+    , base >=4.7 && <5
+    , errors
+    , jose
+    , microlens
+    , microlens-mtl
+    , mtl
+    , servant
+    , servant-auth-server
+    , servant-raven
+    , servant-server
+    , time
+    , ucam-webauth
+    , ucam-webauth-types
+    , unliftio
+  if flag(dev)
+    ghc-options: -ddump-minimal-imports
+  default-language: Haskell2010
+
+executable servant-raven-example
+  main-is: Main.lhs
+  hs-source-dirs:
+      app
+  ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances -pgmL markdown-unlit
+  build-depends:
+      base >=4.7 && <5
+    , bytestring
+    , errors
+    , jose
+    , microlens
+    , microlens-mtl
+    , mtl
+    , optparse-generic
+    , reflection
+    , servant-auth
+    , servant-auth-server
+    , servant-raven
+    , servant-raven-server
+    , servant-server
+    , text
+    , time
+    , ucam-webauth
+    , unliftio
+    , unliftio-core
+    , uri-bytestring
+    , wai-extra
+    , warp
+    , yaml
+  if flag(dev)
+    ghc-options: -ddump-minimal-imports
+  build-tool-depends:
+      markdown-unlit:markdown-unlit
+  default-language: Haskell2010
+
+test-suite test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Servant.UcamWebauthSpec
+      Paths_servant_raven_server
+  autogen-modules:
+      Paths_servant_raven_server
+  hs-source-dirs:
+      test
+  ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances -pgmL markdown-unlit -Wall
+  build-tool-depends:
+      hspec-discover:hspec-discover
+  build-depends:
+      base >=4.7 && <5
+    , bytestring
+    , hspec >=2.0.0
+    , servant-raven
+    , servant-raven-server
+    , servant-server
+    , text
+    , uri-bytestring
+  if flag(dev)
+    ghc-options: -ddump-minimal-imports
+  default-language: Haskell2010

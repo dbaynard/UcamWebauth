@@ -1,0 +1,113 @@
+cabal-version: 2.2
+
+-- This file has been generated from package.yaml by hpack version 0.31.0.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: 4fb6dd61e8c1f17e507ac77b3b9043db6f762b22e1a0da4023ee51a9a21ec7cd
+
+name:           ucam-webauth
+version:        0.1.0.0
+synopsis:       The Ucam-Webauth protocol, used by Raven
+description:    An implementation of the Ucam-Webauth protocol, as used by the University of Cambridge’s
+                Raven authentication service.
+category:       Web
+homepage:       https://github.com/dbaynard/UcamWebauth#readme
+bug-reports:    https://github.com/dbaynard/UcamWebauth/issues
+author:         David Baynard <ucamwebauth@baynard.me>
+maintainer:     David Baynard <ucamwebauth@baynard.me>
+copyright:      2018 David Baynard
+license:        (BSD-3-Clause OR Apache-2.0)
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    Changelog.md
+    README.md
+
+source-repository head
+  type: git
+  location: https://github.com/dbaynard/UcamWebauth
+
+flag dev
+  description: Compile for development
+  manual: True
+  default: False
+
+library
+  exposed-modules:
+      UcamWebauth
+      UcamWebauth.Internal
+      UcamWebauth.Parser
+      UcamWebauth.WLS
+  hs-source-dirs:
+      src
+  ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances
+  build-depends:
+      aeson >=1.2
+    , attoparsec
+    , base >=4.11.0.0
+    , bytestring
+    , containers
+    , cryptonite
+    , errors
+    , http-api-data
+    , http-types
+    , microlens
+    , microlens-mtl
+    , mtl
+    , parser-combinators
+    , pem
+    , text >=0.11 && <1.2.3.0 || >=1.2.3.1
+    , time
+    , ucam-webauth-types
+    , x509
+  if flag(dev)
+    ghc-options: -ddump-minimal-imports
+  default-language: Haskell2010
+
+test-suite test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      UcamWebauth
+      UcamWebauth.Internal
+      UcamWebauth.Parser
+      UcamWebauth.WLS
+      UcamWebauthSpec
+      Paths_ucam_webauth
+  autogen-modules:
+      Paths_ucam_webauth
+  hs-source-dirs:
+      src
+      test
+  ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances -Wall
+  build-tool-depends:
+      hspec-discover:hspec-discover
+  build-depends:
+      QuickCheck
+    , aeson >=1.2
+    , attoparsec
+    , base >=4.11.0.0
+    , bytestring
+    , containers
+    , cryptonite
+    , errors
+    , generic-random
+    , here
+    , hspec >=2.0.0
+    , http-api-data
+    , http-types
+    , microlens
+    , microlens-mtl
+    , mtl
+    , parser-combinators
+    , pem
+    , quickcheck-instances
+    , text >=0.11 && <1.2.3.0 || >=1.2.3.1
+    , time
+    , time-qq
+    , ucam-webauth-types
+    , x509
+  if flag(dev)
+    ghc-options: -ddump-minimal-imports
+  default-language: Haskell2010
