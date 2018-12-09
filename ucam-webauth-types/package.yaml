@@ -35,7 +35,7 @@ when:
   ghc-options: -ddump-minimal-imports
 
 dependencies:
-- base >=4.11.0.0
+- base >=4.11.0.0 && <4.13
 
 library:
   source-dirs: src
@@ -49,7 +49,7 @@ library:
   - base64-bytestring
   - bytestring
   - case-insensitive
-  - containers
+  - containers >= 0.5.11.0 && <0.7
   - http-types
   - microlens
   - microlens-mtl
@@ -66,6 +66,6 @@ tests:
     generated-other-modules:
     - Paths_ucam_webauth_types
     dependencies:
-    - hspec >=2.0.0
+    - hspec >=2.0.0 && <2.7
     build-tools:
     - hspec-discover

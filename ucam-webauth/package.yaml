@@ -37,9 +37,9 @@ when:
 dependencies:
 - aeson >=1.2
 - attoparsec
-- base >=4.11.0.0
+- base >=4.11.0.0 && <4.13
 - bytestring
-- containers
+- containers >= 0.5.11.0 && <0.7
 - cryptonite
 - errors
 - http-api-data
@@ -76,7 +76,7 @@ tests:
     - QuickCheck
     - generic-random
     - here
-    - hspec >=2.0.0
+    - hspec >=2.0.0 && <2.7
     - quickcheck-instances
     - time-qq
     - ucam-webauth-types
