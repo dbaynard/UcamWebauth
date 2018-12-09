@@ -4,7 +4,7 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 57047d85f1dc6aaaa962f901b00fe884f8bd00383b60d457121529d4760ed978
+-- hash: a7662501e5428b4c0d3070cecb7e74a15023b95eb857913d0d305ed021912ab0
 
 name:           ucam-webauth
 version:        0.1.0.0
@@ -45,8 +45,8 @@ library
   build-depends:
       aeson >=1.2
     , attoparsec
-    , base >=4 && <5
-    , bytestring >=0.9 && <0.11
+    , base >=4.10.0.0
+    , bytestring
     , containers
     , cryptonite
     , errors
@@ -57,7 +57,7 @@ library
     , mtl
     , parser-combinators
     , pem
-    , text >=0.11 && <2.0
+    , text >=0.11 && <1.2.3.0 || >=1.2.3.1
     , time
     , ucam-webauth-types
     , x509
@@ -87,8 +87,8 @@ test-suite test
       QuickCheck
     , aeson >=1.2
     , attoparsec
-    , base
-    , bytestring >=0.9 && <0.11
+    , base >=4.10.0.0
+    , bytestring
     , containers
     , cryptonite
     , errors
@@ -103,7 +103,7 @@ test-suite test
     , parser-combinators
     , pem
     , quickcheck-instances
-    , text
+    , text >=0.11 && <1.2.3.0 || >=1.2.3.1
     , time
     , time-qq
     , ucam-webauth-types
