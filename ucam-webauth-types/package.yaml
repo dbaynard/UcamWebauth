@@ -35,7 +35,7 @@ when:
   ghc-options: -ddump-minimal-imports
 
 dependencies:
-- base >=4.10.0.0 && <5
+- base >=4.10.0.0
 
 library:
   source-dirs: src
@@ -47,15 +47,14 @@ library:
   dependencies:
   - aeson >=1.2
   - base64-bytestring
-  - bytestring >=0.9 && <0.11
+  - bytestring
   - case-insensitive
   - containers
-  - errors
   - http-types
   - microlens
   - microlens-mtl
   - mtl
-  - text >=0.11 && <2.0
+  - text >=0.11 && < 1.2.3.0 || >= 1.2.3.1
   - time
   - timerep
   - deepseq
