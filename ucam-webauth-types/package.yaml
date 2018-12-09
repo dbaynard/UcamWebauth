@@ -1,7 +1,9 @@
 name: ucam-webauth-types
 version: '0.1.0'
 synopsis: Types for the Ucam-Webauth protocol, as used by Raven
-description: Please see README.md
+description: |
+  Types for the implementation of the Ucam-Webauth protocol, as used by the
+  University of Cambridge’s Raven authentication service.
 category: Web
 author: David Baynard
 maintainer: ucamwebauth@baynard.me
@@ -37,6 +39,7 @@ library:
   - Data.ByteString.B64
   - UcamWebauth.Data
   - UcamWebauth.Data.Internal
+  other-modules: []
   dependencies:
   - aeson >=1.2
   - base64-bytestring
@@ -57,7 +60,7 @@ tests:
   test:
     main: Spec.hs
     source-dirs: test
-    ghc-options: -Wall
+    other-modules: []
     dependencies:
     - hspec >=2.0.0
     build-tools:

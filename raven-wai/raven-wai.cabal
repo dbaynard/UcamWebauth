@@ -4,12 +4,12 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: deb1512c8e534227d0ae267e43f8dde06f1b02fa335adc6f58f39ab75bb80c1b
+-- hash: 63f3c75585c5208c6d864b6e6797b4a003926ae5e72d950bcf33c6ff9605ed20
 
 name:           raven-wai
 version:        0.1.0
-synopsis:       The Raven protocol as Wai middleware
-description:    Please see README.md
+synopsis:       Raven authentication as Wai middleware
+description:    The UcamWebauth protocol instantiated to the University of Cambridge’s Raven service, as Wai middleware.
 category:       Web
 homepage:       https://github.com/dbaynard/UcamWebauth#readme
 bug-reports:    https://github.com/dbaynard/UcamWebauth/issues
@@ -31,12 +31,10 @@ flag dev
 
 library
   exposed-modules:
-      Network.Wai.Protocol.UcamWebauth
       Network.Wai.Protocol.Raven.Auth
-      Network.Wai.Protocol.Raven.Test
-  other-modules:
       Network.Wai.Protocol.Raven.Internal
-      Paths_raven_wai
+      Network.Wai.Protocol.Raven.Test
+      Network.Wai.Protocol.UcamWebauth
   hs-source-dirs:
       src
   ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances
@@ -53,8 +51,6 @@ library
 
 executable raven-wai-example
   main-is: Main.lhs
-  other-modules:
-      Paths_raven_wai
   hs-source-dirs:
       app
   ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances -threaded -rtsopts -with-rtsopts=-N -pgmL markdown-unlit
@@ -82,8 +78,6 @@ executable raven-wai-example
 test-suite test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
-  other-modules:
-      Paths_raven_wai
   hs-source-dirs:
       test
   ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances -Wall

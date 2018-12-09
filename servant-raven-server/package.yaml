@@ -1,7 +1,10 @@
 name: servant-raven-server
 version: '0.1.0'
 synopsis: Servant server for Raven authentication
-description: See README.md
+description: |
+  Servant server to authenticate using the University of Cambridge’s Raven servers.
+
+  This package is suitable for servers.
 license: BSD-3-Clause OR Apache-2.0
 author: David Baynard
 maintainer: ucamwebauth@baynard.me
@@ -42,6 +45,7 @@ library:
   - Extra.Servant.Auth
   - Extra.Servant.Redirect
   - Servant.UcamWebauth
+  other-modules: []
   dependencies:
   - aeson
   - errors
@@ -62,6 +66,7 @@ executables:
     main:             Main.lhs
     build-tools:
     - markdown-unlit
+    other-modules: []
     dependencies:
     - bytestring
     - errors
@@ -95,5 +100,6 @@ tests:
     - servant-raven-server
     - text
     - uri-bytestring
+    other-modules: []
     build-tools:
     - hspec-discover

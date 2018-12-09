@@ -4,12 +4,14 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 4e58c95f3f65611ebead7d9e280341e06d58146835d6571efd634809f1b5981a
+-- hash: b496b1750e173b127ee60fe9d67502ddf16fdca695432c3114a03fb89835dd16
 
 name:           servant-raven-server
 version:        0.1.0
 synopsis:       Servant server for Raven authentication
-description:    See README.md
+description:    Servant server to authenticate using the University of Cambridge’s Raven servers.
+                .
+                This package is suitable for servers.
 category:       Web
 homepage:       https://github.com/dbaynard/UcamWebauth#readme
 bug-reports:    https://github.com/dbaynard/UcamWebauth/issues
@@ -37,8 +39,6 @@ library
       Extra.Servant.Auth
       Extra.Servant.Redirect
       Servant.UcamWebauth
-  other-modules:
-      Paths_servant_raven_server
   hs-source-dirs:
       src
   ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances -pgmL markdown-unlit
@@ -64,8 +64,6 @@ library
 
 executable servant-raven-example
   main-is: Main.lhs
-  other-modules:
-      Paths_servant_raven_server
   hs-source-dirs:
       app
   ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances -pgmL markdown-unlit
@@ -102,9 +100,6 @@ executable servant-raven-example
 test-suite test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
-  other-modules:
-      Servant.UcamWebauthSpec
-      Paths_servant_raven_server
   hs-source-dirs:
       test
   ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances -pgmL markdown-unlit -Wall

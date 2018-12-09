@@ -4,12 +4,13 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 68b80a65eefff8f2b8df5206c00729779c636a87e44b3ac86989065a783f7048
+-- hash: 301a3a44929dfbb284335139bda7f3c2c05bc3c421c53f60b9f97baee812885b
 
 name:           ucam-webauth
 version:        0.1.0
 synopsis:       The Ucam-Webauth protocol, used by Raven
-description:    Please see README.md
+description:    An implementation of the Ucam-Webauth protocol, as used by the University of Cambridge’s
+                Raven authentication service.
 category:       Web
 homepage:       https://github.com/dbaynard/UcamWebauth#readme
 bug-reports:    https://github.com/dbaynard/UcamWebauth/issues
@@ -32,11 +33,6 @@ flag dev
 library
   exposed-modules:
       UcamWebauth
-  other-modules:
-      UcamWebauth.Internal
-      UcamWebauth.Parser
-      UcamWebauth.WLS
-      Paths_ucam_webauth
   hs-source-dirs:
       src
   ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances
@@ -61,22 +57,11 @@ library
     , x509
   if flag(dev)
     ghc-options: -ddump-minimal-imports
-  if flag(dev)
-    ghc-options: -Wall -fwarn-tabs -O0
-  else
-    ghc-options: -Wall -fwarn-tabs -O2
   default-language: Haskell2010
 
 test-suite test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
-  other-modules:
-      UcamWebauth
-      UcamWebauth.Internal
-      UcamWebauth.Parser
-      UcamWebauth.WLS
-      UcamWebauthSpec
-      Paths_ucam_webauth
   hs-source-dirs:
       src
       test

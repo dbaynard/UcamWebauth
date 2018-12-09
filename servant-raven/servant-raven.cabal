@@ -4,12 +4,14 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: e818b27fd0f3eea32bcf2ddf4ea1a97ea51ba3e496383a226dc68140a02bec2e
+-- hash: 716beac035b1fb26757e8c173f7bded82becea42906643b5104486fd25e67e56
 
 name:           servant-raven
 version:        0.1.0
 synopsis:       Servant API for Raven authentication
-description:    See README.md
+description:    Servant combinators to authenticate using the University of Cambridge’s Raven servers.
+                .
+                This package is suitable for clients and servers.
 category:       Web
 homepage:       https://github.com/dbaynard/UcamWebauth#readme
 bug-reports:    https://github.com/dbaynard/UcamWebauth/issues
@@ -35,14 +37,12 @@ flag dev
 library
   exposed-modules:
       Extra.Servant.Redirect.API
+      Servant.Raven.Auth
+      Servant.Raven.Internal
+      Servant.Raven.Test
       Servant.UcamWebauth.API
       Servant.UcamWebauth.Settings
-      Servant.Raven.Test
-      Servant.Raven.Auth
       URI.Convert
-  other-modules:
-      Servant.Raven.Internal
-      Paths_servant_raven
   hs-source-dirs:
       src
   ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances
@@ -69,9 +69,6 @@ library
 test-suite test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
-  other-modules:
-      URI.ConvertSpec
-      Paths_servant_raven
   hs-source-dirs:
       test
   ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances -Wall

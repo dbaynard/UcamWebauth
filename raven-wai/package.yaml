@@ -1,7 +1,8 @@
 name: raven-wai
 version: '0.1.0'
-synopsis: The Raven protocol as Wai middleware
-description: Please see README.md
+synopsis: Raven authentication as Wai middleware
+description: |
+  The UcamWebauth protocol instantiated to the University of Cambridge’s Raven service, as Wai middleware.
 category: Web
 author: David Baynard
 maintainer: ucamwebauth@baynard.me
@@ -34,9 +35,11 @@ dependencies:
 library:
   source-dirs: src
   exposed-modules:
-  - Network.Wai.Protocol.UcamWebauth
   - Network.Wai.Protocol.Raven.Auth
+  - Network.Wai.Protocol.Raven.Internal
   - Network.Wai.Protocol.Raven.Test
+  - Network.Wai.Protocol.UcamWebauth
+  other-modules: []
   dependencies:
   - containers
   - ucam-webauth-types
@@ -48,6 +51,7 @@ executables:
   raven-wai-example:
     source-dirs: app
     main: Main.lhs
+    other-modules: []
     ghc-options:
     - -threaded
     - -rtsopts
@@ -75,6 +79,7 @@ tests:
     main: Spec.hs
     source-dirs: test
     ghc-options: -Wall
+    other-modules: []
     dependencies:
     - hspec >=2.0.0
     build-tools:

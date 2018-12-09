@@ -1,7 +1,10 @@
 name: servant-raven
 version: '0.1.0'
 synopsis: Servant API for Raven authentication
-description: See README.md
+description: |
+  Servant combinators to authenticate using the University of Cambridge’s Raven servers.
+
+  This package is suitable for clients and servers.
 license: BSD-3-Clause OR Apache-2.0
 author: David Baynard
 maintainer: ucamwebauth@baynard.me
@@ -37,11 +40,13 @@ library:
   source-dirs: src
   exposed-modules:
   - Extra.Servant.Redirect.API
+  - Servant.Raven.Auth
+  - Servant.Raven.Internal
+  - Servant.Raven.Test
   - Servant.UcamWebauth.API
   - Servant.UcamWebauth.Settings
-  - Servant.Raven.Test
-  - Servant.Raven.Auth
   - URI.Convert
+  other-modules: []
   dependencies:
   - bytestring
   - cookie
@@ -63,6 +68,7 @@ tests:
     main: Spec.hs
     source-dirs: test
     ghc-options: -Wall
+    other-modules: []
     dependencies:
     - QuickCheck
     - bytestring
