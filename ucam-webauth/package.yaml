@@ -35,24 +35,24 @@ when:
   ghc-options: -ddump-minimal-imports
 
 dependencies:
-  - aeson >=1.2
-  - attoparsec >=0.13.2.2
-  - base >=4.11.0.0 && <4.13
-  - bytestring >=0.10.8.2
-  - containers >=0.5.11.0 && <0.7
-  - cryptonite >=0.25
-  - errors >=2.3.0
-  - http-api-data >=0.3.8.1 && <0.5
-  - http-types >=0.12.2
-  - microlens >=0.4.9.1
-  - microlens-mtl >=0.1.11.1
-  - mtl >=2.2.2
-  - parser-combinators >=1.0.0
-  - pem >=0.2.4
-  - text >=0.11 && <1.2.3.0 || >=1.2.3.1
-  - time >=1.8.0.2
-  - ucam-webauth-types >=0.1.0.0
-  - x509 >=1.7.5
+- aeson >=1.2 && <1.5
+- attoparsec >=0.13.2.2 && <0.14
+- base >=4.11.0.0 && <4.13
+- bytestring >=0.10.8.2 && <0.11
+- containers >=0.5.11.0 && <0.7
+- cryptonite ==0.25.*
+- errors >=2.3.0 && <2.4
+- http-api-data >=0.3.8.1 && <0.5
+- http-types >=0.12.2 && <0.13
+- microlens >=0.4.9.1 && <0.5
+- microlens-mtl >=0.1.11.1 && <0.2
+- mtl >=2.2.2 && <2.3
+- parser-combinators >=1.0.0 && <1.1
+- pem >=0.2.4 && <0.3
+- text >=0.11 && <1.2.3.0 || >=1.2.3.1 && <1.3
+- time >=1.8.0.2 && <1.10
+- ucam-webauth-types >=0.1.0.0 && <0.2
+- x509 >=1.7.5 && <1.8
 
 library:
   source-dirs: src
@@ -73,12 +73,12 @@ tests:
     generated-other-modules:
     - Paths_ucam_webauth
     dependencies:
-    - QuickCheck >=2.11.3
-    - generic-random >=1.2.0.0
-    - here >=1.2.13
+    - QuickCheck >=2.11.3 && <2.13
+    - generic-random >=1.2.0.0 && <1.3
+    - here >=1.2.13 && <1.3
     - hspec >=2.0.0 && <2.7
-    - quickcheck-instances >=0.3.19
-    - time-qq >=0.0.1.0
+    - quickcheck-instances >=0.3.19 && <0.4
+    - time-qq >=0.0.1.0 && <0.1
     - ucam-webauth-types
     build-tools:
     - hspec-discover
