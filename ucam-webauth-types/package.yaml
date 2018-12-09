@@ -35,7 +35,7 @@ when:
   ghc-options: -ddump-minimal-imports
 
 dependencies:
-- base >=4.10.0.0
+- base >=4.11.0.0
 
 library:
   source-dirs: src
