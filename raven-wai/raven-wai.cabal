@@ -4,10 +4,10 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: ce31ca206736e963ae58a2dd47cc677f6b6411a76a9717b0e035e835eb20d531
+-- hash: c182fc6b231284f703eb3a55c4cc1eda2a977982cfc88aa95bab74c9c391a7c1
 
 name:           raven-wai
-version:        0.1.0
+version:        0.1.0.0
 synopsis:       Raven authentication as Wai middleware
 description:    The UcamWebauth protocol instantiated to the University of Cambridge’s Raven service, as Wai middleware.
 category:       Web

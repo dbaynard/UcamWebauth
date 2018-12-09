@@ -1,5 +1,5 @@
 name: servant-raven
-version: '0.1.0'
+version: '0.1.0.0'
 synopsis: Servant API for Raven authentication
 description: |
   Servant combinators to authenticate using the University of Cambridge’s Raven servers.

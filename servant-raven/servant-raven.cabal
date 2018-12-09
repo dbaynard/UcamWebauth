@@ -4,10 +4,10 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: f47a3204644f94343f8d805271d51adff317b62ef59f2e98f358ea8518f45f2d
+-- hash: 01a135eb3f82163c1e7dfe686e8f3462982803f1a450d449c0722557a3110afe
 
 name:           servant-raven
-version:        0.1.0
+version:        0.1.0.0
 synopsis:       Servant API for Raven authentication
 description:    Servant combinators to authenticate using the University of Cambridge’s Raven servers.
                 .

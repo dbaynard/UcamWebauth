@@ -4,10 +4,10 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 29af2e9311fd66f3dbbc06eb35e51b8358fa76c762b7ecc7980af31890237f05
+-- hash: 809326865c2d15ae1a753ef6f1daabc2a8d2dd78ebf1d6797ae34d8592749d44
 
 name:           ucam-webauth
-version:        0.1.0
+version:        0.1.0.0
 synopsis:       The Ucam-Webauth protocol, used by Raven
 description:    An implementation of the Ucam-Webauth protocol, as used by the University of Cambridge’s
                 Raven authentication service.

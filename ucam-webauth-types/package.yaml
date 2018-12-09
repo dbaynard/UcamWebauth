@@ -1,5 +1,5 @@
 name: ucam-webauth-types
-version: '0.1.0'
+version: '0.1.0.0'
 synopsis: Types for the Ucam-Webauth protocol, as used by Raven
 description: |
   Types for the implementation of the Ucam-Webauth protocol, as used by the

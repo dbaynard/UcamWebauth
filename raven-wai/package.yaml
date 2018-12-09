@@ -1,5 +1,5 @@
 name: raven-wai
-version: '0.1.0'
+version: '0.1.0.0'
 synopsis: Raven authentication as Wai middleware
 description: |
   The UcamWebauth protocol instantiated to the University of Cambridge’s Raven service, as Wai middleware.
