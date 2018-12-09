@@ -4,7 +4,7 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 809326865c2d15ae1a753ef6f1daabc2a8d2dd78ebf1d6797ae34d8592749d44
+-- hash: 57047d85f1dc6aaaa962f901b00fe884f8bd00383b60d457121529d4760ed978
 
 name:           ucam-webauth
 version:        0.1.0.0
@@ -36,6 +36,9 @@ flag dev
 library
   exposed-modules:
       UcamWebauth
+      UcamWebauth.Internal
+      UcamWebauth.Parser
+      UcamWebauth.WLS
   hs-source-dirs:
       src
   ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances
@@ -65,6 +68,15 @@ library
 test-suite test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
+  other-modules:
+      UcamWebauth
+      UcamWebauth.Internal
+      UcamWebauth.Parser
+      UcamWebauth.WLS
+      UcamWebauthSpec
+      Paths_ucam_webauth
+  autogen-modules:
+      Paths_ucam_webauth
   hs-source-dirs:
       src
       test

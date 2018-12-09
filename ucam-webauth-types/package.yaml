@@ -64,7 +64,8 @@ tests:
   test:
     main: Spec.hs
     source-dirs: test
-    other-modules: []
+    generated-other-modules:
+    - Paths_ucam_webauth_types
     dependencies:
     - hspec >=2.0.0
     build-tools:

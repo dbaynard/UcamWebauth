@@ -4,7 +4,7 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: c182fc6b231284f703eb3a55c4cc1eda2a977982cfc88aa95bab74c9c391a7c1
+-- hash: ded75671bc1a648e424efee4ba3b3eb5bd3ae2d5a47f43150f39eee01e28ec4b
 
 name:           raven-wai
 version:        0.1.0.0
@@ -81,6 +81,10 @@ executable raven-wai-example
 test-suite test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
+  other-modules:
+      Paths_raven_wai
+  autogen-modules:
+      Paths_raven_wai
   hs-source-dirs:
       test
   ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances -Wall

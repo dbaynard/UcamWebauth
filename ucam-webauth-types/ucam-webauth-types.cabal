@@ -4,7 +4,7 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 39ab29dfa3d2f234ee04065a814698defc56a3c2100fbca1f2d241f92d5fb927
+-- hash: d92927e25de56349ce30e1d31ab0d0799f0e572dfba58fb3b2837d1dd676b7d3
 
 name:           ucam-webauth-types
 version:        0.1.0.0
@@ -64,6 +64,10 @@ library
 test-suite test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
+  other-modules:
+      Paths_ucam_webauth_types
+  autogen-modules:
+      Paths_ucam_webauth_types
   hs-source-dirs:
       test
   ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances

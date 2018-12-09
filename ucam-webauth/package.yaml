@@ -58,6 +58,9 @@ library:
   source-dirs: src
   exposed-modules:
   - UcamWebauth
+  - UcamWebauth.Internal
+  - UcamWebauth.Parser
+  - UcamWebauth.WLS
   other-modules: []
 
 tests:
@@ -67,7 +70,8 @@ tests:
     - src
     - test
     ghc-options: -Wall
-    other-modules: []
+    generated-other-modules:
+    - Paths_ucam_webauth
     dependencies:
     - QuickCheck
     - base

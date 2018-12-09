@@ -102,6 +102,7 @@ tests:
     - servant-raven-server
     - text
     - uri-bytestring
-    other-modules: []
+    generated-other-modules:
+    - Paths_servant_raven_server
     build-tools:
     - hspec-discover

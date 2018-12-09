@@ -4,7 +4,7 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 01a135eb3f82163c1e7dfe686e8f3462982803f1a450d449c0722557a3110afe
+-- hash: 3da26c35ce034eccb21b704e0c58f865aafd3cef0307dd00505350f1cf47bb54
 
 name:           servant-raven
 version:        0.1.0.0
@@ -71,6 +71,11 @@ library
 test-suite test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
+  other-modules:
+      URI.ConvertSpec
+      Paths_servant_raven
+  autogen-modules:
+      Paths_servant_raven
   hs-source-dirs:
       test
   ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances -Wall

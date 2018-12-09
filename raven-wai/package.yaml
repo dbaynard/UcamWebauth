@@ -83,7 +83,8 @@ tests:
     main: Spec.hs
     source-dirs: test
     ghc-options: -Wall
-    other-modules: []
+    generated-other-modules:
+    - Paths_raven_wai
     dependencies:
     - hspec >=2.0.0
     build-tools:
