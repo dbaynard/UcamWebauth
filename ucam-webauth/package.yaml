@@ -37,7 +37,7 @@ when:
 dependencies:
 - aeson >=1.2
 - attoparsec
-- base >=4.10.0.0
+- base >=4.11.0.0
 - bytestring
 - containers
 - cryptonite
