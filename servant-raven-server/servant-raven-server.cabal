@@ -4,10 +4,10 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: b496b1750e173b127ee60fe9d67502ddf16fdca695432c3114a03fb89835dd16
+-- hash: 684cb8d545721c48da09fed261dd17ffb6c6aa0d907224707b110120cdabab40
 
 name:           servant-raven-server
-version:        0.1.0
+version:        0.1.0.0
 synopsis:       Servant server for Raven authentication
 description:    Servant server to authenticate using the University of Cambridge’s Raven servers.
                 .
@@ -24,6 +24,8 @@ build-type:     Simple
 extra-source-files:
     static/pubkey2.crt
     static/pubkey901.crt
+    Changelog.md
+    README.md
 
 source-repository head
   type: git
@@ -100,6 +102,11 @@ executable servant-raven-example
 test-suite test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
+  other-modules:
+      Servant.UcamWebauthSpec
+      Paths_servant_raven_server
+  autogen-modules:
+      Paths_servant_raven_server
   hs-source-dirs:
       test
   ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances -pgmL markdown-unlit -Wall

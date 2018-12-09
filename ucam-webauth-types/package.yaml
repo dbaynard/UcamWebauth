@@ -1,5 +1,5 @@
 name: ucam-webauth-types
-version: '0.1.0'
+version: '0.1.0.0'
 synopsis: Types for the Ucam-Webauth protocol, as used by Raven
 description: |
   Types for the implementation of the Ucam-Webauth protocol, as used by the
@@ -10,6 +10,10 @@ maintainer: ucamwebauth@baynard.me
 copyright: 2018 David Baynard
 license: BSD-3-Clause OR Apache-2.0
 github: dbaynard/UcamWebauth
+
+extra-source-files:
+- Changelog.md
+- README.md
 
 ghc-options:
 - -Wall
@@ -60,7 +64,8 @@ tests:
   test:
     main: Spec.hs
     source-dirs: test
-    other-modules: []
+    generated-other-modules:
+    - Paths_ucam_webauth_types
     dependencies:
     - hspec >=2.0.0
     build-tools:

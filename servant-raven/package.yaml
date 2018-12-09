@@ -1,5 +1,5 @@
 name: servant-raven
-version: '0.1.0'
+version: '0.1.0.0'
 synopsis: Servant API for Raven authentication
 description: |
   Servant combinators to authenticate using the University of Cambridge’s Raven servers.
@@ -11,8 +11,11 @@ maintainer: ucamwebauth@baynard.me
 copyright: 2018 David Baynard
 category: Web
 github: dbaynard/UcamWebauth
+
 extra-source-files:
 - static/*.crt
+- Changelog.md
+- README.md
 
 ghc-options:
 - -Wall
@@ -68,7 +71,8 @@ tests:
     main: Spec.hs
     source-dirs: test
     ghc-options: -Wall
-    other-modules: []
+    generated-other-modules:
+    - Paths_servant_raven
     dependencies:
     - QuickCheck
     - bytestring

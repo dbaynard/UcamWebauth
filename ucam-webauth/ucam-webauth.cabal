@@ -4,10 +4,10 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 301a3a44929dfbb284335139bda7f3c2c05bc3c421c53f60b9f97baee812885b
+-- hash: 57047d85f1dc6aaaa962f901b00fe884f8bd00383b60d457121529d4760ed978
 
 name:           ucam-webauth
-version:        0.1.0
+version:        0.1.0.0
 synopsis:       The Ucam-Webauth protocol, used by Raven
 description:    An implementation of the Ucam-Webauth protocol, as used by the University of Cambridge’s
                 Raven authentication service.
@@ -20,6 +20,9 @@ copyright:      2018 David Baynard
 license:        (BSD-3-Clause OR Apache-2.0)
 license-file:   LICENSE
 build-type:     Simple
+extra-source-files:
+    Changelog.md
+    README.md
 
 source-repository head
   type: git
@@ -33,6 +36,9 @@ flag dev
 library
   exposed-modules:
       UcamWebauth
+      UcamWebauth.Internal
+      UcamWebauth.Parser
+      UcamWebauth.WLS
   hs-source-dirs:
       src
   ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances
@@ -62,6 +68,15 @@ library
 test-suite test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
+  other-modules:
+      UcamWebauth
+      UcamWebauth.Internal
+      UcamWebauth.Parser
+      UcamWebauth.WLS
+      UcamWebauthSpec
+      Paths_ucam_webauth
+  autogen-modules:
+      Paths_ucam_webauth
   hs-source-dirs:
       src
       test

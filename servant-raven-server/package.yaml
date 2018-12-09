@@ -1,5 +1,5 @@
 name: servant-raven-server
-version: '0.1.0'
+version: '0.1.0.0'
 synopsis: Servant server for Raven authentication
 description: |
   Servant server to authenticate using the University of Cambridge’s Raven servers.
@@ -11,6 +11,11 @@ maintainer: ucamwebauth@baynard.me
 copyright: 2018 David Baynard
 category: Web
 github: dbaynard/UcamWebauth
+
+extra-source-files:
+- static/*.crt
+- Changelog.md
+- README.md
 
 ghc-options:
 - -Wall
@@ -35,9 +40,6 @@ dependencies:
 - base >= 4.7 && < 5
 - servant-raven
 - servant-server
-
-extra-source-files:
-- static/*.crt
 
 library:
   source-dirs: src
@@ -100,6 +102,7 @@ tests:
     - servant-raven-server
     - text
     - uri-bytestring
-    other-modules: []
+    generated-other-modules:
+    - Paths_servant_raven_server
     build-tools:
     - hspec-discover

@@ -4,10 +4,10 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 2101e1cd81166edb6528f90fb87208ab4a92778fc480721c05bffe26bea332ac
+-- hash: d92927e25de56349ce30e1d31ab0d0799f0e572dfba58fb3b2837d1dd676b7d3
 
 name:           ucam-webauth-types
-version:        0.1.0
+version:        0.1.0.0
 synopsis:       Types for the Ucam-Webauth protocol, as used by Raven
 description:    Types for the implementation of the Ucam-Webauth protocol, as used by the
                 University of Cambridge’s Raven authentication service.
@@ -20,6 +20,9 @@ copyright:      2018 David Baynard
 license:        (BSD-3-Clause OR Apache-2.0)
 license-file:   LICENSE
 build-type:     Simple
+extra-source-files:
+    Changelog.md
+    README.md
 
 source-repository head
   type: git
@@ -61,6 +64,10 @@ library
 test-suite test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
+  other-modules:
+      Paths_ucam_webauth_types
+  autogen-modules:
+      Paths_ucam_webauth_types
   hs-source-dirs:
       test
   ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances

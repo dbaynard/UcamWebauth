@@ -1,5 +1,5 @@
 name: ucam-webauth
-version: '0.1.0'
+version: '0.1.0.0'
 synopsis: The Ucam-Webauth protocol, used by Raven
 description: |
   An implementation of the Ucam-Webauth protocol, as used by the University of Cambridge’s
@@ -10,6 +10,10 @@ maintainer: ucamwebauth@baynard.me
 copyright: 2018 David Baynard
 license: BSD-3-Clause OR Apache-2.0
 github: dbaynard/UcamWebauth
+
+extra-source-files:
+- Changelog.md
+- README.md
 
 ghc-options:
 - -Wall
@@ -54,6 +58,9 @@ library:
   source-dirs: src
   exposed-modules:
   - UcamWebauth
+  - UcamWebauth.Internal
+  - UcamWebauth.Parser
+  - UcamWebauth.WLS
   other-modules: []
 
 tests:
@@ -63,7 +70,8 @@ tests:
     - src
     - test
     ghc-options: -Wall
-    other-modules: []
+    generated-other-modules:
+    - Paths_ucam_webauth
     dependencies:
     - QuickCheck
     - base
