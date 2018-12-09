@@ -11,6 +11,10 @@ copyright: 2018 David Baynard
 license: BSD-3-Clause OR Apache-2.0
 github: dbaynard/UcamWebauth
 
+extra-source-files:
+- Changelog.md
+- README.md
+
 ghc-options:
 - -Wall
 - -Wincomplete-uni-patterns

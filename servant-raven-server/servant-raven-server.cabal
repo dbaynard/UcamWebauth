@@ -4,7 +4,7 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: b496b1750e173b127ee60fe9d67502ddf16fdca695432c3114a03fb89835dd16
+-- hash: bc7d3e936f3a8a65727dd89e8405e6119909917ba551e72ac92b1c222c25485f
 
 name:           servant-raven-server
 version:        0.1.0
@@ -24,6 +24,8 @@ build-type:     Simple
 extra-source-files:
     static/pubkey2.crt
     static/pubkey901.crt
+    Changelog.md
+    README.md
 
 source-repository head
   type: git

@@ -4,7 +4,7 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 2101e1cd81166edb6528f90fb87208ab4a92778fc480721c05bffe26bea332ac
+-- hash: d892a85068eefdf778434cd6eaee89472b329165f78fc818972ad0658932dea5
 
 name:           ucam-webauth-types
 version:        0.1.0
@@ -20,6 +20,9 @@ copyright:      2018 David Baynard
 license:        (BSD-3-Clause OR Apache-2.0)
 license-file:   LICENSE
 build-type:     Simple
+extra-source-files:
+    Changelog.md
+    README.md
 
 source-repository head
   type: git

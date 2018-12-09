@@ -4,7 +4,7 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 63f3c75585c5208c6d864b6e6797b4a003926ae5e72d950bcf33c6ff9605ed20
+-- hash: ce31ca206736e963ae58a2dd47cc677f6b6411a76a9717b0e035e835eb20d531
 
 name:           raven-wai
 version:        0.1.0
@@ -19,6 +19,9 @@ copyright:      2018 David Baynard
 license:        (BSD-3-Clause OR Apache-2.0)
 license-file:   LICENSE
 build-type:     Simple
+extra-source-files:
+    Changelog.md
+    README.md
 
 source-repository head
   type: git

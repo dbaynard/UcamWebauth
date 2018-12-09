@@ -11,8 +11,11 @@ maintainer: ucamwebauth@baynard.me
 copyright: 2018 David Baynard
 category: Web
 github: dbaynard/UcamWebauth
+
 extra-source-files:
 - static/*.crt
+- Changelog.md
+- README.md
 
 ghc-options:
 - -Wall
