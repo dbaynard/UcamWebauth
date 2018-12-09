@@ -42,7 +42,7 @@ dependencies:
 - containers >= 0.5.11.0 && <0.7
 - cryptonite
 - errors
-- http-api-data
+- http-api-data >= 0.3.8.1 && <0.5
 - http-types
 - microlens
 - microlens-mtl

@@ -4,7 +4,7 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: caad0741515368bba8854203be47640a811f0cd979a22d9d6fd696ad5abc49d4
+-- hash: 00dad0ad5beb8e15161e64b59ba356acd28faaf8fed44c81b355ac3e8bee38ba
 
 name:           ucam-webauth
 version:        0.1.0.0
@@ -50,7 +50,7 @@ library
     , containers >=0.5.11.0 && <0.7
     , cryptonite
     , errors
-    , http-api-data
+    , http-api-data >=0.3.8.1 && <0.5
     , http-types
     , microlens
     , microlens-mtl
@@ -95,7 +95,7 @@ test-suite test
     , generic-random
     , here
     , hspec >=2.0.0 && <2.7
-    , http-api-data
+    , http-api-data >=0.3.8.1 && <0.5
     , http-types
     , microlens
     , microlens-mtl
