@@ -1,10 +1,10 @@
 cabal-version: 2.2
 
--- This file has been generated from package.yaml by hpack version 0.31.0.
+-- This file has been generated from package.yaml by hpack version 0.31.1.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 37cfda03bcab2b915009478cf95ecd3853485cece4222f06aab1eb92ab3a2cbe
+-- hash: 5b69ff90d168b6ae655cd423742d3b4844da689d7dbd0fa34066c4b6179e9c58
 
 name:           ucam-webauth
 version:        0.1.0.0
@@ -94,7 +94,7 @@ test-suite test
     , errors >=2.3.0 && <2.4
     , generic-random >=1.2.0.0 && <1.3
     , here >=1.2.13 && <1.3
-    , hspec >=2.0.0 && <2.7
+    , hspec >=2.0.0 && <2.8
     , http-api-data >=0.3.8.1 && <0.5
     , http-types >=0.12.2 && <0.13
     , microlens >=0.4.9.1 && <0.5

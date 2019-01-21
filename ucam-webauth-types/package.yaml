@@ -66,6 +66,6 @@ tests:
     generated-other-modules:
     - Paths_ucam_webauth_types
     dependencies:
-    - hspec >=2.0.0 && <2.7
+    - hspec >=2.0.0 && <2.8
     build-tools:
     - hspec-discover
