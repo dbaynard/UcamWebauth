@@ -1,10 +1,10 @@
 cabal-version: 2.2
 
--- This file has been generated from package.yaml by hpack version 0.31.0.
+-- This file has been generated from package.yaml by hpack version 0.31.1.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 0eaa85ecb8d6dd868686b229ddc21e4a18d237dd837d277650de4a48357ce101
+-- hash: e47bc9b683e42968709269a32ec08c4eaa7b12eb45a7ba77c344ac8fd2d5fa4f
 
 name:           ucam-webauth-types
 version:        0.1.0.0
@@ -74,7 +74,7 @@ test-suite test
       hspec-discover:hspec-discover
   build-depends:
       base >=4.11.0.0 && <4.13
-    , hspec >=2.0.0 && <2.7
+    , hspec >=2.0.0 && <2.8
   if flag(dev)
     ghc-options: -ddump-minimal-imports
   default-language: Haskell2010
