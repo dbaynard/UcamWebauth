@@ -84,23 +84,23 @@ module Servant.UcamWebauth
   , authURI
   ) where
 
-import           "errors"              Control.Error
-import           "base"                Control.Monad.IO.Class
-import           "mtl"                 Control.Monad.State
-import           "jose"                Crypto.JOSE.JWK (JWK)
-import           "aeson"               Data.Aeson.Types hiding ((.=))
-import           "ucam-webauth-types"  Data.ByteString.B64
-import           "time"                Data.Time
-import           "this"                Extra.Servant.Redirect
-import           "microlens"           Lens.Micro
-import           "microlens-mtl"       Lens.Micro.Mtl
-import           "servant-server"      Servant
-import           "servant-auth-server" Servant.Auth.Server
-import           "servant-auth-server" Servant.Auth.Server.SetCookieOrphan ()
-import           "servant-raven"       Servant.UcamWebauth.API
-import           "servant-raven"       Servant.UcamWebauth.Settings
-import           "ucam-webauth"        UcamWebauth
-import qualified "unliftio"            UnliftIO.Exception as UIO
+import           "errors"                  Control.Error
+import           "base"                    Control.Monad.IO.Class
+import           "mtl"                     Control.Monad.State
+import           "jose"                    Crypto.JOSE.JWK (JWK)
+import           "aeson"                   Data.Aeson.Types hiding ((.=))
+import           "ucam-webauth-types"      Data.ByteString.B64
+import           "time"                    Data.Time
+import           "microlens"               Lens.Micro
+import           "microlens-mtl"           Lens.Micro.Mtl
+import           "servant-server"          Servant
+import           "servant-auth-server"     Servant.Auth.Server
+import           "servant-auth-server"     Servant.Auth.Server.SetCookieOrphan ()
+import           "servant-redirect-server" Servant.Redirect
+import           "servant-raven"           Servant.UcamWebauth.API
+import           "servant-raven"           Servant.UcamWebauth.Settings
+import           "ucam-webauth"            UcamWebauth
+import qualified "unliftio"                UnliftIO.Exception as UIO
 
 ------------------------------------------------------------------------------
 --

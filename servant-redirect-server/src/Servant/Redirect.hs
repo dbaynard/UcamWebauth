@@ -1,5 +1,5 @@
 {-|
-Module      : Extra.Servant.Redirect
+Module      : Servant.Redirect
 Description : Handlers for redirection
 Maintainer  : David Baynard <ucamwebauth@baynard.me>
 
@@ -23,7 +23,7 @@ The 'reroute' family of functions rely on redirection to type safe links, as man
   , TypeOperators
   #-}
 
-module Extra.Servant.Redirect
+module Servant.Redirect
   ( -- $redirect
     Rerouteable
   , Rerouteable'
@@ -36,10 +36,10 @@ module Extra.Servant.Redirect
   , module X
   ) where
 
-import "base"           Control.Monad.IO.Class
-import "base"           Data.Kind
-import "servant-raven"  Extra.Servant.Redirect.API as X
-import "servant-server" Servant
+import "base"             Control.Monad.IO.Class
+import "base"             Data.Kind
+import "servant-redirect" Servant.Redirect.API as X
+import "servant-server"   Servant
 
 -- $redirect
 -- 
@@ -50,7 +50,7 @@ import "servant-server" Servant
 -- > type Redirect (method :: StdMethod) (code :: Nat) contentTypes (loc :: k)
 -- >     = Verb method code contentTypes (Headers '[Header "Location" loc] NoContent)
 --
--- See "servant-raven" 'Extra.Servant.Redirect.API'
+-- See "servant-raven" 'Servant.Redirect.API'
 
 -- | Redirect to 'loc'
 redirect

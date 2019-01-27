@@ -1,10 +1,10 @@
 cabal-version: 2.2
 
--- This file has been generated from package.yaml by hpack version 0.31.0.
+-- This file has been generated from package.yaml by hpack version 0.31.1.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: eeafbc2b53e6321843e81a3fd48011aabf6a7f733a75ceade2a996e3b6ff5419
+-- hash: 3da4f8c6a9e77e7a2b3ccf105bb9c52b1153be8005f2b557c339400298eba601
 
 name:           servant-raven-server
 version:        0.1.0.0
@@ -39,7 +39,6 @@ flag dev
 library
   exposed-modules:
       Extra.Servant.Auth
-      Extra.Servant.Redirect
       Servant.UcamWebauth
   hs-source-dirs:
       src
@@ -55,6 +54,7 @@ library
     , servant
     , servant-auth-server
     , servant-raven
+    , servant-redirect-server
     , servant-server
     , time
     , ucam-webauth

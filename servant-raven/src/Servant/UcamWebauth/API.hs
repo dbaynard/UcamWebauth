@@ -37,9 +37,9 @@ module Servant.UcamWebauth.API
 
 import "ucam-webauth-types" Data.ByteString.B64
 import "base"               Data.Kind
-import "this"               Extra.Servant.Redirect.API
 import "servant"            Servant.API
 import "servant-auth"       Servant.Auth
+import "servant-redirect"   Servant.Redirect.API
 import "ucam-webauth-types" UcamWebauth.Data
 import "cookie"             Web.Cookie
 

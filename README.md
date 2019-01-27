@@ -1,7 +1,7 @@
 ---
 title:  Ucam Webauth  
 author: David Baynard  
-date:   09 Dec 2018  
+date:   27 Jan 2019  
 ...
 
 [![Build Status](https://travis-ci.com/dbaynard/UcamWebauth.svg?branch=develop)](https://travis-ci.com/dbaynard/UcamWebauth)
@@ -54,3 +54,19 @@ API combinators for [servant](//hackage.haskell.org/package/servant), using [ser
 [![servant-raven-server on Stackage Nightly](http://stackage.org/package/servant-raven-server/badge/nightly)](http://stackage.org/nightly/package/servant-raven-server)
 
 The handlers for [servant](//hackage.haskell.org/package/servant).
+
+# servant-redirect
+
+[![Hackage — servant-redirect](https://img.shields.io/hackage/v/servant-redirect.svg?style=flat)](https://hackage.haskell.org/package/servant-redirect)
+[![servant-redirect on Stackage LTS 13](http://stackage.org/package/servant-redirect/badge/lts-13)](http://stackage.org/lts-13/package/servant-redirect)
+[![servant-redirect on Stackage Nightly](http://stackage.org/package/servant-redirect/badge/nightly)](http://stackage.org/nightly/package/servant-redirect)
+
+Redirect combinators for [servant](//hackage.haskell.org/package/servant), using [servant-auth](//hackage.haskell.org/package/servant-auth).
+
+# servant-redirect-server
+
+[![Hackage — servant-redirect-server](https://img.shields.io/hackage/v/servant-redirect-server.svg?style=flat)](https://hackage.haskell.org/package/servant-redirect-server)
+[![servant-redirect-server on Stackage LTS 13](http://stackage.org/package/servant-redirect-server/badge/lts-13)](http://stackage.org/lts-13/package/servant-redirect-server)
+[![servant-redirect-server on Stackage Nightly](http://stackage.org/package/servant-redirect-server/badge/nightly)](http://stackage.org/nightly/package/servant-redirect-server)
+
+The handlers for [servant-redirect](//hackage.haskell.org/package/servant-redirect).

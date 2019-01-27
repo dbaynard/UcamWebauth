@@ -9,6 +9,8 @@ packages:
 - 'ucam-webauth'
 - 'servant-raven'
 - 'servant-raven-server'
+- 'servant-redirect'
+- 'servant-redirect-server'
 - 'raven-wai'
 
 # Packages to be pulled from upstream that are not in the resolver (e.g., acme-missiles-0.3)

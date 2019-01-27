@@ -1,5 +1,5 @@
 {-|
-Module      : Extra.Servant.Redirect.API
+Module      : Servant.Redirect.API
 Description : Redirects within the API
 Maintainer  : David Baynard <ucamwebauth@baynard.me>
 
@@ -15,7 +15,7 @@ Based on Alp Mestanogullari’s approach to (success) redirects, from
   , TypeOperators
   #-}
 
-module Extra.Servant.Redirect.API
+module Servant.Redirect.API
   ( Redirect
   , PostRedirect
   , AuthCookieRedirect

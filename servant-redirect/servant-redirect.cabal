@@ -4,28 +4,29 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: c97f68df109756cf0e5b8ec5c4998be13fabfd32bae9561ad18bc2b49eb435c6
+-- hash: 7b5c6b4d14e1e2854bebab482b447bd508d2993cbde6270aa4f208ed564445e1
 
-name:           servant-raven
+name:           servant-redirect
 version:        0.1.0.0
-synopsis:       Servant API for Raven authentication
-description:    Servant combinators to authenticate using the University of Cambridge’s Raven servers.
+synopsis:       Servant API for redirects
+description:    Servant combinators to indicate redirects
                 .
                 This package is suitable for clients and servers.
+                .
+                Based on Alp Mestanogullari’s approach to (success) redirects, from
+                <https://gist.github.com/alpmestan/757094ecf9401f85c5ba367ca20b8900>
 category:       Web
 homepage:       https://github.com/dbaynard/UcamWebauth#readme
 bug-reports:    https://github.com/dbaynard/UcamWebauth/issues
 author:         David Baynard <ucamwebauth@baynard.me>
 maintainer:     David Baynard <ucamwebauth@baynard.me>
-copyright:      2018 David Baynard
+copyright:      2019 David Baynard
 license:        (BSD-3-Clause OR Apache-2.0)
 license-file:   LICENSE
 build-type:     Simple
 extra-source-files:
-    static/pubkey2.crt
-    static/pubkey901.crt
-    Changelog.md
     README.md
+    ChangeLog.md
 
 source-repository head
   type: git
@@ -38,58 +39,29 @@ flag dev
 
 library
   exposed-modules:
-      Servant.Raven.Auth
-      Servant.Raven.Internal
-      Servant.Raven.Test
-      Servant.UcamWebauth.API
-      Servant.UcamWebauth.Settings
-      URI.Convert
+      Servant.Redirect.API
+  other-modules:
+      Paths_servant_redirect
   hs-source-dirs:
       src
   ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances
   build-depends:
       base >=4.7 && <5
-    , bytestring
-    , cookie
-    , errors
-    , file-embed
-    , microlens
-    , microlens-ghc
-    , microlens-mtl
-    , network-uri
-    , reflection
     , servant
-    , servant-auth
-    , servant-redirect
-    , text
-    , ucam-webauth-types
-    , uri-bytestring
   if flag(dev)
     ghc-options: -ddump-minimal-imports
   default-language: Haskell2010
 
-test-suite test
+test-suite servant-redirect-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
-      URI.ConvertSpec
-      Paths_servant_raven
-  autogen-modules:
-      Paths_servant_raven
+      Paths_servant_redirect
   hs-source-dirs:
       test
-  ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances -Wall
-  build-tool-depends:
-      hspec-discover:hspec-discover
+  ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      QuickCheck
-    , base >=4.7 && <5
-    , bytestring
-    , generic-arbitrary
-    , hspec >=2.0.0
-    , quickcheck-instances
-    , servant-raven
-    , uri-bytestring
+      base >=4.7 && <5
   if flag(dev)
     ghc-options: -ddump-minimal-imports
   default-language: Haskell2010

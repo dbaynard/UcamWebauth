@@ -42,7 +42,6 @@ dependencies:
 library:
   source-dirs: src
   exposed-modules:
-  - Extra.Servant.Redirect.API
   - Servant.Raven.Auth
   - Servant.Raven.Internal
   - Servant.Raven.Test
@@ -62,6 +61,7 @@ library:
   - reflection
   - servant
   - servant-auth
+  - servant-redirect
   - text
   - ucam-webauth-types
   - uri-bytestring

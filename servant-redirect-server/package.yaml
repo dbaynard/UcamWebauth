@@ -1,0 +1,61 @@
+name: servant-redirect-server
+version: '0.1.0.0'
+synopsis: Servant API for redirects
+description: |
+  Servant handlers for redirects.
+
+  This package is suitable for servers.
+
+  Based on Alp Mestanogullari’s approach to (success) redirects, from
+  <https://gist.github.com/alpmestan/757094ecf9401f85c5ba367ca20b8900>
+license: BSD-3-Clause OR Apache-2.0
+author: David Baynard <ucamwebauth@baynard.me>
+maintainer: David Baynard <ucamwebauth@baynard.me>
+copyright: 2019 David Baynard
+category: Web
+github: dbaynard/UcamWebauth
+
+extra-source-files:
+- README.md
+- ChangeLog.md
+
+ghc-options:
+- -Wall
+- -Wincomplete-uni-patterns
+- -Wincomplete-record-updates
+#- -Wmissing-import-lists
+- -Wcompat
+- -Wnoncanonical-monad-instances
+- -Wnoncanonical-monadfail-instances
+
+flags:
+  dev:
+    description: Compile for development
+    default: false
+    manual: true
+
+when:
+- condition: flag(dev)
+  ghc-options: -ddump-minimal-imports
+
+dependencies:
+- base >= 4.7 && < 5
+
+library:
+  source-dirs: src
+  exposed-modules:
+  - Servant.Redirect
+  dependencies:
+  - servant
+  - servant-redirect
+  - servant-server
+
+tests:
+  servant-redirect-server-test:
+    main:                Spec.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+
