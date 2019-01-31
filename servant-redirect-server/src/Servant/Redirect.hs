@@ -1,104 +1,52 @@
-{-|
-Module      : Servant.Redirect
-Description : Handlers for redirection
-Maintainer  : David Baynard <ucamwebauth@baynard.me>
+-- |
+-- Module      : Servant.Redirect
+-- Description : Redirect handlers
+-- Copyright   : David Baynard 2019
+--
+-- License     : BSD-3-Clause OR Apache-2.0
+-- Maintainer  : David Baynard <ucamwebauth@baynard.me>
+-- Stability   : experimental
+-- Portability : unknown
+--
+-- Based on [Alp Mestanogullari’s approach to (success)
+-- redirects](https://gist.github.com/alpmestan/757094ecf9401f85c5ba367ca20b8900)
+--
+-- See "Servant.Redirect.API".
 
-Based on Alp Mestanogullari’s approach to (success) redirects, from
-<https://gist.github.com/alpmestan/757094ecf9401f85c5ba367ca20b8900>
-
-The 'reroute' family of functions rely on redirection to type safe links, as managed by "servant".
-
- -}
-
-{-# LANGUAGE
-    PackageImports
-  , AllowAmbiguousTypes
-  , ConstraintKinds
-  , DataKinds
-  , FlexibleContexts
-  , ScopedTypeVariables
-  , TypeApplications
-  , TypeFamilies
-  , TypeInType
-  , TypeOperators
-  #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE ConstraintKinds     #-}
+{-# LANGUAGE DataKinds           #-}
+{-# LANGUAGE FlexibleContexts    #-}
+{-# LANGUAGE PackageImports      #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeApplications    #-}
+{-# LANGUAGE TypeFamilies        #-}
+{-# LANGUAGE TypeInType          #-}
+{-# LANGUAGE TypeOperators       #-}
 
 module Servant.Redirect
   ( -- $redirect
-    Rerouteable
-  , Rerouteable'
-  , reroute
-  , reroute'
-  , redirect
-  -- * Specializations
-  , rerouteCookie
-  -- * Reexport
+    -- * Specializations
+    rerouteCookie
+    -- * Reexport
   , module X
   ) where
 
-import "base"             Control.Monad.IO.Class
-import "base"             Data.Kind
+import "base" Control.Monad.IO.Class
+import "base" Data.Kind
+import "servant-server" Servant
 import "servant-redirect" Servant.Redirect.API as X
-import "servant-server"   Servant
 
 -- $redirect
--- 
+--
 -- Redirect according to the ServerT type.
--- 
+--
 -- Typically, this type will be a specialization of
 --
--- > type Redirect (method :: StdMethod) (code :: Nat) contentTypes (loc :: k)
--- >     = Verb method code contentTypes (Headers '[Header "Location" loc] NoContent)
+-- > type 'Redirect' (method :: 'StdMethod') (code :: 'Nat') contentTypes (loc :: k)
+-- >     = 'Verb' method code contentTypes ('Headers' '['Header' "Location" loc] 'NoContent')
 --
--- See "servant-raven" 'Servant.Redirect.API'
-
--- | Redirect to 'loc'
-redirect
-  :: forall handler loc withLocation .
-    ( ToHttpApiData loc
-    , MonadIO handler
-    , AddHeader "Location" loc NoContent withLocation
-    )
-  => loc -- ^ what to put in the 'Location' header
-  -> handler withLocation
-redirect = pure . flip addHeader NoContent
-
--- | Is 'route' a valid link within 'api'
-type Rerouteable' route api =
-  ( MkLink route Link ~ Link
-  , IsElem route api
-  , HasLink route
-  )
-
--- | Is 'route' a valid link within 'route
-type Rerouteable route = Rerouteable' route route
-
--- | Redirect to 'route'
---
--- This generates the redirect link from the supplied servant 'route'.
--- Note that it /doesn’t/ check that the 'route' is part of any particular
--- api. See 'reroute\'' for that.
-reroute
-  :: forall (route :: Type) handler withLocation .
-    ( MonadIO handler
-    , AddHeader "Location" Link NoContent withLocation
-    , Rerouteable route
-    )
-  => handler withLocation
-reroute = reroute' @route @route
-
--- | Redirect to 'route' as 'reroute'.
---
--- This generates the redirect link if the supplied servant 'route' is
--- a valid route in the supplied 'api'.
-reroute'
-  :: forall (api :: Type) (route :: Type) handler withLocation .
-    ( MonadIO handler
-    , Rerouteable' route api
-    , AddHeader "Location" Link NoContent withLocation
-    )
-  => handler withLocation
-reroute' = redirect $ Proxy @api `safeLink` Proxy @route
+-- See "Servant.Redirect.API" from @servant-raven@.
 
 --------------------------------------------------
 -- * Specializations
@@ -108,7 +56,7 @@ reroute' = redirect $ Proxy @api `safeLink` Proxy @route
 rerouteCookie
   :: forall (route :: Type) (method :: StdMethod) handler .
     ( MonadIO handler
-    , Rerouteable route
+    , SelfLinked route
     )
   => ServerT (AuthCookieRedirect method Link) handler
 rerouteCookie = reroute @route

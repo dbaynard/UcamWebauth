@@ -233,7 +233,7 @@ ucamWebauthCookieRedir
      ( ToJSON a
      , ToJWT tok
      , MonadIO handler
-     , Rerouteable route
+     , SelfLinked route
      )
   => AuthSet handler tok a
   -> ServerT (UcamWebauthCookieRedir a Link) handler
