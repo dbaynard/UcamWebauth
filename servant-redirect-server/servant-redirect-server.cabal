@@ -4,7 +4,7 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 8534f45fc9b92b89795cccafe9510eab7993195e3ab6858630673134dfd3788b
+-- hash: 2667dee2c7fbf07c87afaf515081d03abc13c10075b421541f6ada22e34ad3f2
 
 name:           servant-redirect-server
 version:        0.1.0.0
@@ -40,6 +40,7 @@ flag dev
 library
   exposed-modules:
       Servant.Redirect
+      Servant.Redirect.Auth
   other-modules:
       Paths_servant_redirect_server
   hs-source-dirs:
@@ -48,8 +49,10 @@ library
   build-depends:
       base >=4.7 && <5
     , servant
+    , servant-auth-server
     , servant-redirect
     , servant-server
+    , unliftio
   if flag(dev)
     ghc-options: -ddump-minimal-imports
   default-language: Haskell2010

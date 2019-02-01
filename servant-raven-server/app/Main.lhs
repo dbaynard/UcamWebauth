@@ -11,58 +11,59 @@ abstract: |
 
 ```haskell
 {-# OPTIONS_GHC -fno-warn-orphans -fno-warn-deprecations #-}
-{-# LANGUAGE
-    PackageImports
-  , OverloadedStrings
-  , AllowAmbiguousTypes
-  , DataKinds
-  , DeriveGeneric
-  , FlexibleContexts
-  , InstanceSigs
-  , QuasiQuotes
-  , RankNTypes
-  , RecordWildCards
-  , ScopedTypeVariables
-  , TypeApplications
-  , TypeFamilies
-  , TypeInType
-  , TypeOperators
-  #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE DataKinds           #-}
+{-# LANGUAGE DeriveGeneric       #-}
+{-# LANGUAGE FlexibleContexts    #-}
+{-# LANGUAGE InstanceSigs        #-}
+{-# LANGUAGE OverloadedStrings   #-}
+{-# LANGUAGE PackageImports      #-}
+{-# LANGUAGE QuasiQuotes         #-}
+{-# LANGUAGE RankNTypes          #-}
+{-# LANGUAGE RecordWildCards     #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeApplications    #-}
+{-# LANGUAGE TypeFamilies        #-}
+{-# LANGUAGE TypeInType          #-}
+{-# LANGUAGE TypeOperators       #-}
 
 module Main where
 
-import           "base"                Control.Applicative
-import           "base"                Control.Concurrent
-import           "errors"              Control.Error
-import           "base"                Control.Monad
-import           "mtl"                 Control.Monad.Except
-import qualified "unliftio-core"       Control.Monad.IO.Unlift as UIO
-import           "mtl"                 Control.Monad.State
-import           "jose"                Crypto.JOSE
-import           "bytestring"          Data.ByteString (ByteString)
-import           "base"                Data.Kind
-import           "base"                Data.Proxy
-import           "reflection"          Data.Reflection
-import           "text"                Data.Text (Text)
-import qualified "text"                Data.Text as T
-import           "text"                Data.Text.Encoding
-import qualified "text"                Data.Text.IO as T
-import           "time"                Data.Time
-import           "yaml"                Data.Yaml hiding ((.=))
-import           "microlens"           Lens.Micro
-import           "microlens-mtl"       Lens.Micro.Mtl
-import           "warp"                Network.Wai.Handler.Warp
-import           "wai-extra"           Network.Wai.Middleware.RequestLogger
-import           "optparse-generic"    Options.Generic
-import           "servant-server"      Servant
-import           "servant-auth"        Servant.Auth
+import           "base" Control.Applicative
+import           "base" Control.Concurrent
+import           "errors" Control.Error
+import           "base" Control.Monad
+import           "mtl" Control.Monad.Except
+import qualified "unliftio-core" Control.Monad.IO.Unlift          as UIO
+import           "mtl" Control.Monad.State
+import           "jose" Crypto.JOSE
+import           "bytestring" Data.ByteString
+  (ByteString)
+import           "base" Data.Kind
+import           "base" Data.Proxy
+import           "reflection" Data.Reflection
+import           "text" Data.Text
+  (Text)
+import qualified "text" Data.Text                                 as T
+import           "text" Data.Text.Encoding
+import qualified "text" Data.Text.IO                              as T
+import           "time" Data.Time
+import           "yaml" Data.Yaml                                 hiding
+  ((.=))
+import           "microlens" Lens.Micro
+import           "microlens-mtl" Lens.Micro.Mtl
+import           "warp" Network.Wai.Handler.Warp
+import           "wai-extra" Network.Wai.Middleware.RequestLogger
+import           "optparse-generic" Options.Generic
+import           "servant-server" Servant
+import           "servant-auth" Servant.Auth
 import           "servant-auth-server" Servant.Auth.Server
-import           "servant-raven"       Servant.Raven.Test
-import           "uri-bytestring"      URI.ByteString.QQ
-import           "ucam-webauth"        UcamWebauth
-import qualified "unliftio"            UnliftIO.Exception as UIO
+import           "servant-raven" Servant.Raven.Test
+import           "servant-redirect-server" Servant.Redirect.Auth
+import           "ucam-webauth" UcamWebauth
+import qualified "unliftio" UnliftIO.Exception                    as UIO
+import           "uri-bytestring" URI.ByteString.QQ
 
-import Extra.Servant.Auth
 import Servant.UcamWebauth
 ```
 

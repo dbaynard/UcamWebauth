@@ -45,10 +45,13 @@ library:
   source-dirs: src
   exposed-modules:
   - Servant.Redirect
+  - Servant.Redirect.Auth
   dependencies:
   - servant
+  - servant-auth-server
   - servant-redirect
   - servant-server
+  - unliftio
 
 tests:
   servant-redirect-server-test:

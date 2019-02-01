@@ -1,16 +1,24 @@
-{-# LANGUAGE
-    PackageImports
-  , AllowAmbiguousTypes
-  , ConstraintKinds
-  , DataKinds
-  , FlexibleContexts
-  , ScopedTypeVariables
-  , TypeApplications
-  , TypeInType
-  , TypeOperators
-  #-}
+-- |
+-- Module      : Servant.Redirect.Auth
+-- Description : Authentication handlers for servant
+-- Copyright   : David Baynard 2019
+--
+-- License     : BSD-3-Clause OR Apache-2.0
+-- Maintainer  : David Baynard <ucamwebauth@baynard.me>
+-- Stability   : experimental
+-- Portability : unknown
 
-module Extra.Servant.Auth
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE ConstraintKinds     #-}
+{-# LANGUAGE DataKinds           #-}
+{-# LANGUAGE FlexibleContexts    #-}
+{-# LANGUAGE PackageImports      #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeApplications    #-}
+{-# LANGUAGE TypeInType          #-}
+{-# LANGUAGE TypeOperators       #-}
+
+module Servant.Redirect.Auth
   ( WithAuthenticated
   , authenticated
   , authenticatedProxied
@@ -18,11 +26,11 @@ module Extra.Servant.Auth
   , throwAllProxied
   ) where
 
-import           "base"                Control.Monad.IO.Class
-import           "base"                Data.Kind
-import           "servant-server"      Servant
+import           "base" Control.Monad.IO.Class
+import           "base" Data.Kind
+import           "servant-server" Servant
 import           "servant-auth-server" Servant.Auth.Server
-import qualified "unliftio"            UnliftIO.Exception as UIO
+import qualified "unliftio" UnliftIO.Exception             as UIO
 
 -- | Constraints for authenticated endpoints
 type WithAuthenticated (api :: Type) (context :: [Type]) (handler :: Type -> Type) =

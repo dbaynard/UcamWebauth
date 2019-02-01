@@ -44,7 +44,6 @@ dependencies:
 library:
   source-dirs: src
   exposed-modules:
-  - Extra.Servant.Auth
   - Servant.UcamWebauth
   other-modules: []
   dependencies:
@@ -81,6 +80,7 @@ executables:
     - servant-auth
     - servant-auth-server
     - servant-raven-server
+    - servant-redirect-server
     - text
     - time
     - ucam-webauth

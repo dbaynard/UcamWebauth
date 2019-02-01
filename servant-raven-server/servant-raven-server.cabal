@@ -4,7 +4,7 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 3da4f8c6a9e77e7a2b3ccf105bb9c52b1153be8005f2b557c339400298eba601
+-- hash: 5f667ef12abf06a7e306ae03b2bad674d38b630c770dd95e1aa8b88df2b85693
 
 name:           servant-raven-server
 version:        0.1.0.0
@@ -38,7 +38,6 @@ flag dev
 
 library
   exposed-modules:
-      Extra.Servant.Auth
       Servant.UcamWebauth
   hs-source-dirs:
       src
@@ -83,6 +82,7 @@ executable servant-raven-example
     , servant-auth-server
     , servant-raven
     , servant-raven-server
+    , servant-redirect-server
     , servant-server
     , text
     , time
