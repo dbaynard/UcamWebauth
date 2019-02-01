@@ -10,7 +10,7 @@ abstract: |
 ...
 
 ```haskell
-{-# OPTIONS_GHC -fno-warn-orphans #-}
+{-# OPTIONS_GHC -fno-warn-orphans -fno-warn-deprecations #-}
 {-# LANGUAGE
     PackageImports
   , OverloadedStrings

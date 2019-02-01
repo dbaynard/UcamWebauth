@@ -95,7 +95,6 @@ import           "microlens"               Lens.Micro
 import           "microlens-mtl"           Lens.Micro.Mtl
 import           "servant-server"          Servant
 import           "servant-auth-server"     Servant.Auth.Server
-import           "servant-auth-server"     Servant.Auth.Server.SetCookieOrphan ()
 import           "servant-redirect-server" Servant.Redirect
 import           "servant-raven"           Servant.UcamWebauth.API
 import           "servant-raven"           Servant.UcamWebauth.Settings

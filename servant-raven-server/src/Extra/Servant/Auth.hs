@@ -25,43 +25,47 @@ import           "servant-auth-server" Servant.Auth.Server
 import qualified "unliftio"            UnliftIO.Exception as UIO
 
 -- | Constraints for authenticated endpoints
-type WithAuthenticated (api :: Type) (m :: Type -> Type) =
-  ( HasServer api '[]
+type WithAuthenticated (api :: Type) (context :: [Type]) (handler :: Type -> Type) =
+  ( HasServer api context
   , ThrowAll (Server api)
-  , MonadIO m
+  , MonadIO handler
   )
 
 -- | Wrap the provided handler function with authentication.
 authenticated
-  :: forall api m u . WithAuthenticated api m
+  :: forall api context m u . WithAuthenticated api context m
   => (u -> ServerT api m)
   -> AuthResult u
   -> ServerT api m
-authenticated f (Authenticated user) = f user
-authenticated _ _ = throwAll' @api @m err401
+authenticated = authenticatedProxied @api @context @m Proxy Proxy
 
 -- | Wrap the provided handler function with authentication.
 authenticatedProxied
-  :: forall api m u . WithAuthenticated api m
+  :: forall api context m u . WithAuthenticated api context m
   => Proxy api
+  -> Proxy context
   -> (u -> ServerT api m)
   -> AuthResult u
   -> ServerT api m
-authenticatedProxied _ = authenticated @api @m
+authenticatedProxied _ _ f (Authenticated user) = f user
+authenticatedProxied api context _ _ = throwAllProxied api context (Proxy @m) err401
 
 -- | Throw an error throughout an api.
 throwAll'
-  :: forall api m . WithAuthenticated api m
+  :: forall api context m . WithAuthenticated api context m
   => ServantErr
   -> ServerT api m
-throwAll' = hoistServer @api @_ @m Proxy (UIO.fromEitherIO . runHandler) . throwAll @(Server api)
+throwAll' = throwAllProxied @api @context @m Proxy Proxy Proxy
 
 -- | Throw an error throughout an api.
 throwAllProxied
-  :: forall api m . WithAuthenticated api m
+  :: forall api context m . WithAuthenticated api context m
   => Proxy api
+  -> Proxy context
   -> Proxy m
   -> ServantErr
   -> ServerT api m
-throwAllProxied _ _ = throwAll' @api @m
+throwAllProxied api context _ =
+  hoistServerWithContext api context (UIO.fromEitherIO @_ @m . runHandler) .
+  throwAll @(Server api)
 
