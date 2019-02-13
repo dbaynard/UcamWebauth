@@ -94,6 +94,9 @@ module RIO.Servant
   , serveRIO_
   , serveRIONoContext_
 
+    -- ** Throwing 'ServantErr' exceptions
+  , throwServantErr
+
     -- ** Run a 'Servant.Handler' in 'RIO'
   , rioHandler
 
@@ -190,12 +193,14 @@ import           "servant-server" Servant      hiding
 import qualified "servant-server" Servant      hiding
   (serve, serveWithContext)
 import           "unliftio" UnliftIO.Exception
-  (fromEitherIO, fromException, tryJust)
+  (fromEitherIO, fromException, tryJust, throwIO)
 
 -- $rio-servant
 --
 -- To create handlers in a @'RIO' env@ context, return the value required
 -- for success as with 'Servant.Handler'.
+--
+-- Throw errors using 'throwServantErr'.
 
 -- | Serve an @api@ (with 'Context' @context@).
 --
@@ -261,6 +266,13 @@ serveRIONoContext_ _ = serveRIONoContext @api
 -- context.
 rioHandler :: forall env a . Servant.Handler a -> RIO env a
 rioHandler = fromEitherIO . Servant.runHandler
+
+-- | A type-restricted version of @'throwIO' :: ('MonadIO' m, 'Exception'
+-- e) => e -> m a@.
+--
+-- Use to throw 'ServantErr' exceptions from @'RIO' env@ handlers.
+throwServantErr :: forall env a . ServantErr -> RIO env a
+throwServantErr = throwIO
 
 -- $handler
 --
