@@ -1,7 +1,7 @@
 ---
 title:  Ucam Webauth  
 author: David Baynard  
-date:   27 Jan 2019  
+date:   13 Feb 2019  
 ...
 
 [![Build Status](https://travis-ci.com/dbaynard/UcamWebauth.svg?branch=develop)](https://travis-ci.com/dbaynard/UcamWebauth)
@@ -38,6 +38,14 @@ Its only purpose is to split the core functionality among packages for minimal g
 [![raven-wai on Stackage Nightly](http://stackage.org/package/raven-wai/badge/nightly)](http://stackage.org/nightly/package/raven-wai)
 
 This adds [wai](//hackage.haskell.org/package/wai) middleware enabling authentication using _Raven_.
+
+# rio-servant
+
+[![Hackage — rio-servant](https://img.shields.io/hackage/v/rio-servant.svg?style=flat)](https://hackage.haskell.org/package/rio-servant)
+[![rio-servant on Stackage LTS 13](http://stackage.org/package/rio-servant/badge/lts-13)](http://stackage.org/lts-13/package/rio-servant)
+[![rio-servant on Stackage Nightly](http://stackage.org/package/rio-servant/badge/nightly)](http://stackage.org/nightly/package/rio-servant)
+
+Use [servant](//hackage.haskell.org/package/servant) with [RIO](//hackage.haskell.org/package/rio)
 
 # servant-raven
 

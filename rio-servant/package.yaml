@@ -1,0 +1,57 @@
+name: rio-servant
+version: '0.1.0.0'
+synopsis: Using rio with servant
+description: TODO
+license: BSD-3-Clause OR Apache-2.0
+author: David Baynard <ucamwebauth@baynard.me>
+maintainer: David Baynard <ucamwebauth@baynard.me>
+copyright: 2018 David Baynard
+category: Web
+github: dbaynard/UcamWebauth
+
+extra-source-files:
+- Changelog.md
+- README.md
+
+ghc-options:
+- -Wall
+- -Wincomplete-uni-patterns
+- -Wincomplete-record-updates
+#- -Wmissing-import-lists
+- -Wcompat
+- -Wnoncanonical-monad-instances
+- -Wnoncanonical-monadfail-instances
+
+flags:
+  dev:
+    description: Compile for development
+    default: false
+    manual: true
+
+when:
+- condition: flag(dev)
+  ghc-options: -ddump-minimal-imports
+
+dependencies:
+- base >= 4.7 && < 5
+
+library:
+  source-dirs: src
+  exposed-modules:
+  - RIO.Servant
+  other-modules: []
+  dependencies:
+  - rio
+  - servant
+  - servant-auth
+
+tests:
+  test:
+    main: Spec.hs
+    source-dirs: test
+    ghc-options: -Wall
+    dependencies:
+    - hspec >=2.0.0
+    - rio-servant
+    build-tools:
+    - hspec-discover

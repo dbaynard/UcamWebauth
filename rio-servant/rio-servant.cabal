@@ -1,0 +1,66 @@
+cabal-version: 2.2
+
+-- This file has been generated from package.yaml by hpack version 0.31.1.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: 33b16475e056e9ec2ffc214c32bf726fa2885f0235990e8a6bf924a1e230526f
+
+name:           rio-servant
+version:        0.1.0.0
+synopsis:       Using rio with servant
+description:    TODO
+category:       Web
+homepage:       https://github.com/dbaynard/UcamWebauth#readme
+bug-reports:    https://github.com/dbaynard/UcamWebauth/issues
+author:         David Baynard <ucamwebauth@baynard.me>
+maintainer:     David Baynard <ucamwebauth@baynard.me>
+copyright:      2018 David Baynard
+license:        (BSD-3-Clause OR Apache-2.0)
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    Changelog.md
+    README.md
+
+source-repository head
+  type: git
+  location: https://github.com/dbaynard/UcamWebauth
+
+flag dev
+  description: Compile for development
+  manual: True
+  default: False
+
+library
+  exposed-modules:
+      RIO.Servant
+  hs-source-dirs:
+      src
+  ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances
+  build-depends:
+      base >=4.7 && <5
+    , rio
+    , servant
+    , servant-auth
+  if flag(dev)
+    ghc-options: -ddump-minimal-imports
+  default-language: Haskell2010
+
+test-suite test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Paths_rio_servant
+  hs-source-dirs:
+      test
+  ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances -Wall
+  build-tool-depends:
+      hspec-discover:hspec-discover
+  build-depends:
+      base >=4.7 && <5
+    , hspec >=2.0.0
+    , rio-servant
+  if flag(dev)
+    ghc-options: -ddump-minimal-imports
+  default-language: Haskell2010
