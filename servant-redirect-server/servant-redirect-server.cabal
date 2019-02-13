@@ -4,7 +4,7 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 2667dee2c7fbf07c87afaf515081d03abc13c10075b421541f6ada22e34ad3f2
+-- hash: b8e991d50d36ab3ac081ed3f26217644ac8374088732fac56913203ce5c84d3f
 
 name:           servant-redirect-server
 version:        0.1.0.0
@@ -48,11 +48,16 @@ library
   ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances
   build-depends:
       base >=4.7 && <5
+    , exceptions
+    , http-types
+    , mtl
     , servant
     , servant-auth-server
+    , servant-checked-exceptions-core
     , servant-redirect
     , servant-server
     , unliftio
+    , unliftio-core
   if flag(dev)
     ghc-options: -ddump-minimal-imports
   default-language: Haskell2010
@@ -61,12 +66,21 @@ test-suite servant-redirect-server-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      Servant.Redirect.AuthSpec
       Paths_servant_redirect_server
   hs-source-dirs:
       test
   ghc-options: -Wall -Wincomplete-uni-patterns -Wincomplete-record-updates -Wcompat -Wnoncanonical-monad-instances -Wnoncanonical-monadfail-instances -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      base >=4.7 && <5
+      async
+    , base >=4.7 && <5
+    , exceptions
+    , hspec
+    , servant-redirect-server
+    , servant-server
+    , unliftio-core
+    , wai
+    , warp
   if flag(dev)
     ghc-options: -ddump-minimal-imports
   default-language: Haskell2010

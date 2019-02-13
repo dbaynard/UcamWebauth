@@ -47,11 +47,16 @@ library:
   - Servant.Redirect
   - Servant.Redirect.Auth
   dependencies:
+  - http-types
+  - exceptions
+  - mtl
   - servant
   - servant-auth-server
+  - servant-checked-exceptions-core
   - servant-redirect
   - servant-server
   - unliftio
+  - unliftio-core
 
 tests:
   servant-redirect-server-test:
@@ -61,4 +66,12 @@ tests:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
-
+    dependencies:
+    - async
+    - exceptions
+    - hspec
+    - servant-server
+    - servant-redirect-server
+    - unliftio-core
+    - wai
+    - warp
