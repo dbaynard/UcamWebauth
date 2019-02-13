@@ -34,6 +34,7 @@ when:
 
 dependencies:
 - base >= 4.7 && < 5
+- rio
 
 library:
   source-dirs: src
@@ -41,9 +42,10 @@ library:
   - RIO.Servant
   other-modules: []
   dependencies:
-  - rio
-  - servant
+  - mtl
   - servant-auth
+  - servant-server
+  - unliftio
 
 tests:
   test:
