@@ -64,8 +64,9 @@
 --
 -- This module exports "Servant", without the dangerous 'serve' and
 -- 'serveWithContext' functions, and so it is recommended that this module
--- is imported **instead** of "Servant".
+-- is imported __instead__ of "Servant".
 
+{-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE DataKinds           #-}
 {-# LANGUAGE FlexibleContexts    #-}
 {-# LANGUAGE PackageImports      #-}
@@ -77,11 +78,15 @@ module RIO.Servant
     -- * Run a wai application from an API ('RIO' context)
     serveRIO
   , serveRIONoContext
+  , serveRIO_
+  , serveRIONoContext_
 
     -- * Run a 'Servant.Handler' in 'RIO'
   , rioHandler
 
     -- * Re-exports
+
+    -- ** Handler
 
     -- $handler
   , Servant.Handler
@@ -179,13 +184,12 @@ import           "unliftio" UnliftIO.Exception
 -- Like 'serveWithContext' but for 'RIO'.
 serveRIO
   :: forall api context env . HasServer api context
-  => Proxy api
-  -> Context context
+  => Context context
   -> env
   -> ServerT api (RIO env)
   -> Application
-serveRIO api context env = serveWithContext api context .
-    hoistServerWithContext api (Proxy @context) handleServantErr
+serveRIO context env = serveWithContext (Proxy @api) context .
+    hoistServerWithContext (Proxy @api) (Proxy @context) handleServantErr
   where
 
     handleServantErr :: forall a . RIO env a -> Servant.Handler a
@@ -198,16 +202,38 @@ serveRIO api context env = serveWithContext api context .
     errHandlingLiftIO :: forall a . IO a -> Servant.Handler a
     errHandlingLiftIO = Servant.Handler . ExceptT . tryJust (fromException @ServantErr)
 
+-- | Serve an @api@ (with no 'Context').
+--
+-- Like 'serve' but for 'RIO'.
+serveRIONoContext
+  :: forall api env . HasServer api '[]
+  => env
+  -> ServerT api (RIO env)
+  -> Application
+serveRIONoContext = serveRIO @api EmptyContext
+
 -- | Serve an @api@ (with 'Context' @context@).
 --
--- Like 'serveWithContext' but for 'RIO'.
-serveRIONoContext
+-- Like 'serveRIO' but with explicit 'Proxy'.
+serveRIO_
+  :: forall api context env . HasServer api context
+  => Proxy api
+  -> Context context
+  -> env
+  -> ServerT api (RIO env)
+  -> Application
+serveRIO_ _ = serveRIO @api
+
+-- | Serve an @api@ (with no 'Context').
+--
+-- Like 'serveRIONoContext' but with explicit 'Proxy'.
+serveRIONoContext_
   :: forall api env . HasServer api '[]
   => Proxy api
   -> env
   -> ServerT api (RIO env)
   -> Application
-serveRIONoContext api = serveRIO api EmptyContext
+serveRIONoContext_ _ = serveRIONoContext @api
 
 -- | This escape hatch from a 'Servant.Handler' context throws 'ServantErr'
 -- errors as exceptions, in a manner that is compatible with 'serveRIO' and
@@ -220,8 +246,8 @@ rioHandler = fromEitherIO . Servant.runHandler
 
 -- $handler
 --
--- Only the type is re-exported. There is no need to use either the
--- constructor or destructor.
+-- For 'Servant.Handler', only the type is re-exported. There is no need to
+-- use either the constructor or destructor.
 --
 -- Create handlers in a @'RIO' env@ context instead.
 --
