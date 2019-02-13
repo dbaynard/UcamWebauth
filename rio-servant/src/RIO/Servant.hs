@@ -73,10 +73,95 @@
 {-# LANGUAGE TypeApplications    #-}
 
 module RIO.Servant
-  ( serveRIO
+  (
+    -- * Run a wai application from an API ('RIO' context)
+    serveRIO
   , serveRIONoContext
+
+    -- * Run a 'Servant.Handler' in 'RIO'
   , rioHandler
-  , module Servant
+
+    -- * Re-exports
+
+    -- $handler
+  , Servant.Handler
+
+  , -- ** Construct a wai Application from an API
+    Servant.toApplication
+
+  , -- ** Handlers for all standard combinators
+    Servant.HasServer(..)
+  , Servant.Server
+  , Servant.EmptyServer
+  , Servant.emptyServer
+
+    -- ** Debugging the server layout
+  , Servant.layout
+  , Servant.layoutWithContext
+
+    -- ** Enter / hoisting server
+  , Servant.hoistServer
+
+  -- *** Functions based on <https://hackage.haskell.org/package/mmorph mmorph>
+  , Servant.tweakResponse
+
+  -- ** Context
+  , Servant.Context(..)
+  , Servant.HasContextEntry(getContextEntry)
+  -- *** NamedContext
+  , Servant.NamedContext(..)
+  , Servant.descendIntoNamedContext
+
+  -- ** Basic Authentication
+  , Servant.BasicAuthCheck(BasicAuthCheck, unBasicAuthCheck)
+  , Servant.BasicAuthResult(..)
+
+  -- ** General Authentication
+  -- , AuthHandler(unAuthHandler)
+  -- , AuthServerData
+  -- , mkAuthHandler
+
+    -- ** Default error type
+  , Servant.ServantErr(..)
+    -- *** 3XX
+  , Servant.err300
+  , Servant.err301
+  , Servant.err302
+  , Servant.err303
+  , Servant.err304
+  , Servant.err305
+  , Servant.err307
+    -- *** 4XX
+  , Servant.err400
+  , Servant.err401
+  , Servant.err402
+  , Servant.err403
+  , Servant.err404
+  , Servant.err405
+  , Servant.err406
+  , Servant.err407
+  , Servant.err409
+  , Servant.err410
+  , Servant.err411
+  , Servant.err412
+  , Servant.err413
+  , Servant.err414
+  , Servant.err415
+  , Servant.err416
+  , Servant.err417
+  , Servant.err418
+  , Servant.err422
+   -- *** 5XX
+  , Servant.err500
+  , Servant.err501
+  , Servant.err502
+  , Servant.err503
+  , Servant.err504
+  , Servant.err505
+
+  -- ** Re-exports
+  , Servant.Application
+  , Servant.Tagged (..)
   ) where
 
 import           "mtl" Control.Monad.Except
@@ -132,3 +217,12 @@ serveRIONoContext api = serveRIO api EmptyContext
 -- context.
 rioHandler :: forall env a . Servant.Handler a -> RIO env a
 rioHandler = fromEitherIO . Servant.runHandler
+
+-- $handler
+--
+-- Only the type is re-exported. There is no need to use either the
+-- constructor or destructor.
+--
+-- Create handlers in a @'RIO' env@ context instead.
+--
+-- Consume handlers in a 'Servant.Handler' context with 'rioHandler'.
