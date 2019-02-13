@@ -5,7 +5,7 @@
 
 module Servant.Redirect.AuthSpec (spec) where
 
-import Servant.Redirect.Auth
+-- import Servant.Redirect.Auth
 
 import "hspec" Test.Hspec
 
@@ -39,18 +39,18 @@ spec = do
       it "throwM" $ do
         Servant.runHandler (throwM err400) `shouldThrow` anyServantException
 
-  describe "Servant.Raven.Auth" $ do
-
-    describe "runHandler" $ do
-
-      it "pure" $ do
-        runHandler (pure 200) `shouldReturn` Right (200 :: Int)
-
-      it "throwError" $ do
-        runHandler (throwError err400) `shouldReturn` Left @ServantErr @Int err400
-
-      it "throwM" $ do
-        runHandler (throwM err400) `shouldReturn` Left @ServantErr @Int err400
+--   describe "Servant.Raven.Auth" $ do
+-- 
+--     describe "runHandler" $ do
+-- 
+--       it "pure" $ do
+--         runHandler (pure 200) `shouldReturn` Right (200 :: Int)
+-- 
+--       it "throwError" $ do
+--         runHandler (throwError err400) `shouldReturn` Left @ServantErr @Int err400
+-- 
+--       it "throwM" $ do
+--         runHandler (throwM err400) `shouldReturn` Left @ServantErr @Int err400
 
     describe "withServer" . runIO . withServer $ do
       pure ()
