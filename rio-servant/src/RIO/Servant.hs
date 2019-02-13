@@ -8,6 +8,12 @@
 -- Stability   : experimental
 -- Portability : unknown
 --
+-- This module exports the API of "Servant", without the dangerous 'serve'
+-- and 'serveWithContext' functions, and so it is recommended that this
+-- module is imported __instead__ of "Servant".
+--
+-- = Serving handlers
+--
 -- The [servant-server](//hackage.haskell.org/package/servant-server)
 -- library provides a way to serve an API.
 --
@@ -20,11 +26,15 @@
 -- written as values of type @'ServerT' api ('RIO' env)@ this function does
 -- not suffice.
 --
+-- = Natural transformations
+--
 -- The function 'hoistServerWithContext' allows serving handlers of type
 -- @'ServerT' api m@, if the user supplies a natural transformation from
 -- handlers in a context @m@ to handlers in a context 'Servant.Handler'.
 --
 -- However, there’s a gotcha — exceptions.
+--
+-- = Exceptions
 --
 -- 'Servant.Handler' is defined as follows:
 --
@@ -54,6 +64,8 @@
 -- a change is not possible; until 'ExceptT' is removed, this looks like
 -- the best option.
 --
+-- = RIO
+--
 -- This library supplies a function 'serveRIO' which should be used instead
 -- of 'serveWithContext'. This correctly handles 'ServantErr' exceptions.
 -- The function 'serveRIONoContext' corresponds to 'serve'.
@@ -61,10 +73,6 @@
 -- Meanwhile, some libraries provide handlers in a 'Servant.Handler'
 -- context. This library’s 'rioHandler' function lifts those to a @'RIO'
 -- env@ context, throwing @'ServantErr'@ errors as exceptions.
---
--- This module exports "Servant", without the dangerous 'serve' and
--- 'serveWithContext' functions, and so it is recommended that this module
--- is imported __instead__ of "Servant".
 
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE DataKinds           #-}
@@ -75,16 +83,21 @@
 
 module RIO.Servant
   (
-    -- * Run a wai application from an API ('RIO' context)
+    -- * Using servant with rio
+
+    -- $rio-servant
+
+    -- ** Run a wai application from an API ('RIO' context)
+
     serveRIO
   , serveRIONoContext
   , serveRIO_
   , serveRIONoContext_
 
-    -- * Run a 'Servant.Handler' in 'RIO'
+    -- ** Run a 'Servant.Handler' in 'RIO'
   , rioHandler
 
-    -- * Re-exports
+    -- * Re-exports from "Servant"
 
     -- ** Handler
 
@@ -178,6 +191,11 @@ import qualified "servant-server" Servant      hiding
   (serve, serveWithContext)
 import           "unliftio" UnliftIO.Exception
   (fromEitherIO, fromException, tryJust)
+
+-- $rio-servant
+--
+-- To create handlers in a @'RIO' env@ context, return the value required
+-- for success as with 'Servant.Handler'.
 
 -- | Serve an @api@ (with 'Context' @context@).
 --
