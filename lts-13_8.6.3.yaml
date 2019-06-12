@@ -1,0 +1,11 @@
+resolver: lts-13.5
+packages:
+- 'ucam-webauth-types'
+- 'ucam-webauth'
+- 'servant-raven'
+- 'servant-raven-server'
+- 'raven-wai'
+extra-deps:
+- cryptonite-0.26@sha256:43c722f3770c31f4c5376e7aa42645b104834103312e217aa7fe79316416d6df
+- parser-combinators-1.1.0@sha256:0c79260aeb14db4790a859dd1a3f772b1c6c7c640e93308b4795e983db4a62d7
+- time-qq-0.0.1.0@sha256:0eb66a848f6d0c37dd84cdbd7e8a108e6929c93f503bc397690eb525a277e7bc
