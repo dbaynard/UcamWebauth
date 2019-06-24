@@ -4,7 +4,7 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: e47bc9b683e42968709269a32ec08c4eaa7b12eb45a7ba77c344ac8fd2d5fa4f
+-- hash: 5a800341e1896c6b7eca593eb8a114e2c0b23701fc14c50947f140cfb8b4057b
 
 name:           ucam-webauth-types
 version:        0.1.0.0
@@ -51,7 +51,7 @@ library
     , deepseq >=1.4.3.0 && <1.5
     , http-types >=0.12.2 && <0.13
     , microlens >=0.4.9.1 && <0.5
-    , microlens-mtl >=0.1.11.1 && <0.2
+    , microlens-mtl >=0.1.11.1 && <0.3
     , mtl >=2.2.2 && <2.3
     , text >=0.11 && <1.2.3.0 || >=1.2.3.1 && <1.3
     , time >=1.8.0.2 && <1.10
