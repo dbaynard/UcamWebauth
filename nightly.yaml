@@ -1,4 +1,4 @@
-resolver: nightly-2019-06-12
+resolver: nightly-2019-07-29
 packages:
 - 'ucam-webauth-types'
 - 'ucam-webauth'
@@ -6,6 +6,5 @@ packages:
 - 'servant-raven-server'
 - 'raven-wai'
 extra-deps:
-- http-api-data-0.4@sha256:ad69f7cd0d1e7723abfbed6f88ac987bdf75a402b29de161eb867c6131c9d427
-- time-qq-0.0.1.0@sha256:0eb66a848f6d0c37dd84cdbd7e8a108e6929c93f503bc397690eb525a277e7bc
 - microlens-mtl-0.2.0.1@sha256:ac604347d822e07215ca4374d7d13881be2e53c29d5c12882bd82e782f42369e
+- parser-combinators-1.2.0@sha256:784ab858e0a814d2aa36785e3c359a393be7ef7be9a37428a59908331249eb80
