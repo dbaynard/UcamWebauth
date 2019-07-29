@@ -1,10 +1,10 @@
 cabal-version: 2.2
 
--- This file has been generated from package.yaml by hpack version 0.31.0.
+-- This file has been generated from package.yaml by hpack version 0.31.1.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: af935295e899db4a84c5dea4532aabb0c105e5c2701a968100bb120c6703d942
+-- hash: 3067ca4b0b936cb0613b8cdf6b83ba61f50537d2641d817e7dd0169cdb156645
 
 name:           servant-raven
 version:        0.1.0.0
@@ -15,8 +15,8 @@ description:    Servant combinators to authenticate using the University of Camb
 category:       Web
 homepage:       https://github.com/dbaynard/UcamWebauth#readme
 bug-reports:    https://github.com/dbaynard/UcamWebauth/issues
-author:         David Baynard <ucamwebauth@baynard.me>
-maintainer:     David Baynard <ucamwebauth@baynard.me>
+author:         David Baynard <ucamwebauth@baynard.dev>
+maintainer:     David Baynard <ucamwebauth@baynard.dev>
 copyright:      2018 David Baynard
 license:        (BSD-3-Clause OR Apache-2.0)
 license-file:   LICENSE

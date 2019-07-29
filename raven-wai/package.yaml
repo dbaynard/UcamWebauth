@@ -4,8 +4,8 @@ synopsis: Raven authentication as Wai middleware
 description: |
   The UcamWebauth protocol instantiated to the University of Cambridge’s Raven service, as Wai middleware.
 category: Web
-author: David Baynard <ucamwebauth@baynard.me>
-maintainer: David Baynard <ucamwebauth@baynard.me>
+author: David Baynard <ucamwebauth@baynard.dev>
+maintainer: David Baynard <ucamwebauth@baynard.dev>
 copyright: 2018 David Baynard
 license: BSD-3-Clause OR Apache-2.0
 github: dbaynard/UcamWebauth
